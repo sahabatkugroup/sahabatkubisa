@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sahabatku Delivery - Aplikasi Kurir</title>
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --sky:#e6f7ff; --sky-strong:#4dabf7; --accent:#0077c8; --muted:#475b6b; --card:#ffffff;
+    --glass: rgba(255,255,255,0.7);
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:Inter,Arial,Helvetica,sans-serif;
+    background: linear-gradient(180deg,#f0f8ff 0%, #e6f7ff 60%);
+    margin:0;padding:0;color:#083044;
+  }
+  header{
+    background:linear-gradient(90deg,var(--sky-strong),#68bff0);
+    color:white;padding:18px 16px;text-align:center;font-weight:800;
+    box-shadow:0 6px 30px rgba(4,46,72,0.12);
+    position:sticky;top:0;z-index:10;
+  }
+  .container{max-width:1080px;margin:20px auto;padding:12px}
+  .card{
+    background:var(--card);
+    border-radius:14px;padding:16px;
+    box-shadow:0 8px 26px rgba(11,59,90,0.06);
+    margin-bottom:16px;border:1px solid rgba(11,59,90,0.04);
+  }
+  h1,h2,h3{margin:6px 0;color:var(--accent)}
+  label{display:block;margin-top:8px;font-size:14px;color:var(--muted)}
+  input[type="text"],input[type="password"],input[type="number"],input[type="date"],textarea,select{
+    width:100%;padding:10px;border-radius:10px;border:1px solid #e3f2fb;margin-top:6px;background:var(--glass);
+    box-sizing:border-box;
+  }
+  button{
+    background:var(--sky-strong);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;margin-top:8px;
+    box-shadow: 0 6px 18px rgba(11,59,90,0.08);
+  }
+  button.secondary{background:#f5f7fa;color:#0b3b5a;border:1px solid rgba(11,59,90,0.03)}
+  button.danger{background:#ff6b6b;box-shadow:none}
+  nav.tab{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  nav.tab button{flex:1;min-width:140px;padding:10px;border-radius:10px}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:10px;border:1px solid #e6f2fb;text-align:center}
+  th{background:linear-gradient(90deg,var(--sky-strong),#6fc2ff);color:white}
+  .nota-box{
+    white-space:pre-wrap;font-family:monospace;background:#fbfdff;padding:12px;border-radius:10px;border:1px solid #e6f4ff;
+    min-height:100px;overflow:auto;
+  }
+  .small{font-size:13px;color:var(--muted)}
+  footer{text-align:center;color:var(--muted);padding:14px;margin-top:6px}
+  .row{display:flex;gap:10px}
+  .col{flex:1}
+  .right{text-align:right}
+  .hidden{display:none}
+  .btn-inline{display:inline-block;margin-right:8px}
+  .item-card{border:1px solid #e6f4ff;border-radius:12px;padding:10px;margin-top:8px;background:#fff}
+  .actions-col{display:flex;flex-direction:column;gap:6px}
+  .muted-pill{background:#f0f9ff;color:#0b4870;padding:6px 8px;border-radius:18px;font-weight:600}
+  @media (max-width:900px){ .row{flex-direction:column} nav.tab button{min-width:0} }
+</style>
+</head>
+<body>
+<header>🚚 Sahabatku Delivery — Aplikasi Kurir</header>
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="loginCard" class="card">
+    <h2>Login Kurir</h2>
+    <label>Username</label>
+    <input id="loginUser" type="text" placeholder="Nama Courier">
+    <label>Password</label>
+    <input id="loginPass" type="password" placeholder="ID Card Courier">
+    <div class="row" style="margin-top:12px">
+      <div class="col"><button id="btnLogin">Masuk</button></div>
+      <div class="col"><button id="btnDemo" class="secondary"></button></div>
+    </div>
+    <p id="loginMsg" class="small" style="color:#c0392b"></p>
+    <p class="small" style="margin-top:10px"></p>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2>Halo, <span id="curUser" style="color:#0b4870;font-weight:700"></span></h2>
+        <div class="small">Buat nota, simpan foto, bagikan ke WhatsApp, dan lihat rekap/pelacakan</div>
+      </div>
+      <div style="text-align:right">
+        <div id="docLinkWrap" class="hidden" style="margin-bottom:8px"><a class="small" id="docLink" href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku" target="_blank">📄 Dokumen Sahabatku</a></div>
+        <button id="btnLogout" class="danger">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <nav class="tab">
+        <button data-tab="notaTab">📝 Nota Elektrik</button>
+        <button data-tab="riwayatTab">📑 Riwayat Nota</button>
+        <button data-tab="rekapTab">📊 Rekap Bulanan</button>
+        <button data-tab="pelacakTab">📋 Pelacak Orderan</button>
+      </nav>
+
+      <!-- NOTA TAB -->
+      <div id="notaTab" class="tabContent">
+        <h3>Buat / Edit Nota Elektrik</h3>
+
+        <div class="card">
+          <div class="row">
+            <div class="col">
+              <label>Nama Kurir</label>
+              <input id="kurirName" type="text" readonly>
+            </div>
+            <div class="col">
+              <label>Nomor WhatsApp Customer (format internasional tanpa +)</label>
+              <input id="custPhone" type="text" placeholder="6281234... (opsional)">
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <div class="small muted-pill">Items</div>
+            <div>
+              <button id="btnAddItem" class="btn-inline">+ Tambah Item</button>
+              <button id="btnClearItems" class="secondary">Bersihkan</button>
+            </div>
+          </div>
+
+          <div id="itemsArea" style="margin-top:12px"></div>
+
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <label>Ongkir (Rp)</label>
+              <input id="ongkir" type="number" value="0" min="0">
+            </div>
+
+            <div style="flex:1;min-width:320px">
+              <label>Tambahan Lainnya</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <select id="tambahanPreset" style="flex:1">
+                  <option value="">-- Pilih preset --</option>
+                  <option value="Tambahan Ojeg">Tambahan Ojeg</option>
+                  <option value="Tambahan Malam">Tambahan Malam</option>
+                  <option value="Tambahan Hujan">Tambahan Hujan</option>
+                  <option value="Tambahan Melebihi Kapasitas">Tambahan Melebihi Kapasitas</option>
+                  <option value="Tambahan Cash Minuman">Tambahan Cash Minuman</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+                <button id="btnAddTambahan" class="btn-inline">+ Tambahan</button>
+              </div>
+              <div id="tambahanArea" style="margin-top:10px"></div>
+            </div>
+
+            <div style="min-width:220px;text-align:right">
+              <label>Total Pesanan</label>
+              <div style="font-weight:800;font-size:20px;color:#0b4870;padding-top:8px" id="totalPesanan">Rp 0</div>
+              <div class="small" style="margin-top:6px">(Termasuk ongkir & tambahan)</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button id="btnSaveForm">Simpan Nota</button>
+            <button id="btnSavePhoto" class="secondary hidden">Save Foto (Download)</button>
+            <button id="btnSharePhoto" class="secondary hidden">Bagikan ke WhatsApp (Foto)</button>
+            <button id="btnSaveAndShare" class="btn-inline">Simpan & Simpan Foto & Bagikan</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Preview Nota</h3>
+          <div id="notaPreview" class="nota-box">Belum ada nota.</div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button id="btnExportPreview" class="secondary">Ekspor Foto Preview</button>
+            <button id="btnSharePreview" class="secondary">Bagikan Preview ke WhatsApp</button>
+          </div>
+          <p class="small" style="margin-top:8px">
+            Catatan: share lebih mulus di ponsel dengan Web Share API. Jika tidak tersedia, fallback akan membuka tab baru dengan gambar + link WhatsApp.
+          </p>
+        </div>
+      </div>
+
+      <!-- RIWAYAT TAB -->
+      <div id="riwayatTab" class="tabContent hidden">
+        <h3>Riwayat Nota (Akun ini)</h3>
+        <div id="notaHistory"></div>
+      </div>
+
+      <!-- REKAP TAB -->
+      <div id="rekapTab" class="tabContent hidden">
+        <h3>Rekap Bulanan (dari Nota Elektronik)</h3>
+        <div class="row">
+          <div class="col">
+            <label>Pilih Bulan</label>
+            <input id="rekapMonth" type="month">
+          </div>
+          <div class="col right" style="align-self:end">
+            <button id="btnLoadRekap">Muat Rekap</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px">
+          <table aria-label="Rekap Bulanan">
+            <thead>
+              <tr><th>Tanggal</th><th>Jumlah Nota</th><th>Ongkir (Rp)</th><th>Tambahan (Rp)</th><th>Total Harian (Rp)</th></tr>
+            </thead>
+            <tbody id="rekapBody"></tbody>
+            <tfoot>
+              <tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- PELACAK TAB -->
+      <div id="pelacakTab" class="tabContent hidden">
+        <h3>Pelacak Orderan (dari Nota)</h3>
+        <div class="card">
+          <h4>Ringkasan Hari Ini</h4>
+          <div id="summaryToday" class="small">Tidak ada data hari ini.</div>
+        </div>
+
+        <div class="card">
+          <h4>Riwayat Order per Hari</h4>
+          <div id="ordersByDay"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="small">📄 <span id="footerDoc" class="hidden"><a href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku" target="_blank">Dokumen Sahabatku</a></span> — © 2025 Sahabatku Delivery</footer>
+</div>
+
+<!-- Modal image viewer -->
+<div id="imgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999">
+  <div style="max-width:720px;width:94%;background:white;padding:14px;border-radius:12px;position:relative">
+    <div style="text-align:right"><button id="closeImgModal" class="secondary">Tutup</button></div>
+    <div style="text-align:center;margin-top:8px">
+      <img id="imgModalImg" src="" alt="Nota" style="max-width:100%;height:auto;border-radius:8px;border:1px solid #ddd" />
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+        <button id="modalSaveBtn">Simpan ke Galeri (Download)</button>
+        <button id="modalShareBtn" class="secondary">Bagikan ke WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================
+   Data model, helpers, storage
+   ============================ */
+const sampleUsers = {
+  "Sonia":"A0103",
+  "Alfan":"A0106",
+  "Hafiz":"A0108",
+  "Gilang":"A0109",
+  "Kardianto":"A0110",
+  "Eblek":"A0112",
+  "Nandar":"A0117",
+  "Pitri":"A0115",
+  "Robi":"A0118",
+  "Hambali":"A0119",
+  "Admin": "A1111"
+};
+let currentUser = null;
+let editingNoteId = null;
+let currentSavedNoteId = null;
+let modalCurrentNote = null;
+
+/* ---------- Login/Logout ---------- */
+document.getElementById('btnDemo').addEventListener('click', ()=>{document.getElementById('loginUser').value='Sonia';document.getElementById('loginPass').value='A0103';});
+document.getElementById('btnLogin').addEventListener('click', doLogin);
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(u && sampleUsers[u] && sampleUsers[u] === p){
+    currentUser = u;
+    localStorage.setItem('currentUser', u);
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('curUser').innerText = currentUser;
+    // restore draft if any
+    restoreDraftIfAny();
+    document.getElementById('docLinkWrap').classList.remove('hidden');
+    document.getElementById('footerDoc').classList.remove('hidden');
+    initForUser();
+  } else {
+    document.getElementById('loginMsg').innerText = 'Username/password salah (cek demo).';
+  }
+}
+window.addEventListener('load', ()=>{
+  const saved = localStorage.getItem('currentUser');
+  if(saved && sampleUsers[saved]){
+    document.getElementById('loginUser').value = saved;
+    document.getElementById('loginPass').value = sampleUsers[saved];
+    doLogin();
+  }
+});
+
+/* Logout: before logout, save draft (form state) automatically */
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  if(currentUser){
+    saveDraftBeforeLogout();
+  }
+  // simulate return to initial login screen:
+  localStorage.removeItem('currentUser');
+  // reload page to reset UI cleanly
+  location.reload();
+});
+
+/* ---------- Draft handling (auto-save on logout) ---------- */
+function getDraftKey(){ return currentUser + '_draft'; }
+function saveDraftBeforeLogout(){
+  try{
+    const draft = gatherFormDraft();
+    localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+  }catch(e){ console.warn('Gagal simpan draft', e); }
+}
+function restoreDraftIfAny(){
+  try{
+    const raw = localStorage.getItem(getDraftKey());
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    // restore fields to form
+    if(d.custPhone) document.getElementById('custPhone').value = d.custPhone;
+    if(d.items && Array.isArray(d.items) && d.items.length){
+      document.getElementById('itemsArea').innerHTML = '';
+      d.items.forEach(it => addItemUI({name:it.name, qty:it.qty, price:it.price}));
+    }
+    if(typeof d.ongkir !== 'undefined') document.getElementById('ongkir').value = d.ongkir;
+    // restore tambahan
+    document.getElementById('tambahanArea').innerHTML = '';
+    if(d.tambahans && Array.isArray(d.tambahans)){
+      d.tambahans.forEach(t => addTambahanUI(t));
+    }
+    updateTotals();
+    // clear draft after restoring so it doesn't auto-apply again
+    localStorage.removeItem(getDraftKey());
+  }catch(e){ console.warn('gagal restore draft', e); }
+}
+function gatherFormDraft(){
+  // return a plain object representing current form
+  const items = [];
+  document.querySelectorAll('#itemsArea .item-card').forEach(c=>{
+    items.push({
+      name: c.querySelector('.iname').value || '',
+      qty: Number(c.querySelector('.iqty').value) || 0,
+      price: Number(c.querySelector('.iprice').value) || 0
+    });
+  });
+  const tambahans = [];
+  document.querySelectorAll('#tambahanArea .tambahan-item').forEach(t=>{
+    tambahans.push({
+      type: t.querySelector('.t-type').value || '',
+      nominal: Number(t.querySelector('.t-nom').value) || 0
+    });
+  });
+  return {
+    custPhone: document.getElementById('custPhone').value || '',
+    items, ongkir: Number(document.getElementById('ongkir').value) || 0, tambahans
+  };
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('nav.tab button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.dataset.tab;
+    showTab(id);
+  });
+});
+function showTab(id){
+  document.querySelectorAll('.tabContent').forEach(t => t.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id === 'rekapTab'){
+    const now = new Date();
+    document.getElementById('rekapMonth').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    loadRekap();
+  } else if(id === 'riwayatTab'){
+    refreshNotaHistory();
+  } else if(id === 'pelacakTab'){
+    renderPelacak();
+  }
+}
+
+/* ===========================
+   Nota: items, tambahan UI
+   =========================== */
+const itemsArea = document.getElementById('itemsArea');
+const tambahanArea = document.getElementById('tambahanArea');
+document.getElementById('btnAddItem').addEventListener('click', ()=>addItemUI());
+document.getElementById('btnClearItems').addEventListener('click', ()=>{ clearItems(); updateTotals(); });
+document.getElementById('ongkir').addEventListener('input', updateTotals);
+document.getElementById('tambahanPreset').addEventListener('change', ()=>{ /* user selects preset - not auto add */ });
+
+let itemsCounter = 0;
+function addItemUI(pref={}){
+  itemsCounter++;
+  const id = 'item_' + Date.now() + '_' + itemsCounter;
+  const div = document.createElement('div');
+  div.className = 'item-card';
+  div.dataset.id = id;
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="flex:2"><label>Nama Item</label><input class="iname" type="text" value="${pref.name||''}" placeholder="Contoh: Nasi Goreng"></div>
+      <div style="flex:0.8"><label>Qty</label><input class="iqty" type="number" value="${pref.qty||1}" min="1"></div>
+      <div style="flex:1"><label>Harga Satuan (Rp)</label><input class="iprice" type="number" value="${pref.price||0}" min="0"></div>
+      <div style="flex:0.9;text-align:center"><label>Subtotal</label><div class="isub" style="font-weight:700;padding-top:6px">0</div></div>
+      <div style="width:80px"><button class="danger removeBtn" title="Hapus item">Hapus</button></div>
+    </div>
+  `;
+  itemsArea.appendChild(div);
+  const inputs = div.querySelectorAll('input');
+  inputs.forEach(i => i.addEventListener('input', updateTotals));
+  div.querySelector('.removeBtn').addEventListener('click', ()=>{ div.remove(); updateTotals(); });
+  updateTotals();
+}
+function clearItems(){ itemsArea.innerHTML=''; addItemUI(); }
+
+/* Tambahan area (multiple tambahan rows) */
+document.getElementById('btnAddTambahan').addEventListener('click', ()=>{
+  const preset = document.getElementById('tambahanPreset').value || '';
+  addTambahanUI({type:preset, nominal:0});
+});
+
+let tambahanCounter = 0;
+function addTambahanUI(pref={}){
+  tambahanCounter++;
+  const id = 'tamb_' + Date.now() + '_' + tambahanCounter;
+  const div = document.createElement('div');
+  div.className = 'tambahan-item';
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.alignItems = 'center';
+  div.style.marginTop = '8px';
+  div.innerHTML = `
+    <select class="t-type" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6f2fb">
+      <option ${!pref.type?'selected':''} value="">-- Pilih --</option>
+      <option ${pref.type==='Tambahan Ojeg'?'selected':''} value="Tambahan Ojeg">Tambahan Ojeg</option>
+      <option ${pref.type==='Tambahan Malam'?'selected':''} value="Tambahan Malam">Tambahan Malam</option>
+      <option ${pref.type==='Tambahan Tempat'?'selected':''} value="Tambahan Tempat">Tambahan Tempat</option>
+      <option ${pref.type==='Tambahan Hujan'?'selected':''} value="Tambahan Hujan">Tambahan Hujan</option>
+      <option ${pref.type==='Tambahan Melebihi Kapasitas'?'selected':''} value="Tambahan Melebihi Kapasitas">Tambahan Melebihi Kapasitas</option>
+      <option ${pref.type==='Tambahan Cash Minuman'?'selected':''} value="Tambahan Cash Minuman">Tambahan Cash Minuman</option>
+      <option ${pref.type==='Lainnya'?'selected':''} value="Lainnya">Lainnya</option>
+    </select>
+    <input class="t-nom" type="number" min="0" value="${pref.nominal||0}" style="width:160px;border-radius:8px;padding:8px;border:1px solid #e6f2fb" placeholder="Nominal (Rp)">
+    <button class="secondary t-remove">Hapus</button>
+  `;
+  tambahanArea.appendChild(div);
+  div.querySelector('.t-type').addEventListener('change', updateTotals);
+  div.querySelector('.t-nom').addEventListener('input', updateTotals);
+  div.querySelector('.t-remove').addEventListener('click', ()=>{ div.remove(); updateTotals(); });
+  updateTotals();
+}
+
+/* Update totals */
+function updateTotals(){
+  let total = 0;
+  document.querySelectorAll('#itemsArea .item-card').forEach(c=>{
+    const qty = Number(c.querySelector('.iqty').value) || 0;
+    const price = Number(c.querySelector('.iprice').value) || 0;
+    const sub = qty * price;
+    c.querySelector('.isub').innerText = sub.toLocaleString('id-ID');
+    total += sub;
+  });
+  const ong = Number(document.getElementById('ongkir').value) || 0;
+  let sumTamb = 0;
+  document.querySelectorAll('#tambahanArea .tambahan-item').forEach(t=>{
+    sumTamb += Number(t.querySelector('.t-nom').value) || 0;
+  });
+  total += ong + sumTamb;
+  document.getElementById('totalPesanan').innerText = 'Rp ' + total.toLocaleString('id-ID');
+  return total;
+}
+
+/* ---------- Preview generation ---------- */
+function generatePreviewFromForm(){
+  const items = [];
+  let subtotal = 0;
+  document.querySelectorAll('#itemsArea .item-card').forEach(c=>{
+    const name = (c.querySelector('.iname').value||'').trim();
+    const qty = Number(c.querySelector('.iqty').value) || 0;
+    const price = Number(c.querySelector('.iprice').value) || 0;
+    const sub = qty * price;
+    items.push({name, qty, price, subtotal: sub});
+    subtotal += sub;
+  });
+  const ongkir = Number(document.getElementById('ongkir').value) || 0;
+  const tambahans = [];
+  let tambahanTotal = 0;
+  document.querySelectorAll('#tambahanArea .tambahan-item').forEach(t=>{
+    const type = t.querySelector('.t-type').value || '';
+    const nominal = Number(t.querySelector('.t-nom').value) || 0;
+    if(type || nominal) tambahans.push({type, nominal});
+    tambahanTotal += nominal;
+  });
+  const custPhone = (document.getElementById('custPhone').value || '').replace(/\D/g,'');
+  const kurir = currentUser || document.getElementById('kurirName').value || '';
+  const total = subtotal + ongkir + tambahanTotal;
+
+  const lines = [];
+  lines.push('🧾 NOTA SAHABATKU DELIVERY');
+  lines.push('==========================');
+  lines.push(`Kurir: ${kurir}`);
+  lines.push('--------------------------');
+  items.forEach((it,i)=>{
+    lines.push(`${i+1}. ${it.name || '(tanpa nama)'} (${it.qty} x Rp ${it.price.toLocaleString('id-ID')}) = Rp ${it.subtotal.toLocaleString('id-ID')}`);
+  });
+  lines.push('--------------------------');
+  lines.push(`Ongkir: Rp ${ongkir.toLocaleString('id-ID')}`);
+  if(tambahans.length){
+    tambahans.forEach(t=> lines.push(`${t.type || 'Tambahan'}: Rp ${Number(t.nominal).toLocaleString('id-ID')}`));
+  }
+  lines.push(`TOTAL: Rp ${total.toLocaleString('id-ID')}`);
+  lines.push('');
+  lines.push('Terimakasih sudah menggunakan jasa Sahabatku Delivery');
+  lines.push('Ditunggu orderan selanjutnya 🙏');
+
+  document.getElementById('notaPreview').innerText = lines.join('\n');
+
+  return {
+    items, ongkir, tambahans, total, custPhone, text: lines.join('\n'), kurir
+  };
+}
+
+/* ---------- Create image from preview using html2canvas ---------- */
+async function createImageFromPreview(quality=0.7){
+  const node = document.getElementById('notaPreview');
+  if(!node.innerText.trim()) throw new Error('Belum ada preview');
+  const canvas = await html2canvas(node, {scale:2, backgroundColor:'#ffffff', scrollY: -window.scrollY});
+  return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
+/* ---------- Utils blob/dataURL/download/share ---------- */
+function blobToDataURL(blob){
+  return new Promise(res=>{
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.readAsDataURL(blob);
+  });
+}
+function dataURLToBlob(dataURL){
+  const parts = dataURL.split(';base64,');
+  const mime = parts[0].split(':')[1];
+  const bstr = atob(parts[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--) u8arr[n] = bstr.charCodeAt(n);
+  return new Blob([u8arr], {type:mime});
+}
+function downloadDataURL(dataURL, filename){
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+async function shareDataURLWithFallback(dataURL, custPhone=''){
+  try{
+    const blob = dataURLToBlob(dataURL);
+    const file = new File([blob], `nota_${Date.now()}.jpg`, {type: 'image/jpeg'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title: 'Nota Sahabatku', text: 'Nota pesanan Anda'});
+      if(custPhone) window.open(`https://wa.me/${custPhone}`, '_blank');
+      return;
+    } else {
+      const win = window.open('', '_blank');
+      win.document.write(`<p style="font-family:Arial,Helvetica,sans-serif">Simpan gambar lalu kirim ke WhatsApp.</p>`);
+      win.document.write(`<img src="${dataURL}" style="max-width:100%;height:auto;border:1px solid #ccc;border-radius:8px" />`);
+      if(custPhone) win.document.write(`<p><a href="https://wa.me/${custPhone}" target="_blank">Buka chat ke ${custPhone}</a></p>`);
+    }
+  }catch(e){
+    console.error(e);
+    const win = window.open('', '_blank');
+    win.document.write(`<img src="${dataURL}" style="max-width:100%;height:auto;border:1px solid #ccc;border-radius:8px" />`);
+    if(custPhone) win.document.write(`<p><a href="https://wa.me/${custPhone}" target="_blank">Buka chat ke ${custPhone}</a></p>`);
+  }
+}
+
+/* ===========================
+   Save / Edit / History / Image
+   =========================== */
+function getNotesArray(){ return JSON.parse(localStorage.getItem(currentUser + '_notas') || '[]'); }
+function saveNotesArray(arr){ localStorage.setItem(currentUser + '_notas', JSON.stringify(arr)); }
+
+document.getElementById('btnSaveForm').addEventListener('click', saveNoteFromForm);
+document.getElementById('btnSavePhoto').addEventListener('click', savePhotoOfCurrentNote);
+document.getElementById('btnSharePhoto').addEventListener('click', sharePhotoOfCurrentNote);
+document.getElementById('btnSaveAndShare').addEventListener('click', async ()=>{
+  const note = await saveNoteFromForm();
+  if(note){
+    currentSavedNoteId = note.id;
+    await savePhotoOfCurrentNote();
+    await sharePhotoOfCurrentNote();
+  }
+});
+document.getElementById('btnExportPreview').addEventListener('click', exportPreviewAsImage);
+document.getElementById('btnSharePreview').addEventListener('click', sharePreviewImage);
+
+async function saveNoteFromForm(){
+  const preview = generatePreviewFromForm();
+  if(!currentUser){ alert('Login dulu.'); return null; }
+  const key = currentUser + '_notas';
+  const arr = JSON.parse(localStorage.getItem(key) || '[]');
+
+  const noteObj = {
+    id: editingNoteId || ('nota_' + Date.now()),
+    createdAt: editingNoteId ? getNotesArray().find(n=>n.id===editingNoteId).createdAt : new Date().toISOString(),
+    items: preview.items,
+    ongkir: preview.ongkir,
+    tambahans: preview.tambahans,
+    total: preview.total,
+    custPhone: preview.custPhone,
+    text: preview.text,
+    kurir: preview.kurir,
+    imageData: null
+  };
+
+  if(editingNoteId){
+    const idx = arr.findIndex(n => n.id === editingNoteId);
+    if(idx >= 0) arr[idx] = {...arr[idx], ...noteObj};
+    editingNoteId = null;
+  } else {
+    arr.unshift(noteObj);
+  }
+  saveNotesArray(arr);
+  refreshNotaHistory();
+  renderPelacak();
+  loadRekap();
+  currentSavedNoteId = noteObj.id;
+  document.getElementById('btnSavePhoto').classList.remove('hidden');
+  document.getElementById('btnSharePhoto').classList.remove('hidden');
+  alert('Nota berhasil disimpan.');
+  return noteObj;
+}
+
+/* Save photo for a saved note (download + attach to note) */
+async function savePhotoOfCurrentNote(){
+  if(!currentSavedNoteId){ alert('Pilih nota yang sudah disimpan (lihat riwayat) atau simpan terlebih dulu.'); return; }
+  const arr = getNotesArray();
+  const note = arr.find(n => n.id === currentSavedNoteId);
+  if(!note){ alert('Nota tidak ditemukan.'); return; }
+  try{
+    // regenerate preview based on saved note content (ensuring preview reflects saved)
+    // create temporary preview UI from note.text
+    document.getElementById('notaPreview').innerText = note.text;
+    const blob = await createImageFromPreview(0.65);
+    const dataURL = await blobToDataURL(blob);
+    note.imageData = dataURL;
+    saveNotesArray(arr);
+    // download to gallery
+    downloadDataURL(dataURL, `nota_${currentUser}_${Date.now()}.jpg`);
+    alert('Foto nota tersimpan & di-download ke galeri.');
+  }catch(e){ console.error(e); alert('Gagal menyimpan foto nota.'); }
+}
+
+/* Share photo for current saved note */
+async function sharePhotoOfCurrentNote(){
+  if(!currentSavedNoteId){ alert('Pilih nota tersimpan dulu.'); return; }
+  const arr = getNotesArray();
+  const note = arr.find(n => n.id === currentSavedNoteId);
+  if(!note){ alert('Nota tidak ditemukan'); return; }
+  if(!note.imageData){
+    await savePhotoOfCurrentNote();
+    const arr2 = getNotesArray();
+    const n2 = arr2.find(x=>x.id===currentSavedNoteId);
+    if(n2 && n2.imageData) return shareDataURLWithFallback(n2.imageData, n2.custPhone);
+    return;
+  } else {
+    return shareDataURLWithFallback(note.imageData, note.custPhone);
+  }
+}
+
+/* Export/Share preview without saving */
+async function exportPreviewAsImage(){
+  try{
+    const blob = await createImageFromPreview(0.7);
+    const dataURL = await blobToDataURL(blob);
+    downloadDataURL(dataURL, `nota_preview_${Date.now()}.jpg`);
+    alert('Preview di-download ke galeri.');
+  }catch(e){ console.error(e); alert('Gagal ekspor preview.'); }
+}
+async function sharePreviewImage(){
+  try{
+    const blob = await createImageFromPreview(0.7);
+    const dataURL = await blobToDataURL(blob);
+    await shareDataURLWithFallback(dataURL, (document.getElementById('custPhone').value||'').replace(/\D/g,''));
+  }catch(e){ console.error(e); alert('Gagal share preview.'); }
+}
+
+/* ---------- History UI (lihat/edit/hapus/save/share) ---------- */
+function refreshNotaHistory(){
+  refreshNotaHistoryUI();
+  renderPelacak();
+}
+
+function refreshNotaHistoryUI(){
+  if(!currentUser) return;
+  const arr = getNotesArray();
+  const el = document.getElementById('notaHistory');
+  if(!arr.length){ el.innerHTML = '<p class="small">Belum ada nota tersimpan.</p>'; return; }
+  let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+  arr.forEach(n=>{
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:10px;background:linear-gradient(180deg, #ffffff, #fbfeff)">
+      <div style="flex:1">
+        <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
+        <div style="font-weight:700">Total: Rp ${Number(n.total).toLocaleString('id-ID')}</div>
+        <div class="small">Tambahan: ${n.tambahans && n.tambahans.length ? n.tambahans.map(t=>`${t.type||'-'} Rp ${Number(t.nominal).toLocaleString('id-ID')}`).join(', ') : '-'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="handleViewNote('${n.id}')">Lihat</button>
+        <button onclick="handleEditNote('${n.id}')" class="secondary">Edit</button>
+        <button onclick="handleSavePhoto('${n.id}')" class="btn-inline">Save Foto</button>
+        <button onclick="handleShareNote('${n.id}')" class="btn-inline secondary">Bagikan</button>
+        <button onclick="handleDeleteNote('${n.id}')" class="danger">Hapus</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* Actions */
+function handleViewNote(id){
+  const arr = getNotesArray();
+  const n = arr.find(x=>x.id===id);
+  if(!n){ alert('Nota tidak ditemukan'); return; }
+  document.getElementById('notaPreview').innerText = n.text;
+  currentSavedNoteId = n.id;
+  document.getElementById('btnSavePhoto').classList.remove('hidden');
+  document.getElementById('btnSharePhoto').classList.remove('hidden');
+  if(n.imageData){
+    openImageModal(n.imageData, n);
+  } else {
+    if(confirm('Foto belum tersedia. Buat ulang foto sekarang dan simpan ke galeri?')){
+      recreateImageFromNote(n.id);
+    }
+  }
+}
+
+function handleEditNote(id){
+  const arr = getNotesArray();
+  const n = arr.find(x=>x.id===id);
+  if(!n) return alert('Nota tidak ditemukan');
+  editingNoteId = id;
+  currentSavedNoteId = id;
+  document.getElementById('custPhone').value = n.custPhone || '';
+  document.getElementById('kurirName').value = n.kurir || currentUser;
+  // populate items
+  document.getElementById('itemsArea').innerHTML = '';
+  (n.items||[]).forEach(it => addItemUI({name:it.name, qty:it.qty, price:it.price}));
+  // populate tambahan
+  document.getElementById('tambahanArea').innerHTML = '';
+  (n.tambahans||[]).forEach(t=> addTambahanUI({type:t.type, nominal:t.nominal}));
+  document.getElementById('ongkir').value = n.ongkir || 0;
+  updateTotals();
+  // show save/photo buttons
+  document.getElementById('btnSavePhoto').classList.remove('hidden');
+  document.getElementById('btnSharePhoto').classList.remove('hidden');
+  showTab('notaTab');
+}
+
+async function handleSavePhoto(id){
+  const arr = getNotesArray();
+  const n = arr.find(x=>x.id===id);
+  if(!n) return alert('Nota tidak ditemukan');
+  if(n.imageData){
+    downloadDataURL(n.imageData, `nota_${currentUser}_${Date.now()}.jpg`);
+    alert('Foto di-download ulang ke galeri.');
+  } else {
+    await recreateImageFromNote(id);
+  }
+}
+
+async function handleShareNote(id){
+  const arr = getNotesArray();
+  const n = arr.find(x=>x.id===id);
+  if(!n) return alert('Nota tidak ditemukan');
+  if(n.imageData){
+    shareDataURLWithFallback(n.imageData, n.custPhone);
+  } else {
+    const url = await recreateImageFromNote(id);
+    if(url) shareDataURLWithFallback(url, n.custPhone);
+  }
+}
+
+function handleDeleteNote(id){
+  if(!confirm('Hapus nota dari riwayat? (Rekap/pelacak akan diperbarui)')) return;
+  let arr = getNotesArray();
+  arr = arr.filter(x=>x.id !== id);
+  saveNotesArray(arr);
+  refreshNotaHistory();
+  loadRekap();
+  renderPelacak();
+}
+
+/* ---------- Recreate image from a saved note ---------- */
+async function recreateImageFromNote(id){
+  const arr = getNotesArray();
+  const n = arr.find(x=>x.id===id);
+  if(!n) return null;
+  // create simple node using n.text
+  const temp = document.createElement('div');
+  temp.style.width = '700px';
+  temp.style.padding = '14px';
+  temp.style.background = '#ffffff';
+  temp.style.color = '#000';
+  temp.style.fontFamily = 'Arial, sans-serif';
+  temp.style.fontSize = '14px';
+  temp.innerHTML = `<div style="font-weight:700;color:#0b4870;font-size:18px">Sahabatku Delivery</div>
+    <div style="margin-top:8px;white-space:pre-wrap;">${n.text.replace(/\n/g,'<br>')}</div>`;
+  document.body.appendChild(temp);
+  try{
+    const canvas = await html2canvas(temp, {scale:2, backgroundColor:'#ffffff'});
+    const dataURL = canvas.toDataURL('image/jpeg', 0.68);
+    const idx = arr.findIndex(x=>x.id===id);
+    if(idx >= 0){ arr[idx].imageData = dataURL; saveNotesArray(arr); refreshNotaHistory(); }
+    downloadDataURL(dataURL, `nota_${currentUser}_${Date.now()}.jpg`);
+    alert('Foto nota dibuat ulang & di-download ke galeri.');
+    return dataURL;
+  }catch(e){ console.error(e); alert('Gagal membuat ulang gambar nota.'); return null; }
+  finally{ temp.remove(); }
+}
+
+/* ---------- Modal viewer ---------- */
+const imgModal = document.getElementById('imgModal');
+const imgModalImg = document.getElementById('imgModalImg');
+document.getElementById('closeImgModal').addEventListener('click', ()=> imgModal.style.display='none');
+document.getElementById('modalSaveBtn').addEventListener('click', ()=>{ if(modalCurrentNote && modalCurrentNote.imageData){ downloadDataURL(modalCurrentNote.imageData, `nota_${currentUser}_${Date.now()}.jpg`); alert('Gambar di-download.'); }});
+document.getElementById('modalShareBtn').addEventListener('click', ()=>{ if(modalCurrentNote && modalCurrentNote.imageData) shareDataURLWithFallback(modalCurrentNote.imageData, modalCurrentNote.custPhone); });
+function openImageModal(dataURL, noteObj){ modalCurrentNote = noteObj; imgModalImg.src = dataURL; imgModal.style.display='flex'; }
+
+/* ---------- Pelacak & Rekap (computed dari notes) ---------- */
+function renderPelacak(){
+  const arr = getNotesArray();
+  const today = new Date().toISOString().slice(0,10);
+  const todayNotes = arr.filter(n => n.createdAt.slice(0,10) === today);
+  const sumToday = todayNotes.reduce((s,n)=> s + (Number(n.total)||0), 0);
+  const summaryEl = document.getElementById('summaryToday');
+  if(todayNotes.length===0) summaryEl.innerText = 'Tidak ada order hari ini.';
+  else summaryEl.innerHTML = `${todayNotes.length} order hari ini — Total Rp ${sumToday.toLocaleString('id-ID')}`;
+
+  // group by day
+  const byDay = {};
+  arr.forEach(n=>{
+    const d = n.createdAt.slice(0,10);
+    if(!byDay[d]) byDay[d] = {count:0,total:0};
+    byDay[d].count++; byDay[d].total += Number(n.total)||0;
+  });
+  const ordersByDayEl = document.getElementById('ordersByDay');
+  let html = '';
+  const days = Object.keys(byDay).sort((a,b)=> b.localeCompare(a));
+  if(days.length===0) html = '<p class="small">Belum ada order</p>';
+  else days.forEach(d=>{
+    html += `<div style="border:1px solid #eef6ff;padding:10px;border-radius:8px;margin-bottom:8px">
+      <div><b>${new Date(d).toLocaleDateString('id-ID')}</b></div>
+      <div class="small">Order: ${byDay[d].count} — Total: Rp ${byDay[d].total.toLocaleString('id-ID')}</div>
+    </div>`;
+  });
+  ordersByDayEl.innerHTML = html;
+}
+
+/* Rekap bulanan (from notes: count, ongkir, tambahans, total) */
+document.getElementById('btnLoadRekap').addEventListener('click', loadRekap);
+function loadRekap(){
+  const ym = document.getElementById('rekapMonth').value;
+  if(!ym){ alert('Pilih bulan'); return; }
+  const [year, month] = ym.split('-').map(Number);
+  const arr = getNotesArray();
+  const byDate = {};
+  arr.forEach(n=>{
+    const d = new Date(n.createdAt);
+    if(d.getFullYear()===year && (d.getMonth()+1)===month){
+      const key = n.createdAt.slice(0,10);
+      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0};
+      byDate[key].count++;
+      byDate[key].ongkir += Number(n.ongkir)||0;
+      if(Array.isArray(n.tambahans)) byDate[key].tambahan += n.tambahans.reduce((s,t)=> s + (Number(t.nominal)||0), 0);
+      byDate[key].total += Number(n.total)||0;
+    }
+  });
+  const tbody = document.getElementById('rekapBody'); tbody.innerHTML = '';
+  let sumNota=0,sumO=0,sumT=0,sumTot=0;
+  Object.keys(byDate).sort().forEach(k=>{
+    const v = byDate[k];
+    tbody.innerHTML += `<tr><td>${new Date(k).toLocaleDateString('id-ID')}</td><td>${v.count}</td><td>${v.ongkir.toLocaleString('id-ID')}</td><td>${v.tambahan.toLocaleString('id-ID')}</td><td>${v.total.toLocaleString('id-ID')}</td></tr>`;
+    sumNota += v.count; sumO += v.ongkir; sumT += v.tambahan; sumTot += v.total;
+  });
+  document.getElementById('sumNota').innerText = sumNota;
+  document.getElementById('sumOngkir').innerText = sumO.toLocaleString('id-ID');
+  document.getElementById('sumTambahan').innerText = sumT.toLocaleString('id-ID');
+  document.getElementById('sumTotal').innerText = sumTot.toLocaleString('id-ID');
+}
+
+/* ---------- Init / helpers ---------- */
+function initForUser(){
+  document.getElementById('curUser').innerText = currentUser;
+  document.getElementById('kurirName').value = currentUser;
+  clearItems();
+  // ensure at least one tambahan area empty
+  tambahanArea.innerHTML = '';
+  updateTotals();
+  refreshNotaHistory();
+  renderPelacak();
+  showTab('notaTab');
+  // reveal doc link
+  document.getElementById('docLinkWrap').classList.remove('hidden');
+  document.getElementById('footerDoc').classList.remove('hidden');
+}
+
+/* expose for console debugging */
+window.createImageFromPreview = createImageFromPreview;
+window.generatePreviewFromForm = generatePreviewFromForm;
+
+</script>
+<script>
+// ... script kamu yang sudah ada ...
+
+/* Auto-save setiap ada input di form nota */
+function enableAutoSaveForm(){
+  const formEls = document.querySelectorAll(
+    '#custPhone, #itemsArea input, #ongkir, #tambahanArea input, #tambahanArea select'
+  );
+
+  formEls.forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const draft = gatherFormDraft();
+      localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+    });
+  });
+}
+
+// Modifikasi sedikit di doLogin supaya auto-save aktif setelah login
+function doLogin(){
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  if(users[user] && users[user].password===pass){
+    loggedUser=user;
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    initForUser();
+    restoreDraftIfAny();
+    enableAutoSaveForm(); // <<=== tambahkan ini
+  } else {
+    document.getElementById('loginError').innerText='Username atau password salah';
+  }
+}
+</script>
+<script>
+// ... script kamu ...
+
+function logout(){
+  loggedUser = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+</script>
+</body>
+</html>
+
+
+
