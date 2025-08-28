@@ -1,2 +1,1 @@
-# sahabatkubisa
 Sahabatku BISA
