@@ -876,12 +876,14 @@ function loadRekap(){
   arr.forEach(n=>{
     const d = new Date(n.createdAt);
     if(d.getFullYear()===year && (d.getMonth()+1)===month){
-      const key = n.createdAt.slice(0,10);
+      const key = n.createdAt.slice(0,10);// YYYY-MM-DD
       if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0};
       byDate[key].count++;
       byDate[key].ongkir += Number(n.ongkir)||0;
-      if(Array.isArray(n.tambahans)) byDate[key].tambahan += n.tambahans.reduce((s,t)=> s + (Number(t.nominal)||0), 0);
-      byDate[key].total += Number(n.total)||0;
+      if(Array.isArray(n.tambahans)) {
+        byDate[key].tambahan += n.tambahans.reduce((s,t)=> s + (Number(t.nominal)||0), 0);
+    }
+      byDate[key].total = byDate[key].ongkir + byDate[key].tambahan;
     }
   });
   const tbody = document.getElementById('rekapBody'); tbody.innerHTML = '';
