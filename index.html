@@ -1023,40 +1023,58 @@
   /* ===================
      REKAP BULANAN
   ====================*/
-  el('btnLoadRekap').addEventListener('click', async ()=>{
-    if(!currentUser){ alert('Login dulu'); return; }
-    const ym = el('rekapMonth').value;
-    if(!ym){ alert('Pilih bulan'); return; }
-    const [year, month] = ym.split('-').map(Number);
+ el('btnLoadRekap').addEventListener('click', async ()=>{
+  if(!currentUser){ alert('Login dulu'); return; }
+  const ym = el('rekapMonth').value;
+  if(!ym){ alert('Pilih bulan'); return; }
+  const [year, month] = ym.split('-').map(Number);
 
-    const snap = await get(ref(db, `nota/${currentUser}`));
-    const val = snap.val()||{};
-    const arr = Object.values(val);
-    const byDate = {};
-    arr.forEach(n=>{
-      const d = new Date(n.createdAt);
-      if(d.getFullYear()===year && (d.getMonth()+1)===month){
-        const key = n.createdAt.slice(0,10);
-        if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0};
-        byDate[key].count++;
-        byDate[key].ongkir += Number(n.ongkir)||0;
-        const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
-        byDate[key].tambahan += t;
-        byDate[key].total += Number(n.total)||0;
-      }
-    });
-    const tbody = el('rekapBody'); tbody.innerHTML='';
-    let sumNota=0,sumO=0,sumT=0,sumTot=0;
-    Object.keys(byDate).sort().forEach(k=>{
-      const v = byDate[k];
-      tbody.innerHTML += `<tr><td>${new Date(k).toLocaleDateString('id-ID')}</td><td>${v.count}</td><td>${v.ongkir.toLocaleString('id-ID')}</td><td>${v.tambahan.toLocaleString('id-ID')}</td><td>${v.total.toLocaleString('id-ID')}</td></tr>`;
-      sumNota += v.count; sumO += v.ongkir; sumT += v.tambahan; sumTot += v.total;
-    });
-    el('sumNota').innerText = sumNota;
-    el('sumOngkir').innerText = sumO.toLocaleString('id-ID');
-    el('sumTambahan').innerText = sumT.toLocaleString('id-ID');
-    el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
+  const snap = await get(ref(db, `nota/${currentUser}`));
+  const val = snap.val()||{};
+  const arr = Object.values(val);
+  const byDate = {};
+
+  arr.forEach(n=>{
+    const d = new Date(n.createdAt);
+    if(d.getFullYear()===year && (d.getMonth()+1)===month){
+      const key = n.createdAt.slice(0,10);
+      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0};
+      byDate[key].count++;
+      byDate[key].ongkir += Number(n.ongkir)||0;
+      const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
+      byDate[key].tambahan += t;
+      // total harian = ongkir + tambahan
+      byDate[key].total += (Number(n.ongkir)||0) + t;
+    }
   });
+
+  const tbody = el('rekapBody'); 
+  tbody.innerHTML='';
+  let sumNota=0,sumO=0,sumT=0,sumTot=0;
+
+  Object.keys(byDate).sort().forEach(k=>{
+    const v = byDate[k];
+    const totalHarian = v.ongkir + v.tambahan;
+    tbody.innerHTML += `
+      <tr>
+        <td>${new Date(k).toLocaleDateString('id-ID')}</td>
+        <td>${v.count}</td>
+        <td>${v.ongkir.toLocaleString('id-ID')}</td>
+        <td>${v.tambahan.toLocaleString('id-ID')}</td>
+        <td>${totalHarian.toLocaleString('id-ID')}</td>
+      </tr>`;
+    sumNota += v.count;
+    sumO += v.ongkir; 
+    sumT += v.tambahan; 
+    sumTot += totalHarian;
+  });
+
+  el('sumNota').innerText = sumNota;
+  el('sumOngkir').innerText = sumO.toLocaleString('id-ID');
+  el('sumTambahan').innerText = sumT.toLocaleString('id-ID');
+  el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
+});
+
 
   /* ===================
      PELACAK: No Nota / Tanggal
