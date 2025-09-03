@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Jadwal & Absensi Kurir — Sahabatku Delivery</title>
+<style>
+/* ===== Reset & Root ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#0288d1; --primary-dark:#05668d;
+  --bg:#f0f4f8; --ok:#43a047; --danger:#e53935;
+  --text:#233; --radius:14px; --shadow:0 10px 25px rgba(0,0,0,.10);
+  --pending:#f9a825; --popup-duration:5000ms;
+}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif;background:var(--bg);color:var(--text);}
+.container{max-width:1200px;margin:16px auto;padding:16px}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+h1{color:var(--primary-dark);text-align:center;font-weight:800;font-size:clamp(20px,3.8vw,32px);margin-bottom:10px}
+
+/* ===== Topbar & Admin ===== */
+.topbar, .admin-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:8px 0 14px}
+.topbar .btn, .admin-bar .btn{
+  padding:10px 14px;border:none;border-radius:12px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:all .25s ease;
+  box-shadow:0 2px 6px rgba(0,0,0,.12);
+}
+.topbar .btn:hover, .admin-bar .btn:hover{filter:brightness(.95);transform:translateY(-1px);}
+.topbar .btn.ghost{background:#e8f4fb;color:var(--primary-dark)}
+.topbar .btn.active{background:var(--primary-dark)}
+.admin-bar .btn.alt{background:#e8f4fb;color:var(--primary-dark)}
+.admin-bar .btn.danger{background:var(--danger)}
+.admin-bar{display:none}
+
+/* ===== Tabs ===== */
+.tab{display:none}.tab.active{display:block}
+.table-wrap{overflow:auto;border-radius:12px;border:1px solid #eef3f7;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #eef3f7;text-align:center}
+thead th{position:sticky;top:0;background:var(--primary);color:#fff;z-index:1}
+tbody tr:hover td{background:#f2fbff}
+
+/* ===== Badges & Buttons ===== */
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:600;font-size:12px}
+.badge.on{background:#e9f7ef;color:#1b5e20;border:1px solid #cdebd6}
+.badge.off{background:#ffebee;color:#b71c1c;border:1px solid #ffcdd2}
+.badge.pending{background:#fff8e1;color:#f9a825;border:1px solid #ffe082}
+.btn-mini{padding:6px 10px;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+.btn-on{background:var(--ok)}.btn-off{background:var(--danger)}.btn-pending{background:var(--pending)}
+.btn-on:hover,.btn-off:hover,.btn-pending:hover{filter:brightness(.95);transform:translateY(-1px)}
+
+/* ===== Overlay Login ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999}
+.login{background:#fff;width:min(92vw,460px);border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.10);padding:22px;text-align:center}
+.login h3{color:var(--primary-dark);margin-bottom:10px}
+.login input{width:100%;padding:12px;border:1px solid #cfe5f5;border-radius:10px;margin:8px 0}
+.login .btn{width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:800;cursor:pointer}
+.small{font-size:13px;color:#666;margin-top:8px}
+
+/* ===== Popup ===== */
+#popup{
+  position:fixed;top:14px;right:14px;width:min(92vw,340px);
+  background:rgba(255,255,255,.95);color:#123;border:1px solid #e8eef5;
+  border-left:6px solid var(--ok);border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+  padding:12px 16px;display:none;z-index:9998;
+  backdrop-filter:saturate(1.2) blur(4px);
+  opacity:0;transform:translateY(-12px);
+  transition:opacity .35s ease, transform .35s ease, border-color .25s ease;
+}
+#popup.show{display:block;opacity:1;transform:translateY(0);}
+#popup .title{font-weight:800;margin-bottom:4px;font-size:14px;display:flex;align-items:center;gap:6px}
+#popup .meta{font-size:12px;color:#566}
+
+/* ===== Dropdown modern ===== */
+select{padding:10px 12px;border:1px solid #cfe5f5;border-radius:10px;min-width:200px;background:#f8fcff;cursor:pointer;transition:all .25s ease;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+select:hover, select:focus{border-color:var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+#pengajuanForm{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;justify-content:center}
+
+/* ===== Responsive ===== */
+@media (max-width:600px){.topbar{gap:8px}.topbar .btn{flex:1}th, td{padding:9px}}
+
+/* ===== Tambahan styling form pengajuan ===== */
+#pengajuanForm {
+  background: #f8fcff;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid #e3eef7;
+}
+
+#pengajuanForm select {
+  min-width: 180px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cfe5f5;
+  background: white;
+  font-weight: 500;
+}
+
+#pengajuanForm button {
+  background: var(--primary);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #fff;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+#pengajuanForm button:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+</style>
+
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h1>Jadwal & Absensi Kurir — Sahabatku Delivery</h1>
+
+<div class="topbar" id="topbar">
+<button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
+<button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
+<button class="btn ghost" id="btn-absensi-tab" data-tab="tab-absensi" style="display:none;">Absensi Harian</button>
+<button class="btn ghost" id="btn-approval-tab" data-tab="tab-approval" style="display:none;">Approval Kurir</button>
+<span class="split"></span>
+<div class="month-wrap">
+<label for="monthPick"><small>Bulan:</small></label>
+<input type="month" id="monthPick"/>
+</div>
+<button class="btn" id="btn-login">Login</button>
+</div>
+
+<div class="admin-bar" id="adminBar">
+<button class="btn alt" id="btn-save">Save Data (Firestore)</button>
+<button class="btn" id="btn-add">Tambah Kurir</button>
+<button class="btn danger" id="btn-del">Hapus Kurir</button>
+<button class="btn alt" id="btn-regen">Regenerasi Off</button>
+<button class="btn" id="btn-logout" style="display:none">Logout</button>
+</div>
+
+<!-- Tabs -->
+<div id="tab-jadwal" class="tab active">
+<div id="pengajuanForm">
+<select id="pengajuanTanggal"></select>
+<select id="penggantiKurir"></select>
+<select id="tanggalTukar"></select>
+<button class="btn" id="btnAjukan">Ajukan Tukar Off</button>
+</div>
+<div class="table-wrap">
+<table id="tableJadwal">
+<thead><tr><th>Tanggal</th><th>Hari</th><th>Kurir Off</th><th>Pengganti</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<div id="tab-absensi" class="tab">
+<div class="table-wrap">
+<table id="tableAbsensi">
+<thead><tr><th>Tanggal</th><th>Nama Kurir</th><th>Status</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<div id="tab-rekap" class="tab">
+<div class="table-wrap">
+<table id="tableRekap">
+<thead><tr><th>Nama Kurir</th><th>Total On</th><th>Total Off</th><th>Skor Keaktifan</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<div id="tab-approval" class="tab">
+<div class="table-wrap">
+<table id="tableApproval">
+<thead><tr><th>Tanggal</th><th>Kurir Asal</th><th>Pengganti</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div class="overlay" id="overlay">
+<div class="login">
+<h3>Login Admin (Firebase)</h3>
+<input id="fbEmail" placeholder="Email admin (Firebase)"/>
+<input id="fbPass" placeholder="Password (Firebase)" type="password"/>
+<button class="btn" id="doFirebaseLogin">Login</button>
+<div class="small">Akses admin hanya untuk UID: <code>J2rOyqBbEVaehucXpJl7jHh90Iz2</code></div>
+<div style="margin-top:10px">
+<button class="btn ghost" id="closeOverlay">Tutup</button>
+</div>
+</div>
+</div>
+
+<div id="popup">
+<div class="title"><span class="icon">✅</span><span id="popTitle">Semua On</span></div>
+<div class="meta" id="popMeta">–</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ===== Firebase Init =====
+const firebaseConfig = {
+  apiKey: "AIzaSyD2tC4MlutCuUZvg06yGKT3jveaTGjtZAg",
+  authDomain: "absensikurir.firebaseapp.com",
+  projectId: "absensikurir",
+  storageBucket: "absensikurir.firebasestorage.app",
+  messagingSenderId: "395111603667",
+  appId: "1:395111603667:web:119be647937508d890a326",
+  measurementId: "G-V4L30EH9GP"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const ADMIN_UID = "J2rOyqBbEVaehucXpJl7jHh90Iz2";
+
+// ===== Data =====
+let kurirList = ["Sonia","Pitri","Hambali","Alfan","Gilang","Hafiz","Kardi","Robi","Ulum","Eblek","Nandar"];
+let jadwalData = {};
+let isFirebaseAdmin = false;
+const LS_KEYS = {kurir:'kurirList_v3', jadwal:'jadwalData_v3', lastMonth:'lastMonth_v3'};
+const idDays = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+const MASTER_DOC = db.collection('appdata').doc('master');
+const JADWAL_COLLECTION = db.collection('jadwal_off');
+const PENGAJUAN_COLLECTION = db.collection('pengajuan_off');
+
+// ===== Helpers =====
+const pad2 = n => String(n).padStart(2,'0');
+const fmtISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const parseISODate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+
+// ===== LocalStorage =====
+function loadLocal(){ try{ const k=localStorage.getItem(LS_KEYS.kurir); const j=localStorage.getItem(LS_KEYS.jadwal); if(k) kurirList=JSON.parse(k); if(j) jadwalData=JSON.parse(j);}catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LS_KEYS.kurir, JSON.stringify(kurirList)); localStorage.setItem(LS_KEYS.jadwal, JSON.stringify(jadwalData));}catch(e){} }
+
+// ===== Generate Jadwal Fair =====
+function generateFairOffForMonth(ym){
+  const [y,m]=ym.split('-').map(Number), year=y, month=m-1;
+  const days = new Date(year, month+1, 0).getDate();
+  const pool = kurirList.slice();
+  const counts = Object.fromEntries(pool.map(k=>[k,0]));
+  const arr=[];
+  for(let d=1; d<=days; d++){
+    const minV = Math.min(...Object.values(counts));
+    const cands = pool.filter(k=>counts[k]===minV);
+    const pick = cands[Math.floor(Math.random()*cands.length)];
+    counts[pick]+=1;
+    const dt=new Date(year, month, d);
+    arr.push({ tanggal: fmtISO(dt), off: pick, pengganti: '' });
+  }
+  jadwalData[ym]=arr;
+}
+
+// ===== Render =====
+function renderJadwal(ym){
+  const tbody = document.querySelector('#tableJadwal tbody'); 
+  tbody.innerHTML='';
+  if(!jadwalData[ym]) generateFairOffForMonth(ym);
+
+  const rows = jadwalData[ym];
+  rows.forEach(it=>{
+    const d = parseISODate(it.tanggal);
+    const hari = idDays[d.getDay()];
+    const tr = document.createElement('tr');
+
+    // Tanggal & Hari
+    const tdTanggal = document.createElement('td'); 
+    tdTanggal.textContent = it.tanggal;
+    const tdHari = document.createElement('td'); 
+    tdHari.textContent = hari;
+
+    // Kolom Off: selalu tampil badge yg BISA di-klik oleh semua user
+    const tdOff = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = it.off ? 'badge off' : 'badge on';
+    badge.textContent = it.off || 'Semua On';
+    badge.style.cursor = 'pointer';
+    badge.title = 'Klik untuk mengajukan tukar off';
+    badge.onclick = ()=>{
+      // set tanggal yg diklik ke form, lalu refresh pilihan
+      document.getElementById('pengajuanTanggal').value = it.tanggal;
+      setupFormPengajuan();
+      popupShow('pending','Tanggal dipilih','Silakan lengkapi form pengajuan');
+    };
+    tdOff.appendChild(badge);
+
+    // Kolom Pengganti
+    const tdPeng = document.createElement('td'); 
+    tdPeng.textContent = it.pengganti || '—';
+
+    // Jika admin login, boleh klik-kanan badge utk quick edit (opsional)
+    if(isFirebaseAdmin){
+      badge.oncontextmenu = (e)=>{
+        e.preventDefault();
+        const nama = prompt('Set OFF hari ini untuk kurir (kosongkan untuk Semua On):', it.off || '');
+        if(nama!==null){
+          it.off = nama.trim();
+          it.pengganti = '';
+          quickSync();
+          popupShow(true,'OFF diperbarui',`${it.tanggal}: ${it.off || 'Semua On'}`);
+        }
+      };
+    }
+
+    tr.append(tdTanggal, tdHari, tdOff, tdPeng);
+    tbody.appendChild(tr);
+  });
+}
+
+
+function renderAbsensi(ym){
+  const tbody = document.querySelector('#tableAbsensi tbody'); tbody.innerHTML='';
+  if(!jadwalData[ym]) generateFairOffForMonth(ym);
+  jadwalData[ym].forEach(it=>{
+    kurirList.forEach(k=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${it.tanggal}</td><td>${k}</td>`;
+      let status = (k===it.off)?'Off':'On';
+      const tdS=document.createElement('td');
+      if(isFirebaseAdmin){
+        const btn=document.createElement('button');
+        btn.className='btn-mini ' + (status==='On'?'btn-on':'btn-off');
+        btn.textContent=status;
+        btn.onclick=()=>{ it.off=(status==='On')?k:''; quickSync(); };
+        tdS.appendChild(btn);
+      } else { const span=document.createElement('span'); span.className='badge '+(status==='On'?'on':'off'); span.textContent=status; tdS.appendChild(span); }
+      tr.appendChild(tdS); tbody.appendChild(tr);
+    });
+  });
+}
+
+function renderRekap(ym){
+  const tbody=document.querySelector('#tableRekap tbody'); tbody.innerHTML='';
+  if(!jadwalData[ym]) generateFairOffForMonth(ym);
+  const map=jadwalData[ym]; const sum=Object.fromEntries(kurirList.map(k=>[k,{on:0,off:0}]));
+  map.forEach(it=>{ kurirList.forEach(k=>{ if(k===it.off) sum[k].off++; else sum[k].on++; }); });
+  kurirList.forEach(k=>{
+    const {on,off}=sum[k]; const total=on+off||1; const skor=Math.round((on/total)*100);
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`; tbody.appendChild(tr);
+  });
+}
+
+// ===== Popup =====
+function popupShow(ok,title,meta){
+  const el=document.getElementById('popup'); el.classList.remove('ok','danger','pending'); el.classList.add(ok==='pending'?'pending':ok?'ok':'danger');
+  el.querySelector('.icon').textContent=ok==='pending'?'⏳':ok?'✅':'⚠️'; 
+  document.getElementById('popTitle').textContent=title;
+  document.getElementById('popMeta').textContent=meta||'';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+// ===== Quick Sync =====
+function quickSync(){ 
+  const ym=document.getElementById('monthPick').value;
+  renderJadwal(ym); renderAbsensi(ym); renderRekap(ym); renderApproval();
+  saveLocal(); localStorage.setItem(LS_KEYS.lastMonth, ym);
+}
+
+// ===== Form Pengajuan =====
+function setupFormPengajuan(){
+  const tanggalSel = document.getElementById('pengajuanTanggal');
+  const kurirSel = document.getElementById('penggantiKurir');
+  const tanggalTukarSel = document.getElementById('tanggalTukar');
+  const ym = document.getElementById('monthPick').value;
+
+  tanggalSel.innerHTML = ''; 
+  kurirSel.innerHTML=''; 
+  tanggalTukarSel.innerHTML='';
+
+  if(!jadwalData[ym]) generateFairOffForMonth(ym);
+
+  // Isi pilihan tanggal yg ada OFF-nya (lebih jelas buat pengajuan)
+  jadwalData[ym].forEach(it=>{
+    const opt = document.createElement('option'); 
+    opt.value=it.tanggal;
+    opt.textContent = it.tanggal + (it.off?` (Off: ${it.off})`:' (Semua On)');
+    tanggalSel.appendChild(opt);
+  });
+
+  // Isi list kurir
+  kurirList.forEach(k=>{
+    const opt = document.createElement('option'); 
+    opt.value=k; 
+    opt.textContent=k; 
+    kurirSel.appendChild(opt);
+  });
+
+  function refreshTanggalTukar(){
+    const kurir = kurirSel.value;
+    tanggalTukarSel.innerHTML='';
+    // Tanggal tukar = tanggal dimana kurir pengganti sedang OFF
+    jadwalData[ym].forEach(it=>{
+      if(it.off===kurir){
+        const opt = document.createElement('option'); 
+        opt.value=it.tanggal; 
+        opt.textContent=it.tanggal; 
+        tanggalTukarSel.appendChild(opt);
+      }
+    });
+  }
+
+  tanggalSel.onchange = refreshTanggalTukar;
+  kurirSel.onchange = refreshTanggalTukar;
+
+  // Default pertama kali
+  refreshTanggalTukar();
+}
+
+// ===== Pengajuan Tukar =====
+document.getElementById('btnAjukan').onclick = async()=>{
+  const tanggal = document.getElementById('pengajuanTanggal').value;
+  const pengganti = document.getElementById('penggantiKurir').value;
+  const tukarTanggal = document.getElementById('tanggalTukar').value;
+  if(!tanggal||!pengganti||!tukarTanggal) return alert('Pilih tanggal, kurir pengganti & tanggal tukar');
+  const ym = tanggal.slice(0,7);
+  const row = jadwalData[ym].find(it=>it.tanggal===tanggal);
+  if(!row || !row.off) return alert('Tidak ada kurir off pada tanggal ini');
+  try{
+    await PENGAJUAN_COLLECTION.add({
+      tanggal, tukarTanggal, asal:row.off, pengganti, status:'Pending', created: new Date().toISOString()
+    });
+    popupShow('pending','Pengajuan terkirim','Tunggu approval admin');
+  }catch(e){ alert('Gagal mengirim pengajuan: '+e.message); }
+};
+
+// ===== Approval =====
+function renderApproval(){
+  const tbody = document.querySelector('#tableApproval tbody'); 
+  tbody.innerHTML='';
+  PENGAJUAN_COLLECTION.orderBy('created','desc').onSnapshot(snap=>{
+    tbody.innerHTML='';
+    snap.forEach(doc=>{
+      const data = doc.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${data.tanggal}</td><td>${data.asal}</td><td>${data.pengganti}</td><td>${data.status}</td>`;
+
+      if(data.status==='Pending' && isFirebaseAdmin){
+        const tdA = document.createElement('td');
+
+        // Tombol Approve
+        const btnApprove = document.createElement('button'); 
+        btnApprove.textContent = 'Approve'; 
+        btnApprove.className = 'btn-mini btn-on';
+        btnApprove.onclick = async()=>{
+          if(!confirm('Yakin ingin menyetujui pengajuan ini?')) return;
+          const ym = data.tanggal.slice(0,7);
+          if(!jadwalData[ym]) generateFairOffForMonth(ym);
+          const row = jadwalData[ym].find(it=>it.tanggal===data.tanggal);
+          const swapRow = jadwalData[ym].find(it=>it.tanggal===data.tukarTanggal);
+          if(row && swapRow){
+            const tmp = row.off; 
+            row.off = swapRow.off; 
+            swapRow.off = tmp;
+            row.pengganti = ''; 
+            swapRow.pengganti = '';
+            await doc.ref.update({status:'Approved', approvedBy:ADMIN_UID});
+            saveFirestoreJadwal(ym);
+            quickSync();
+            popupShow(true,'Approval berhasil','Tanggal: '+data.tanggal+' ↔ '+data.tukarTanggal);
+          }
+        };
+        tdA.appendChild(btnApprove);
+
+        // Tombol Tolak
+        const btnReject = document.createElement('button');
+        btnReject.textContent = 'Tolak';
+        btnReject.className = 'btn-mini btn-off';
+        btnReject.style.marginLeft = '6px';
+        btnReject.onclick = async()=>{
+          if(!confirm('Yakin ingin MENOLAK pengajuan ini?')) return;
+          await doc.ref.update({status:'Rejected', rejectedBy:ADMIN_UID});
+          quickSync();
+          popupShow(false,'Pengajuan ditolak','Tanggal: '+data.tanggal);
+        };
+        tdA.appendChild(btnReject);
+
+        tr.appendChild(tdA);
+      } else { 
+        tr.appendChild(document.createElement('td')); 
+      }
+
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+// ===== Firestore Save =====
+function saveFirestoreJadwal(ym){
+  if(jadwalData[ym]) JADWAL_COLLECTION.doc(ym).set({data:jadwalData[ym]});
+}
+
+// ===== Topbar Tabs =====
+document.querySelectorAll('.topbar .btn[data-tab]').forEach(b=>{ b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.topbar .btn[data-tab]').forEach(bb=>bb.classList.remove('active'));
+  document.getElementById(b.dataset.tab).classList.add('active'); b.classList.add('active');
+}});
+
+// ===== Admin Actions =====
+document.getElementById('btn-add').onclick=()=>{ const nama=prompt('Nama Kurir baru:'); if(nama){ kurirList.push(nama); quickSync(); } };
+document.getElementById('btn-del').onclick=()=>{ const nama=prompt('Hapus kurir:'); const idx=kurirList.indexOf(nama); if(idx>-1){ kurirList.splice(idx,1); quickSync(); } };
+document.getElementById('btn-regen').onclick=()=>{ const ym=document.getElementById('monthPick').value; if(!ym) return; generateFairOffForMonth(ym); quickSync(); popupShow(true,'Regenerasi selesai') };
+document.getElementById('btn-save').onclick=async()=>{
+  try{ await MASTER_DOC.set({kurirList,updated:new Date().toISOString()});
+    for(const ym in jadwalData){ await JADWAL_COLLECTION.doc(ym).set({data:jadwalData[ym]}); }
+    popupShow(true,'Data disimpan di Firestore'); }catch(e){ popupShow(false,'Gagal save: '+e.message); }
+};
+
+// ===== Firebase Login =====
+document.getElementById('btn-login').onclick=()=>document.getElementById('overlay').style.display='flex';
+document.getElementById('closeOverlay').onclick=()=>document.getElementById('overlay').style.display='none';
+document.getElementById('doFirebaseLogin').onclick=async()=>{
+  const email=document.getElementById('fbEmail').value.trim();
+  const pass=document.getElementById('fbPass').value;
+  if(!email||!pass) return alert('Masukkan email & password Firebase.');
+  try{
+    const cred=await auth.signInWithEmailAndPassword(email,pass);
+    if(cred.user.uid===ADMIN_UID){
+      isFirebaseAdmin=true; setAdminUI();
+      document.getElementById('overlay').style.display='none';
+      popupShow(true,'Login admin berhasil','Sekarang bisa Approve & Save');
+    }else{ await auth.signOut(); alert('UID bukan admin.'); }
+  }catch(err){ alert('Login Firebase gagal: '+(err.message||err)); console.error(err); }
+};
+document.getElementById('btn-logout').onclick=async()=>{ if(isFirebaseAdmin){ try{ await auth.signOut(); }catch(e){} isFirebaseAdmin=false; setAdminUI(); popupShow(true,'Logout berhasil'); } };
+function setAdminUI(){
+  const show=isFirebaseAdmin;
+  document.getElementById('adminBar').style.display=show?'flex':'none';
+  document.getElementById('btn-absensi-tab').style.display=show?'':'none';
+  document.getElementById('btn-approval-tab').style.display=show?'':'none';
+  document.getElementById('btn-login').style.display=show?'none':'';
+  document.getElementById('btn-logout').style.display=show?'':'none';
+  quickSync();
+}
+
+// ===== Init =====
+loadLocal();
+document.getElementById('monthPick')// ===== Month Picker Auto-Render =====
+const monthPick = document.getElementById('monthPick');
+
+// Set default bulan ke bulan terakhir di localStorage atau bulan sekarang
+monthPick.value = localStorage.getItem(LS_KEYS.lastMonth) || new Date().toISOString().slice(0,7);
+
+// Fungsi render lengkap untuk bulan tertentu
+function renderForMonth(ym){
+  if(!jadwalData[ym]) generateFairOffForMonth(ym);
+  quickSync();           // render semua tabel & simpan local
+  setupFormPengajuan();  // update dropdown pengajuan
+}
+
+// Trigger pertama kali
+renderForMonth(monthPick.value);
+
+// Trigger saat user pilih bulan baru
+monthPick.onchange = () => {
+  renderForMonth(monthPick.value);
+};
+
+</script>
+</body>
+</html>
