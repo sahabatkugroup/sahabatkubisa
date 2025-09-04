@@ -1025,32 +1025,26 @@
   ====================*/
 el('btnLoadRekap').addEventListener('click', async ()=>{
   if(!currentUser){ alert('Login dulu'); return; }
-
   const ym = el('rekapMonth').value;
   if(!ym){ alert('Pilih bulan'); return; }
   const [year, month] = ym.split('-').map(Number);
 
   const snap = await get(ref(db, `nota/${currentUser}`));
   const val = snap.val()||{};
-  const arr = Object.entries(val); // [ [id, nota], ... ]
+  const arr = Object.values(val);
   const byDate = {};
 
-  arr.forEach(([id, n])=>{
+  arr.forEach(n=>{
     const d = new Date(n.createdAt);
-    const yearUTC = d.getUTCFullYear();
-    const monthUTC = d.getUTCMonth() + 1;
-
-    if(yearUTC === year && monthUTC === month){
-      const key = n.createdAt.slice(0,10); // tetap ambil tanggal asli dari Firebase
-      if(!byDate[key]) byDate[key] = {count:0, ongkir:0, tambahan:0, total:0, ids:[]};
-
+    if(d.getFullYear()===year && (d.getMonth()+1)===month){
+      const key = n.createdAt.slice(0,10);
+      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0, ids:[]};
       byDate[key].count++;
       byDate[key].ongkir += Number(n.ongkir)||0;
       const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
       byDate[key].tambahan += t;
       byDate[key].total += (Number(n.ongkir)||0) + t;
-
-      byDate[key].ids.push(id); // pakai key snapshot Firebase
+      byDate[key].ids.push(n.id || n._id || n.key); // simpan id nota
     }
   });
 
@@ -1064,7 +1058,7 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
 
     const tr = document.createElement('tr');
 
-    // Tanggal bisa diklik untuk update
+    // Tanggal jadi bisa diklik untuk update
     const tdDate = document.createElement('td');
     tdDate.innerText = new Date(k).toLocaleDateString('id-ID');
     tdDate.style.cursor = 'pointer';
@@ -1081,13 +1075,7 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
 
       await update(ref(db, `nota/${currentUser}`), updates);
       alert('Tanggal berhasil diupdate');
-    el('btnLoadRekap').addEventListener('click', ()=>{
-      const month = el('rekapMonth').value;
-      if(!month) return alert('Pilih bulan dulu.');
-      const filtered = allNota.filter(n => n.tanggal.slice(0,7) === month);
-      renderRekap(filtered);
-    });
-
+      el('btnLoadRekap').click(); // refresh tabel otomatis
     });
 
     tr.appendChild(tdDate);
