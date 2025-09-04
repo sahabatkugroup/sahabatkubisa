@@ -1023,28 +1023,34 @@
   /* ===================
      REKAP BULANAN
   ====================*/
- el('btnLoadRekap').addEventListener('click', async ()=>{
+el('btnLoadRekap').addEventListener('click', async ()=>{
   if(!currentUser){ alert('Login dulu'); return; }
+
   const ym = el('rekapMonth').value;
   if(!ym){ alert('Pilih bulan'); return; }
   const [year, month] = ym.split('-').map(Number);
 
   const snap = await get(ref(db, `nota/${currentUser}`));
   const val = snap.val()||{};
-  const arr = Object.values(val);
+  const arr = Object.entries(val); // [ [id, nota], ... ]
   const byDate = {};
 
-  arr.forEach(n=>{
+  arr.forEach(([id, n])=>{
     const d = new Date(n.createdAt);
-    if(d.getFullYear()===year && (d.getMonth()+1)===month){
-      const key = n.createdAt.slice(0,10);
-      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0};
+    const yearUTC = d.getUTCFullYear();
+    const monthUTC = d.getUTCMonth() + 1;
+
+    if(yearUTC === year && monthUTC === month){
+      const key = n.createdAt.slice(0,10); // tetap ambil tanggal asli dari Firebase
+      if(!byDate[key]) byDate[key] = {count:0, ongkir:0, tambahan:0, total:0, ids:[]};
+
       byDate[key].count++;
       byDate[key].ongkir += Number(n.ongkir)||0;
       const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
       byDate[key].tambahan += t;
-      // total harian = ongkir + tambahan
       byDate[key].total += (Number(n.ongkir)||0) + t;
+
+      byDate[key].ids.push(id); // pakai key snapshot Firebase
     }
   });
 
@@ -1055,14 +1061,44 @@
   Object.keys(byDate).sort().forEach(k=>{
     const v = byDate[k];
     const totalHarian = v.ongkir + v.tambahan;
-    tbody.innerHTML += `
-      <tr>
-        <td>${new Date(k).toLocaleDateString('id-ID')}</td>
-        <td>${v.count}</td>
-        <td>${v.ongkir.toLocaleString('id-ID')}</td>
-        <td>${v.tambahan.toLocaleString('id-ID')}</td>
-        <td>${totalHarian.toLocaleString('id-ID')}</td>
-      </tr>`;
+
+    const tr = document.createElement('tr');
+
+    // Tanggal bisa diklik untuk update
+    const tdDate = document.createElement('td');
+    tdDate.innerText = new Date(k).toLocaleDateString('id-ID');
+    tdDate.style.cursor = 'pointer';
+    tdDate.title = 'Klik untuk ubah tanggal';
+
+    tdDate.addEventListener('click', async ()=>{
+      const newDate = prompt('Tanggal baru (YYYY-MM-DD):', k);
+      if(!newDate || newDate===k) return;
+
+      const updates = {};
+      v.ids.forEach(id=>{
+        updates[`${id}/createdAt`] = newDate + val[id].createdAt.slice(10); // tetap ambil jam
+      });
+
+      await update(ref(db, `nota/${currentUser}`), updates);
+      alert('Tanggal berhasil diupdate');
+    el('btnLoadRekap').addEventListener('click', ()=>{
+      const month = el('rekapMonth').value;
+      if(!month) return alert('Pilih bulan dulu.');
+      const filtered = allNota.filter(n => n.tanggal.slice(0,7) === month);
+      renderRekap(filtered);
+    });
+
+    });
+
+    tr.appendChild(tdDate);
+    tr.innerHTML += `
+      <td>${v.count}</td>
+      <td>${v.ongkir.toLocaleString('id-ID')}</td>
+      <td>${v.tambahan.toLocaleString('id-ID')}</td>
+      <td>${totalHarian.toLocaleString('id-ID')}</td>
+    `;
+    tbody.appendChild(tr);
+
     sumNota += v.count;
     sumO += v.ongkir; 
     sumT += v.tambahan; 
@@ -1074,7 +1110,6 @@
   el('sumTambahan').innerText = sumT.toLocaleString('id-ID');
   el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
 });
-
 
   /* ===================
      PELACAK: No Nota / Tanggal
