@@ -1076,6 +1076,10 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
       await update(ref(db, `nota/${currentUser}`), updates);
       alert('Tanggal berhasil diupdate');
       el('btnLoadRekap').click(); // refresh tabel otomatis
+        const month = el('rekapMonth').value;
+        if(!month) return alert('Pilih bulan dulu.');
+        const filtered = allNota.filter(n => n.tanggal.slice(0,7) === month);
+        renderRekap(filtered);
     });
 
     tr.appendChild(tdDate);
