@@ -145,19 +145,12 @@
         <button data-tab="rekapTab">📊 Rekap</button>
         <button data-tab="pelacakTab">📋 Pelacak</button>
         <button data-tab="ongkirTab">📍 Cek Ongkir</button>
-        <button data-tab="dataTab">📢 SOP & Peraturan</button>
-        
+        <button onclick="window.location.href='absensi-kurir-sahabatku.html'">✅ Absensi Kurir</button>
+
+
       </nav>
       
-        <!-- SOP & Peraturan -->
-  <div id="dataTab" class="tabContent">
-    <h2>📢 SOP & Peraturan</h2>
-    <p>Silakan baca dokumen aturan resmi:</p>
-    <a href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku"
-       target="_blank"
-       style="display:inline-block; margin-top:10px; padding:10px 15px; background:#007bff; color:white; border-radius:5px; text-decoration:none;">
-      📄 Buka Dokumen Sahabatku
-    </a>
+
   </div>
       <!-- Ongkir TAB -->
       <div id="ongkirTab" class="tabContent">
@@ -1209,6 +1202,14 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
 
   // Perbarui preview filename saat awal
   updatePreviewFilename();
+
 </script>
-</body>
+</body>        
+<!-- SOP & Peraturan -->
+<a href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku"
+   target="_blank"
+   style="btn-doc; margin-top:8px; padding:6px 10px; font-size:14px; background:#007bff; color:white; border-radius:4px; text-decoration:none;">
+  📄 Buka Dokumen Sahabatku
+</a>
+    </a>
 </html>
