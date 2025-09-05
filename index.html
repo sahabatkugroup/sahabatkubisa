@@ -393,6 +393,127 @@ th {
     grid-template-columns: 1fr 1fr 90px;
   }
 }
+/* Penyesuaian khusus untuk layar kecil (HP) */
+@media (max-width: 600px) {
+  /* Container lebih sempit dan padding lebih kecil */
+  .container {
+    padding: 12px 16px;
+    margin: 16px auto;
+  }
+
+  /* Header font lebih kecil dan padding lebih ringkas */
+  header {
+    padding: 14px 16px;
+    font-size: 1.1rem;
+  }
+
+  /* Judul header lebih ringkas */
+  header .title {
+    font-size: 1.3rem;
+  }
+
+  /* Grid dan layout line-card disesuaikan agar lebih simpel */
+  .line-card {
+    grid-template-columns: 3fr 60px 70px 80px;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .line-card-tambahan {
+    grid-template-columns: 1.5fr 1fr 80px;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  /* Font dan padding lebih kecil untuk teks dan tombol mini */
+  .line-card .sub {
+    font-size: 0.85rem;
+  }
+
+  .line-card .mini-btn {
+    font-size: 0.8rem;
+    padding: 6px 0;
+    border-radius: 12px;
+  }
+
+  /* Nota box padding dan font lebih kecil */
+  .nota-box {
+    padding: 16px 18px;
+    font-size: 0.85rem;
+    min-height: 120px;
+  }
+
+  /* Table font lebih kecil dan padding ringkas */
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 10px 8px;
+  }
+
+  /* Nav tab jadi 2 kolom */
+  nav.tab {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  nav.tab button {
+    padding: 10px 0;
+    font-size: 0.9rem;
+    border-radius: 14px;
+  }
+
+  /* Tombol utama dan sekunder melebar penuh */
+  .btn.full {
+    width: 100%;
+  }
+
+  /* Input, select, textarea padding lebih kecil */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  /* Stack dan grid gap lebih kecil */
+  .stack {
+    gap: 8px;
+  }
+
+  .grid {
+    gap: 8px;
+  }
+
+  /* Row jadi kolom vertikal */
+  .row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Tombol bar jadi kolom vertikal */
+  .btnbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Section title font lebih kecil */
+  .section-title {
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+
+  /* Small text lebih kecil dan rapat */
+  .small {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+}
+
 
     }
   </style>
