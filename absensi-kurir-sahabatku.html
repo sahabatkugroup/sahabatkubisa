@@ -519,6 +519,89 @@ select:focus {
   #pengajuanForm select {
     min-width: 100%;
   }
+/* ===== Penyesuaian Mobile (max-width: 600px) ===== */
+@media (max-width: 600px) {
+  /* Container padding lebih kecil */
+  .container {
+    padding: 16px 16px;
+  }
+
+  /* Judul lebih kecil dan rapat */
+  h1 {
+    font-size: clamp(20px, 7vw, 28px);
+    margin-bottom: 16px;
+  }
+
+  /* Tombol kembali lebih kecil dan tidak terlalu besar */
+  .btn-kembali {
+    padding: 10px 14px;
+    font-size: 14px;
+    top: 14px;
+    right: 14px;
+  }
+
+  /* Form pengajuan: kolom jadi satu, elemen melebar penuh */
+  #pengajuanForm {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 16px;
+  }
+  #pengajuanForm select,
+  #pengajuanForm button {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Tombol dan button di topbar/admin bar melebar penuh */
+  .topbar,
+  .admin-bar {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .topbar .btn,
+  .admin-bar .btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  /* Tabel: buat scroll horizontal dan font lebih kecil */
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    min-width: 100%;
+    font-size: 13px;
+  }
+  thead th,
+  tbody td {
+    padding: 10px 8px;
+  }
+
+  /* Badge dan tombol mini lebih kecil */
+  .badge {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  .btn-mini {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Login overlay dan form lebih kecil dan rapat */
+  .login {
+    width: 90vw;
+    padding: 20px 20px;
+  }
+  .login input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  .login .btn {
+    padding: 12px 0;
+    font-size: 1rem;
+  }
+}
+
 }
 
 </style>
