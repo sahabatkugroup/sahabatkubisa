@@ -72,6 +72,42 @@
     border-radius: 10px;
     box-shadow:0 10px 25px rgba(0,0,0,.15), inset 0 -2px 3px rgba(0,0,0,.08);
   }
+  
+  /* Tombol Kembali (sticky pojok kanan) */
+  .btn-kembali{
+    position:fixed;
+    top:20px; right:20px;
+    background:#f97316; /* oranye */
+    color:#fff;
+    padding:10px 16px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:14px;
+    text-decoration:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.2);
+    transition:.2s;
+    z-index:1000;
+  }
+  .btn-kembali:hover{ background:#ea580c; }
+
+  .headline{
+    font-size: clamp(22px, 3.2vw, 30px);
+    font-weight: 700;
+    margin: 12px 0 6px;
+  }
+  .sub{
+    opacity:.95; font-weight:500;
+  }
+
+  .card{
+    margin-top:16px;
+    background:var(--card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  .card__body{ padding: clamp(16px, 2.8vw, 28px); }
   .headline{
     font-size: clamp(22px, 3.2vw, 30px);
     font-weight: 700;
@@ -228,9 +264,11 @@
       <div class="brand">
         <i class="fa-solid fa-box"></i> Ongkir Express
       </div>
+      <a href="index.html" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
       <div class="headline">Cek Tarif Pengiriman – Asal & Tujuan</div>
       <div class="sub">Pilih lokasi lewat pencarian pintar. Bisa isi salah satu atau keduanya. Otomatis hitung sesuai aturan.</div>
     </header>
+
 
     <main class="card">
       <div class="card__body">
@@ -606,5 +644,3 @@
 </script>
 </body>
 </html>
-
-
