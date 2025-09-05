@@ -17,6 +17,22 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans
 .container{max-width:1200px;margin:16px auto;padding:16px}
 .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
 h1{color:var(--primary-dark);text-align:center;font-weight:800;font-size:clamp(20px,3.8vw,32px);margin-bottom:10px}
+  /* Tombol Kembali (sticky pojok kanan) */
+  .btn-kembali{
+    position:fixed;
+    top:20px; right:20px;
+    background:#f97316; /* oranye */
+    color:#fff;
+    padding:10px 16px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:14px;
+    text-decoration:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.2);
+    transition:.2s;
+    z-index:1000;
+  }
+  .btn-kembali:hover{ background:#ea580c; }
 
 /* ===== Topbar & Admin ===== */
 .topbar, .admin-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:8px 0 14px}
@@ -87,9 +103,10 @@ select:hover, select:focus{border-color:var(--primary);box-shadow:0 4px 12px rgb
 <body>
 <div class="container">
 <div class="card">
-<h1>Jadwal & Absensi Kurir — Sahabatku Delivery</h1>
+<h1>Jadwal & Absensi Kurir</h1>
 
 <div class="topbar" id="topbar">
+  <a href="index.html" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
   <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
   <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
   <button class="btn ghost" id="btn-absensi-tab" data-tab="tab-absensi" style="display:none;">Absensi Harian</button>
