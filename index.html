@@ -7,95 +7,399 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    :root{
-      --sky:#e6f7ff; --sky-strong:#4dabf7; --accent:#0077c8; --muted:#506273; --card:#ffffff;
-      --glass: rgba(255,255,255,0.7);
-      --border:#e6f2fb;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      font-family:Inter,system-ui,Arial,Helvetica,sans-serif;
-      background:linear-gradient(180deg,#f0f8ff 0%, #e6f7ff 60%);
-      margin:0;color:#083044;
-    }
-    header{
-      background:linear-gradient(90deg,var(--sky-strong),#68bff0);
-      color:white;padding:16px;display:flex;gap:8px;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:10;box-shadow:0 6px 30px rgba(4,46,72,0.12);
-    }
-    header .title{font-weight:800}
-    .container{max-width:960px;margin:18px auto;padding:12px}
-    .card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 8px 26px rgba(11,59,90,0.06);margin-bottom:14px;border:1px solid rgba(11,59,90,0.04)}
-    h2,h3{margin:6px 0;color:#0b4870}
-    label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
-    input[type="text"],input[type="password"],input[type="number"],textarea,select{
-      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);margin-top:6px;background:var(--glass);outline:none
-    }
-    input:focus,select:focus,textarea:focus{border-color:#bfe6ff;box-shadow:0 0 0 3px rgba(100,180,255,.15)}
-    .btn{
-      background:var(--sky-strong);color:white;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;
-      box-shadow:0 6px 18px rgba(11,59,90,0.08); font-weight:600
-    }
-    .btn.secondary{background:#f5f7fa;color:#0b3b5a;border:1px solid rgba(11,59,90,0.06)}
-    .btn.ghost{background:transparent;color:#0b3b5a;border:1px dashed var(--border)}
-    .btn.danger{background:#ff6b6b;box-shadow:none}
-    .btn.full{width:100%}
-    .btnbar{display:flex;flex-wrap:wrap;gap:8px}
-    nav.tab{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-    nav.tab button{padding:10px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#0b3b5a;font-weight:600}
-    nav.tab button.active{background:linear-gradient(90deg,var(--sky-strong),#6fc2ff);color:#fff;border-color:transparent}
-    .row{display:flex;gap:10px;align-items:flex-start}
-    .col{flex:1}
-    .hidden{display:none}
-    .small{font-size:12px;color:var(--muted)}
-    .stack{display:flex;flex-direction:column;gap:8px}
-    .grid{display:grid;gap:10px}
-    .grid-2{grid-template-columns:repeat(2,1fr)}
-    .grid-3{grid-template-columns:repeat(3,1fr)}
-    .grid-4{grid-template-columns:repeat(4,1fr)}
-    .section-title{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
-    .list-v{display:flex;flex-direction:column;gap:8px}
+    :root {
+  --sky-light: #d0e8ff;
+  --sky: #a3c9ff;
+  --sky-strong: #4a90e2;
+  --accent: #0077c8;
+  --muted: #4a6fa5;
+  --card-bg: #ffffff;
+  --glass: rgba(255, 255, 255, 0.85);
+  --border: #c9dbf8;
+  --shadow-light: rgba(74, 144, 226, 0.15);
+  --shadow-strong: rgba(74, 144, 226, 0.3);
+  --text-primary: #0b3b5a;
+  --text-secondary: #506273;
+}
 
-    /* Item & Tambahan cards sejajar */
-    .line-card{
-      border:1px solid var(--border);border-radius:14px;background:#fff;padding:10px;
-      display:grid;grid-template-columns:2fr 80px 160px 110px 90px;gap:8px;align-items:center
-    }
-    .line-card .sub{font-weight:700;text-align:center}
-    .line-card .mini-btn{width:100%;}
+* {
+  box-sizing: border-box;
+}
 
-    .line-card-tambahan{
-      border:1px solid var(--border);border-radius:14px;background:#fff;padding:10px;
-      display:grid;grid-template-columns:1.5fr 1fr 110px;gap:8px;align-items:center
-    }
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', system-ui, Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, var(--sky-light) 0%, var(--sky) 70%);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-    /* Nota Preview */
-    .nota-box{
-      white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      background:#fbfdff;padding:14px;border-radius:12px;border:1px solid #e6f4ff;min-height:140px
-    }
+header {
+  background: linear-gradient(90deg, var(--sky-strong), #3f7edb);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 8px 24px var(--shadow-strong);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.03em;
+}
 
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border:1px solid var(--border);text-align:center}
-    th{background:linear-gradient(90deg,var(--sky-strong),#6fc2ff);color:white}
+header .title {
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
 
-    /* Mobile tweaks */
-    @media (max-width:900px){
-      nav.tab{grid-template-columns:repeat(2,1fr)}
-      .grid-3{grid-template-columns:1fr}
-      .line-card{grid-template-columns:1fr 80px 120px 100px 80px}
-      .line-card-tambahan{grid-template-columns:1fr 1fr 100px}
-    }
-    @media (max-width:600px){
-      .line-card{grid-template-columns:4fr 60px 70px 90px}
-      .line-card-tambahan{grid-template-columns:1fr 1fr 90px}
+.container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 16px 20px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 12px 30px var(--shadow-light);
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 16px 40px var(--shadow-strong);
+}
+
+h2, h3 {
+  margin: 8px 0 16px 0;
+  color: var(--sky-strong);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+  background: var(--glass);
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--sky-strong);
+  box-shadow: 0 0 8px var(--sky-strong);
+  background: #f0f8ff;
+}
+
+.btn {
+  background: var(--sky-strong);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--shadow-light);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn:hover {
+  background: #3a6fc1;
+  box-shadow: 0 10px 30px var(--shadow-strong);
+}
+
+.btn.secondary {
+  background: #f5f7fa;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.btn.secondary:hover {
+  background: #e1e9f8;
+  border-color: var(--sky-strong);
+  color: var(--sky-strong);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px dashed var(--border);
+  font-weight: 600;
+}
+
+.btn.ghost:hover {
+  border-color: var(--sky-strong);
+  color: var(--sky-strong);
+}
+
+.btn.danger {
+  background: #ff6b6b;
+  box-shadow: none;
+  font-weight: 700;
+  transition: background 0.3s ease;
+}
+
+.btn.danger:hover {
+  background: #e04e4e;
+}
+
+.btn.full {
+  width: 100%;
+}
+
+.btnbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+nav.tab {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+nav.tab button {
+  padding: 14px 0;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+}
+
+nav.tab button.active {
+  background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 24px var(--shadow-light);
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.col {
+  flex: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-weight: 700;
+  color: var(--sky-strong);
+  font-size: 1.1rem;
+}
+
+.list-v {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Item & Tambahan cards sejajar */
+.line-card {
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  background: var(--card-bg);
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 2.5fr 90px 180px 130px 100px;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.07);
+  transition: box-shadow 0.3s ease;
+}
+
+.line-card:hover {
+  box-shadow: 0 8px 24px var(--shadow-light);
+}
+
+.line-card .sub {
+  font-weight: 700;
+  text-align: center;
+  color: var(--sky-strong);
+  font-size: 0.95rem;
+}
+
+.line-card .mini-btn {
+  width: 100%;
+  border-radius: 14px;
+  padding: 8px 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: var(--sky);
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.line-card .mini-btn:hover {
+  background: var(--sky-strong);
+  color: white;
+}
+
+/* Tambahan card */
+.line-card-tambahan {
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  background: var(--card-bg);
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr 130px;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.07);
+  transition: box-shadow 0.3s ease;
+}
+
+.line-card-tambahan:hover {
+  box-shadow: 0 8px 24px var(--shadow-light);
+}
+
+/* Nota Preview */
+.nota-box {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  background: #f5faff;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1.5px solid #c9dbf8;
+  min-height: 160px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  box-shadow: inset 0 0 10px #dbeeff;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+th, td {
+  padding: 14px 12px;
+  border: 1.5px solid var(--border);
+  text-align: center;
+  font-weight: 600;
+}
+
+th {
+  background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+  color: white;
+  letter-spacing: 0.03em;
+}
+
+/* Mobile tweaks */
+@media (max-width: 900px) {
+  nav.tab {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .line-card {
+    grid-template-columns: 1fr 90px 140px 120px 90px;
+  }
+  .line-card-tambahan {
+    grid-template-columns: 1fr 1.2fr 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .line-card {
+    grid-template-columns: 4fr 70px 90px 100px;
+  }
+  .line-card-tambahan {
+    grid-template-columns: 1fr 1fr 90px;
+  }
+}
+
     }
   </style>
 </head>
 <body>
 <header>
-  <div class="title">🛵️ Sahabatku Delivery Group</div>
+  <div class="title">Sahabatku Delivery Group</div>
   <button id="btnLogout" class="btn danger hidden">Logout</button>
 </header>
 
