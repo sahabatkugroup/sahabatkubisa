@@ -750,24 +750,52 @@ th {
   el('btnLogout').addEventListener('click', ()=>{ localStorage.removeItem('currentUser'); location.reload(); });
   qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
 
-  function doLogin(){
+  async function doLogin(){
     const u = el('loginUser').value.trim();
     const p = el('loginPass').value.trim();
+  
+    // 1️⃣ Cek sampleUsers (dummy)
     if(u && sampleUsers[u]===p){
-      currentUser = u;
-      localStorage.setItem('currentUser', u);
-      el('loginCard').classList.add('hidden');
-      el('app').classList.remove('hidden');
-      el('btnLogout').classList.remove('hidden');
-      el('curUser').innerText = currentUser;
-      el('kurirName').value = currentUser;
-      setActiveTab('notaTab');
-      ensureCounter().then(updateNextNotaLabel);
-      refreshNotaHistory();
-    } else {
-      el('loginMsg').innerText = 'Username/password salah Bro!';
+      return loginSuccess(u);
+    }
+  
+    // 2️⃣ Cek di Firebase Realtime Database (kurir/{username})
+    try {
+      const snap = await get(ref(db, 'kurir/' + u));
+      if(snap.exists()){
+        const data = snap.val();
+        if(!data.enabled){
+          el('loginMsg').innerText = 'Akun ini dinonaktifkan!';
+          return;
+        }
+        if(data.password !== p){
+          el('loginMsg').innerText = 'Password salah!';
+          return;
+        }
+        return loginSuccess(data.username);
+      } else {
+        el('loginMsg').innerText = 'User tidak ditemukan di Firebase!';
+      }
+    } catch(err){
+      console.error("Firebase error:", err);
+      el('loginMsg').innerText = 'Gagal konek Firebase!';
     }
   }
+  
+  // 🔹 Helper untuk login sukses
+  function loginSuccess(username){
+    currentUser = username;
+    localStorage.setItem('currentUser', username);
+    el('loginCard').classList.add('hidden');
+    el('app').classList.remove('hidden');
+    el('btnLogout').classList.remove('hidden');
+    el('curUser').innerText = currentUser;
+    el('kurirName').value = currentUser;
+    setActiveTab('notaTab');
+    ensureCounter().then(updateNextNotaLabel);
+    refreshNotaHistory();
+  }
+
   window.addEventListener('load', ()=>{
     const saved = localStorage.getItem('currentUser');
     if(saved && sampleUsers[saved]){
