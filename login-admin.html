@@ -1,0 +1,782 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sahabatku Delivery — Admin Panel (Advanced)</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <style>
+    :root{ --bg:#f7fbff; --card:#fff; --text:#0b3b5a; --muted:#5c6f81; --accent:#1e90ff; --danger:#ff6b6b; --border:#e7eef6 }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:0}
+    header{position:sticky;top:0;z-index:40;background:linear-gradient(90deg,#f9d423,#ff4e50);color:#000;box-shadow:0 8px 26px rgba(0,0,0,.08)}
+    header .bar{max-width:1200px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+    .badge{background:#ffcd1f;border-radius:999px;padding:3px 10px;font-weight:800}
+    .wrap{max-width:1200px;margin:18px auto;padding:0 12px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 28px rgba(10,50,90,.06);padding:14px;margin-bottom:14px}
+    .row{display:flex;flex-wrap:wrap;gap:10px}
+    .row > *{flex:1 1 240px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+    input,select,textarea{width:100%;padding:8px;border:1px solid var(--border);border-radius:10px}
+    .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#eef6ff;color:var(--text);border:1px solid var(--border)}
+    .btn.ghost{background:transparent;border:1px dashed var(--border);color:var(--text)}
+    .btn.danger{background:var(--danger);color:#fff}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tabs .btn{background:#eef6ff;color:var(--text)}
+    .tabs .btn.active{background:var(--accent);color:#fff}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid var(--border);padding:8px;text-align:left;font-size:14px}
+    th{background:#f1f6ff}
+    .hidden{display:none}
+    #toast{position:fixed;right:16px;bottom:16px;background:#0ea5e9;color:#fff;border-radius:12px;padding:10px 14px;display:none;z-index:999}
+    .pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#eef6ff;border:1px solid var(--border);font-size:12px}
+    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="flex"><strong>📊 Admin Panel</strong><span class="badge">👑 Admin</span></div>
+      <button id="btnLogout" class="btn danger hidden">Logout</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- Login -->
+    <div id="loginCard" class="card">
+      <h2>Login Admin</h2>
+      <div class="row">
+        <div><label>Email</label><input id="loginEmail" type="email" placeholder="admin@email.com"></div>
+        <div><label>Password</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+      </div>
+      <button id="btnLogin" class="btn">Masuk</button>
+      <div id="loginMsg" style="color:#c0392b;font-size:13px;margin-top:6px"></div>
+    </div>
+
+    <!-- App -->
+    <div id="app" class="hidden">
+      <div class="card">
+        <div class="tabs">
+          <button class="btn active" data-tab="tabNota">📝 Kelola Nota</button>
+          <button class="btn" data-tab="tabRekap">📈 Rekap & Riwayat</button>
+          <button class="btn" data-tab="tabKurir">👥 Manajemen Kurir</button>
+          <button class="btn" data-tab="tabOngkir">🚚 Manajemen Ongkir</button>
+        </div>
+      </div>
+
+      <!-- Kelola Nota -->
+      <div id="tabNota" class="card tab">
+        <div class="row">
+          <div>
+            <label>Nama Kurir</label>
+            <select id="filterKurir"><option value="">— Semua Kurir —</option></select>
+          </div>
+          <div>
+            <label>Tanggal</label>
+            <input type="date" id="filterTanggal">
+          </div>
+          <div>
+            <label>Bulan</label>
+            <input type="month" id="filterBulan">
+          </div>
+          <div>
+            <label>Tahun</label>
+            <input type="number" id="filterTahun" min="2020" placeholder="2025">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Cari Nota (No Nota)</label>
+            <input id="filterCariNota" list="listNoNota" placeholder="Pilih/ketik No Nota">
+            <datalist id="listNoNota"></datalist>
+          </div>
+          <div style="align-self:end">
+            <button class="btn secondary" onclick="applyFilter()">Filter</button>
+            <button class="btn secondary" onclick="clearFilter()">Reset</button>
+            <button class="btn" onclick="showAddForm()">+ Tambah Nota</button>
+            <button class="btn secondary" onclick="exportCSV()">⬇ Export CSV (hasil filter)</button>
+          </div>
+        </div>
+
+        <div id="notaList"></div>
+
+        <!-- Form Tambah/Edit -->
+        <div id="notaForm" class="card hidden">
+          <h3 id="formTitle">Tambah Nota</h3>
+          <div class="row">
+            <div>
+              <label>Kurir (dropdown / ketik manual)</label>
+              <input id="formKurir" list="listKurir" placeholder="Pilih/ketik kurir">
+              <datalist id="listKurir"></datalist>
+            </div>
+            <div>
+              <label>No Nota</label>
+              <input id="formNoNota" placeholder="NN-001 / otomatis">
+            </div>
+          </div>
+
+          <h4>Item</h4>
+          <table id="itemTable">
+            <thead><tr><th>Nama</th><th>Qty</th><th>Harga</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="flex"><button class="btn ghost" onclick="addItemRow()">+ Item</button></div>
+
+          <div class="row">
+            <div><label>Ongkir</label><input id="formOngkir" type="number" value="0"></div>
+            <div><label>Tambahan</label><input id="formTambahan" type="number" value="0"></div>
+            <div><label>Keterangan</label><input id="formText" placeholder="Catatan…"></div>
+          </div>
+
+          <h4>Total: Rp <span id="formTotal">0</span></h4>
+          <div class="flex">
+            <button class="btn" onclick="saveNota()">Simpan</button>
+            <button class="btn danger" onclick="cancelNota()">Batal</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rekap & Riwayat -->
+      <div id="tabRekap" class="card tab hidden">
+        <div class="row">
+          <div>
+            <label>Kurir</label>
+            <select id="rekapKurir"><option value="">— Semua Kurir —</option></select>
+          </div>
+          <div>
+            <label>Bulan</label>
+            <input type="month" id="rekapBulan">
+          </div>
+          <div style="align-self:end"><button class="btn secondary" onclick="renderRekap()">Terapkan</button></div>
+        </div>
+
+        <div class="flex">
+          <span class="pill">Mode: Total Nota per Kurir</span>
+          <span class="pill">Mode: Penghasilan (tanggal, jumlah, ongkir, tambahan, total)</span>
+        </div>
+
+        <div id="rekapRingkas" style="margin-top:10px"></div>
+        <div id="rekapTabel"></div>
+        <div class="flex"><button class="btn secondary" onclick="exportCSVRekap()">⬇ Export CSV (Rekap)</button></div>
+      </div>
+
+        <!-- Manajemen Kurir -->
+        <div id="tabKurir" class="card tab hidden">
+          <div class="row">
+            <div>
+              <label>Tambah Kurir Baru</label>
+              <input id="kurirBaru" placeholder="Nama kurir (username)">
+            </div>
+            <div>
+              <label>Password (kurir)</label>
+              <input id="kurirPass" type="password" placeholder="minimal 6 karakter">
+            </div>
+          </div>
+          <div class="flex">
+            <button class="btn" onclick="tambahKurir()">+ Tambah Kurir</button>
+            <span class="pill">Akun dibuat di Auth (email: username@kurir.local) & daftar kurir di DB.</span>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+          <div class="row">
+            <div>
+              <label>Hapus Kurir</label>
+              <select id="kurirManage"></select>
+            </div>
+            <div style="align-self:end">
+              <button class="btn danger" onclick="hapusKurir()">Hapus Kurir</button>
+            </div>
+          </div>
+          <small>Catatan: Menghapus kurir akan menonaktifkan akses di aplikasi kurir dengan menghapus entri kurir di DB. (Penghapusan akun Auth penuh memerlukan server admin.)</small>
+        <div>
+          <button onclick="ubahPasswordKurir()">Ubah Password</button>
+        </div>
+      </div>
+
+      <!-- Manajemen Ongkir -->
+      <div id="tabOngkir" class="card tab hidden">
+        <div class="row">
+          <div>
+            <label>Wilayah</label>
+            <input id="wilayahInput" list="wilayahList" placeholder="Pilih/ketik wilayah">
+            <datalist id="wilayahList"></datalist>
+          </div>
+          <div>
+            <label>Harga Ongkir</label>
+            <input id="hargaOngkir" type="number" placeholder="0">
+          </div>
+          <div style="align-self:end">
+            <button class="btn" onclick="simpanOngkir()">💾 Save/Update</button>
+            <button class="btn danger" onclick="hapusOngkir()">🗑 Hapus</button>
+          </div>
+        </div>
+        <h4>Data Wilayah</h4>
+        <div id="ongkirTabel"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">✅ Login sebagai Admin</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
+    authDomain: "sahabatkuu-bisa.firebaseapp.com",
+    databaseURL: "https://sahabatkuu-bisa-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sahabatkuu-bisa",
+    storageBucket: "sahabatkuu-bisa.firebasestorage.app",
+    messagingSenderId: "315555564115",
+    appId: "1:315555564115:web:56f46dbceb8c154589d4a6",
+    measurementId: "G-PFGYL96VPS"
+  };
+  const ADMIN_UID = "kSW4ThusrwhUFCQeTsnPV1VNaR72";
+
+  // Init
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  // State
+  let allData = {}; // {kurir:{id:nota}}
+  let kurirSet = new Set();
+  let ongkirData = {};
+  let editing = null; // {user,id,createdAt}
+
+  // Helpers
+  const el = id => document.getElementById(id);
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const money = n => (Number(n)||0).toLocaleString('id-ID');
+
+  // Tabs
+  qsa('.tabs .btn').forEach(b=>b.addEventListener('click',()=>{
+    qsa('.tabs .btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    qsa('.tab').forEach(t=>t.classList.add('hidden'));
+    el(b.dataset.tab).classList.remove('hidden');
+  }));
+
+  // Toast
+  function toast(msg){ const t=el('toast'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2200); }
+
+  // Login
+  el('btnLogin').onclick = async () => {
+    const email = el('loginEmail').value.trim();
+    const pass = el('loginPass').value.trim();
+    try{
+      const cred = await signInWithEmailAndPassword(auth,email,pass);
+      if(cred.user.uid!==ADMIN_UID){ el('loginMsg').innerText='Bukan admin'; return; }
+      el('loginCard').classList.add('hidden');
+      el('app').classList.remove('hidden');
+      el('btnLogout').classList.remove('hidden');
+      toast('✅ Login sebagai Admin');
+      await loadAll();
+    }catch(e){ el('loginMsg').innerText = e.message; }
+  };
+  el('btnLogout').onclick = () => location.reload();
+
+  async function loadAll(){
+    await Promise.all([loadNota(), loadKurir(), loadOngkir()]);
+    buildNoNotaDatalist();
+    renderList(allData);
+    fillRekapKurir();
+  }
+
+  // ==================== Loaders ====================
+  async function loadNota(){
+    const snap = await get(ref(db,'nota'));
+    allData = snap.exists()?snap.val():{};
+    Object.keys(allData).forEach(k=>kurirSet.add(k));
+    fillKurirFilter();
+  }
+  async function loadKurir(){
+    const snap = await get(ref(db,'kurir'));
+    if(snap.exists()){
+      const obj = snap.val();
+      Object.keys(obj).forEach(k=>kurirSet.add(k));
+    }
+    fillKurirFilter();
+    fillKurirManage();
+    fillKurirDatalist();
+  }
+  async function loadOngkir(){
+    const snap = await get(ref(db,'ongkir'));
+    ongkirData = snap.exists()?snap.val():{};
+    renderOngkir();
+    fillWilayahDatalist();
+  }
+
+  // ==================== Kelola Nota ====================
+  function fillKurirFilter(){
+    const sel = el('filterKurir');
+    sel.innerHTML = '<option value="">— Semua Kurir —</option>'+ [...kurirSet].sort().map(k=>`<option>${k}</option>`).join('');
+  }
+  function fillKurirManage(){
+    el('kurirManage').innerHTML = [...kurirSet].sort().map(k=>`<option>${k}</option>`).join('');
+  }
+  function fillKurirDatalist(){
+    el('listKurir').innerHTML = [...kurirSet].sort().map(k=>`<option value="${k}">`).join('');
+  }
+  function buildNoNotaDatalist(){
+    const list = el('listNoNota'); list.innerHTML = '';
+    Object.values(allData).forEach(notes => {
+      Object.values(notes).forEach(n=>{
+        if(n.noNota){ const opt=document.createElement('option'); opt.value=n.noNota; list.appendChild(opt); }
+      });
+    });
+  }
+
+  function withinFilters(n){
+    const fK = el('filterKurir').value;
+    const fD = el('filterTanggal').value; // YYYY-MM-DD
+    const fM = el('filterBulan').value;   // YYYY-MM
+    const fY = el('filterTahun').value;   // YYYY
+
+    if (fK && n.kurir !== fK) return false;
+    if (fD && (n.createdAt||'').slice(0,10) !== fD) return false;
+    if (fM && (n.createdAt||'').slice(0,7)  !== fM) return false;
+    if (fY && (n.createdAt||'').slice(0,4)  !== fY) return false;
+    return true;
+  }
+
+  function applyFilter(){
+    const cariNota = el('filterCariNota').value.trim();
+    if (cariNota){
+      // override: tampilkan hanya yang nomor nota cocok
+      const res = {};
+      Object.entries(allData).forEach(([k,notes])=>{
+        Object.values(notes).forEach(n=>{
+          if((n.noNota||'')===cariNota){ if(!res[k]) res[k]={}; res[k][n.id]=n; }
+        });
+      });
+      renderList(res);
+      return;
+    }
+    // filter biasa
+    const res = {};
+    Object.entries(allData).forEach(([k,notes])=>{
+      Object.values(notes).forEach(n=>{
+        if(withinFilters(n)){ if(!res[k]) res[k]={}; res[k][n.id]=n; }
+      });
+    });
+    renderList(res);
+  }
+  window.applyFilter = applyFilter;
+  window.clearFilter = ()=>{
+    el('filterKurir').value=''; el('filterTanggal').value=''; el('filterBulan').value=''; el('filterTahun').value=''; el('filterCariNota').value='';
+    renderList(allData);
+  };
+
+  function renderList(data){
+    const wrap = el('notaList');
+    wrap.innerHTML='';
+    if(!Object.keys(data||{}).length){ wrap.innerHTML='<i>Tidak ada data</i>'; return; }
+    Object.entries(data).forEach(([user,notes])=>{
+      const card=document.createElement('div'); card.className='card';
+      const totalUser = Object.values(notes||{}).reduce((s,n)=>{
+        const tambahanNominal = n.tambahans 
+          ? Object.values(n.tambahans).reduce((s2,t)=>s2+(t.nominal||0),0) 
+          : (n.tambahan||0);
+        return s + (n.ongkir||0) + tambahanNominal;
+      },0);
+
+      card.innerHTML = `<h3>Kurir: ${user} — Total: Rp ${money(totalUser)}</h3>`;
+      const tbl=document.createElement('table');
+      tbl.innerHTML = `<thead><tr><th>No Nota</th><th>Tanggal</th><th>Ongkir</th><th>Tambahan</th><th>Total</th><th>Aksi</th></tr></thead><tbody></tbody>`;
+      const tb=tbl.querySelector('tbody');
+      Object.values(notes||{}).sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||'')).forEach(n=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${n.noNota||''}</td>
+                        <td>${n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '-'}</td>
+                        <td>Rp ${money(n.ongkir||0)}</td>
+                        <td>Rp ${money(n.tambahans ? Object.values(n.tambahans).reduce((s,t)=>s+(t.nominal||0),0) : (n.tambahan||0))}</td>
+                        <td><b>Rp ${money(
+                          (n.ongkir||0) + (
+                            n.tambahans 
+                              ? Object.values(n.tambahans).reduce((s,t)=>s+(t.nominal||0),0) 
+                              : (n.tambahan||0)
+                          )
+                        )}</b></td>
+                        <td class="flex">
+                          <button class="btn secondary" onclick="viewNota('${user}','${n.id}')">👁 Lihat</button>
+                          <button class="btn" onclick="editNota('${user}','${n.id}')">✏️ Edit</button>
+                          <button class="btn danger" onclick="delNota('${user}','${n.id}')">🗑 Hapus</button>
+                        </td>`;
+        tb.appendChild(tr);
+      });
+      card.appendChild(tbl);
+      wrap.appendChild(card);
+    });
+  }
+
+  // Add/Edit form
+  function showAddForm(){
+    editing = null;
+    el('formTitle').innerText='Tambah Nota';
+    el('formKurir').value=''; el('formNoNota').value='';
+    el('formOngkir').value=0; el('formTambahan').value=0; el('formText').value='';
+    qs('#itemTable tbody').innerHTML=''; addItemRow();
+    el('formTotal').innerText='0';
+    el('notaForm').classList.remove('hidden');
+    fillKurirDatalist();
+  }
+  window.showAddForm = showAddForm;
+  window.cancelNota = ()=> el('notaForm').classList.add('hidden');
+
+  function addItemRow(nama='',qty=1,harga=0){
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td><input class="iname" value="${nama}"></td>
+                    <td><input class="iqty" type="number" value="${qty}"></td>
+                    <td><input class="iprice" type="number" value="${harga}"></td>
+                    <td><button class="btn danger" onclick="this.closest('tr').remove();calcTotal()">✖</button></td>`;
+    qs('#itemTable tbody').appendChild(tr);
+    tr.querySelectorAll('input').forEach(i=>i.addEventListener('input', calcTotal));
+    calcTotal();
+  }
+  window.addItemRow = addItemRow;
+
+  function calcTotal(){
+    let total=0;
+    qsa('#itemTable tbody tr').forEach(tr=>{
+      const q=Number(tr.querySelector('.iqty').value)||0;
+      const h=Number(tr.querySelector('.iprice').value)||0;
+      total += q*h;
+    });
+    total += Number(el('formOngkir').value||0);
+    total += Number(el('formTambahan').value||0);
+    el('formTotal').innerText = money(total);
+  }
+  el('formOngkir').addEventListener('input', calcTotal);
+  el('formTambahan').addEventListener('input', calcTotal);
+
+  async function saveNota(){
+    const user = el('formKurir').value.trim();
+    if(!user) return alert('Isi nama kurir');
+    const noNota = el('formNoNota').value.trim() || ('NN-'+Date.now().toString().slice(-6));
+    const items = qsa('#itemTable tbody tr').map(tr=>({
+      nama: tr.querySelector('.iname').value,
+      qty: Number(tr.querySelector('.iqty').value)||0,
+      harga: Number(tr.querySelector('.iprice').value)||0,
+    }));
+    const ongkir = Number(el('formOngkir').value||0);
+    const tambahanNominal = Number(el('formTambahan').value||0);
+    const tambahans = tambahanNominal>0 ? [{nominal:tambahanNominal, type:"Tambahan Manual"}] : [];    const text = el('formText').value||'';
+    const total = items.reduce((s,it)=>s+it.qty*it.harga,0)+ongkir+tambahans.reduce((s,t)=>s+(t.nominal||0),0);
+    let id, createdAt;
+    if(editing){ id=editing.id; createdAt=editing.createdAt; }
+    else { id='nota_'+Date.now(); createdAt=new Date().toISOString(); }
+
+    const data = { id, kurir:user, noNota, createdAt, items, ongkir, tambahans, total, text };
+    await set(ref(db, `nota/${user}/${id}`), data);
+    // simpan nama kurir ke daftar
+    await set(ref(db, `kurir/${user}`), true);
+    kurirSet.add(user);
+    await loadNota();
+    buildNoNotaDatalist();
+    renderList(allData);
+    el('notaForm').classList.add('hidden');
+    toast('💾 Nota disimpan');
+  }
+  window.saveNota = saveNota;
+
+  async function editNota(user,id){
+    const snap = await get(ref(db,`nota/${user}/${id}`));
+    if(!snap.exists()) return alert('Nota tidak ditemukan');
+    const n = snap.val();
+    editing = {id, createdAt:n.createdAt};
+    el('formTitle').innerText='Edit Nota';
+    el('formKurir').value=user;
+    el('formNoNota').value=n.noNota||'';
+    el('formOngkir').value=n.ongkir||0;
+    el('formTambahan').value=n.tambahan||0;
+    el('formText').value=n.text||'';
+    qs('#itemTable tbody').innerHTML='';
+    (n.items||[]).forEach(it=>addItemRow(it.nama,it.qty,it.harga));
+    el('notaForm').classList.remove('hidden');
+    calcTotal();
+  }
+  window.editNota = editNota;
+
+  async function delNota(user,id){
+    if(!confirm('Hapus nota ini?')) return;
+    await remove(ref(db,`nota/${user}/${id}`));
+    await loadNota();
+    renderList(allData);
+    toast('🗑 Nota dihapus');
+  }
+  window.delNota = delNota;
+
+  function viewNota(user,id){
+    const n = allData?.[user]?.[id];
+    if(!n) return;
+    const w = window.open('', '_blank');
+    w.document.write('<title>Nota '+(n.noNota||'')+'</title><pre style="font-family:ui-monospace,Consolas,monospace">'+JSON.stringify(n,null,2)+'</pre>');
+    w.document.close();
+  }
+  window.viewNota = viewNota;
+
+  // Export CSV (mengikuti hasil render/filter di layar)
+  function exportCSV(){
+    // kumpulkan tabel yang sedang ditampilkan
+    const rows = [["Kurir","No Nota","Tanggal","Ongkir","Tambahan","Total"]];
+    // build from currently filtered DOM
+    const cards = qsa('#notaList .card');
+    cards.forEach(card=>{
+      const title = card.querySelector('h3')?.innerText || '';
+      const user = title.replace(/^Kurir:\s*/,'').split(' — ')[0];
+      card.querySelectorAll('tbody tr').forEach(tr=>{
+        const tds = tr.querySelectorAll('td');
+        rows.push([user, tds[0].innerText, tds[1].innerText, tds[2].innerText.replace('Rp ','').replaceAll('.',''), tds[3].innerText.replace('Rp ','').replaceAll('.',''), tds[4].innerText.replace('Rp ','').replaceAll('.','')]);
+      });
+    });
+    downloadCSV(rows, 'nota_filtered.csv');
+  }
+  window.exportCSV = exportCSV;
+
+  // ==================== Rekap & Riwayat ====================
+  function fillRekapKurir(){
+    const sel = el('rekapKurir');
+    sel.innerHTML = '<option value="">— Semua Kurir —</option>' + [...kurirSet].sort().map(k=>`<option>${k}</option>`).join('');
+  }
+
+  async function renderRekap(){
+    const k = el('rekapKurir').value;
+    const m = el('rekapBulan').value; // YYYY-MM
+
+    // Coba ambil dari /rekap (jika ada), fallback hitung dari /nota
+    let rows = [];
+    let total = 0; let count = 0; let totOngkir=0; let totTambahan=0;
+
+    const push = (n)=>{
+      const dt = n.createdAt ? new Date(n.createdAt).toLocaleDateString('id-ID') : '-';
+      const tambahanSum = n.tambahans ? Object.values(n.tambahans).reduce((s,t)=>s+(t.nominal||0),0) : (n.tambahan||0);
+      const totalNota = (n.ongkir||0) + tambahanSum;
+      
+      rows.push([dt, n.noNota||'', n.ongkir||0, tambahanSum, totalNota]);
+      count++; total += totalNota; totOngkir += (n.ongkir||0); totTambahan += tambahanSum;
+    };
+
+    if(k){
+      const notes = allData[k]||{};
+      Object.values(notes).forEach(n=>{
+        if(m){ if((n.createdAt||'').slice(0,7)!==m) return; }
+        push(n);
+      });
+    }else{
+      Object.values(allData).forEach(notes=>{
+        Object.values(notes).forEach(n=>{
+          if(m){ if((n.createdAt||'').slice(0,7)!==m) return; }
+          push(n);
+        });
+      });
+    }
+
+    el('rekapRingkas').innerHTML = `<div class="card">
+      <b>Jumlah Nota:</b> ${count} &nbsp; | &nbsp; <b>Total Ongkir:</b> Rp ${money(totOngkir)}
+      &nbsp; | &nbsp; <b>Total Tambahan:</b> Rp ${money(totTambahan)} &nbsp; | &nbsp; <b>Total Penghasilan:</b> Rp ${money(total)}
+    </div>`;
+
+    const thead = '<thead><tr><th>Tanggal</th><th>No Nota</th><th>Ongkir</th><th>Tambahan</th><th>Total</th></tr></thead>';
+    const tbody = '<tbody>'+rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>Rp ${money(r[2])}</td><td>Rp ${money(r[3])}</td><td><b>Rp ${money(r[4])}</b></td></tr>`).join('')+'</tbody>';
+    el('rekapTabel').innerHTML = `<table>${thead}${tbody}</table>`;
+  }
+  window.renderRekap = renderRekap;
+
+  function exportCSVRekap(){
+    const rows=[["Tanggal","No Nota","Ongkir","Tambahan","Total"]];
+    el('rekapTabel').querySelectorAll('tbody tr').forEach(tr=>{
+      const t=tr.querySelectorAll('td');
+      rows.push([t[0].innerText,t[1].innerText,t[2].innerText.replace('Rp ','').replaceAll('.',''),t[3].innerText.replace('Rp ','').replaceAll('.',''),t[4].innerText.replace('Rp ','').replaceAll('.','')]);
+    });
+    downloadCSV(rows,'rekap.csv');
+  }
+  window.exportCSVRekap = exportCSVRekap;
+
+    // ==================== Manajemen Kurir ====================
+    // Buat akun kurir via REST Identity Toolkit (tidak mengubah sesi admin)
+    async function createAuthUserEmailPassword(email,password){
+      const url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="+firebaseConfig.apiKey;
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password, returnSecureToken:true})});
+      if(!res.ok){ const t=await res.json(); throw new Error(t.error?.message||'Gagal membuat akun'); }
+      return await res.json(); // {localId, email, idToken, ...}
+    }
+
+    async function tambahKurir(){
+      const uname = el('kurirBaru').value.trim();
+      const pass = el('kurirPass').value.trim();
+      if(!uname || pass.length < 6) return alert('Isi username & password min 6 karakter');
+
+      const email = uname.replace(/\s+/g,'.').toLowerCase() + '@kurir.local';
+
+      // Simpan data kurir + password
+      await set(ref(db, 'kurir/' + uname), { 
+        username: uname, 
+        email, 
+        password: pass,     // ✅ simpan password
+        enabled: true, 
+        createdAt: new Date().toISOString() 
+      });
+
+      kurirSet.add(uname);
+      fillKurirFilter(); 
+      fillKurirManage(); 
+      fillKurirDatalist();
+      toast('✅ Kurir ditambahkan');
+
+      el('kurirBaru').value = ''; 
+      el('kurirPass').value = '';
+    }
+    window.tambahKurir = tambahKurir;
+
+
+    async function hapusKurir(){
+      const uname = el('kurirManage').value;
+      if(!uname) return;
+
+      if(!confirm(`Hapus kurir "${uname}"?`)) return;
+
+      // ❌ hapus data kurir dari DB
+      await remove(ref(db, 'kurir/' + uname));
+
+      kurirSet.delete(uname);
+      fillKurirFilter(); 
+      fillKurirManage(); 
+      fillKurirDatalist();
+      toast('🗑 Kurir dihapus');
+    }
+    window.hapusKurir = hapusKurir;
+
+    async function ubahPasswordKurir(){
+    const uname = el('kurirManage').value;
+    const newPass = prompt(`Masukkan password baru untuk ${uname}:`, "");
+    if(!uname || !newPass) return;
+
+    // Update password di DB
+    await update(ref(db, 'kurir/' + uname), { password: newPass });
+
+    toast('🔑 Password berhasil diubah');
+  }
+  window.ubahPasswordKurir = ubahPasswordKurir;
+
+
+
+   // ==================== Manajemen Ongkir Realtime ====================
+  
+  // Listener realtime
+  import { onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  
+  function setupOngkirRealtime(){
+    const ongkirRef = ref(db, 'daftar_ongkir');
+    onValue(ongkirRef, (snap)=>{
+      ongkirData = snap.exists() ? snap.val() : {};
+      renderOngkir();
+      fillWilayahDatalist();
+    });
+  }
+  
+  // Render tabel ongkir
+  function renderOngkir(){
+    const div = el('ongkirTabel');
+    const rows = Object.entries(ongkirData||{}).sort((a,b)=>a[1].wilayah.localeCompare(b[1].wilayah));
+    if(!rows.length){ div.innerHTML = '<i>Belum ada wilayah.</i>'; return; }
+  
+    const thead = '<thead><tr><th>Wilayah</th><th>Ongkir</th><th>Aksi</th></tr></thead>';
+    const tbody = '<tbody>'+rows.map(([k,v])=>`
+      <tr>
+        <td><input value="${v.wilayah}" data-key="${k}" class="wilayahName"></td>
+        <td><input type="number" value="${v.ongkir}" class="wilayahHarga"></td>
+        <td class="flex">
+          <button class="btn" onclick="saveOngkirRow(this)">💾 Save</button>
+          <button class="btn danger" onclick="deleteOngkirRow(this)">🗑 Hapus</button>
+        </td>
+      </tr>`).join('') + '</tbody>';
+  
+    div.innerHTML = `<table>${thead}${tbody}</table>`;
+  }
+  
+  // Update datalist
+  function fillWilayahDatalist(){
+    const dl = el('wilayahList');
+    dl.innerHTML = Object.values(ongkirData||{}).sort((a,b)=>a.wilayah.localeCompare(b.wilayah))
+                      .map(v=>`<option value="${v.wilayah}">`).join('');
+  }
+  
+  // Tambah wilayah baru
+  async function simpanOngkir(){
+    const w = el('wilayahInput').value.trim();
+    const h = Number(el('hargaOngkir').value||0);
+    if(!w) return alert('Isi wilayah');
+  
+    await set(ref(db,'daftar_ongkir/'+w), { wilayah:w, ongkir:h });
+  
+    el('wilayahInput').value=''; 
+    el('hargaOngkir').value='';
+    toast(`💾 Ongkir wilayah "${w}" berhasil disimpan`);
+  }
+  window.simpanOngkir = simpanOngkir;
+  
+  // Hapus wilayah
+  async function hapusOngkir(){
+    const namaWilayah = el('wilayahInput').value.trim();
+    if(!namaWilayah) return alert('Pilih wilayah');
+  
+    const key = Object.keys(ongkirData).find(k=>ongkirData[k].wilayah === namaWilayah);
+    if(!key) return alert('Wilayah tidak ditemukan');
+  
+    await remove(ref(db,'daftar_ongkir/'+key));
+    toast('🗑 Wilayah dihapus');
+  }
+  window.hapusOngkir  = hapusOngkir;
+  
+  // Save per row di tabel
+  async function saveOngkirRow(btn){
+    const tr = btn.closest('tr');
+    const key = tr.querySelector('.wilayahName').dataset.key;
+    const nama = tr.querySelector('.wilayahName').value.trim();
+    const ongkir = Number(tr.querySelector('.wilayahHarga').value||0);
+  
+    if(!nama) return alert('Isi nama wilayah');
+    if(isNaN(ongkir)) return alert('Ongkir harus angka');
+  
+    await set(ref(db, 'daftar_ongkir/' + key), { wilayah: nama, ongkir });
+    toast('✅ Disimpan');
+  }
+  window.saveOngkirRow = saveOngkirRow;
+  
+  // Delete per row di tabel
+  async function deleteOngkirRow(btn){
+    const tr = btn.closest('tr');
+    const key = tr.querySelector('.wilayahName').dataset.key;
+    const nama = tr.querySelector('.wilayahName').value.trim();
+  
+    if(!confirm(`Hapus wilayah "${nama}"?`)) return;
+  
+    await remove(ref(db, 'daftar_ongkir/' + key));
+    toast('🗑 Dihapus');
+  }
+  window.deleteOngkirRow = deleteOngkirRow;
+  
+  // Panggil ini saat load admin panel
+  setupOngkirRealtime();
+
+
+  // ==================== Utils ====================
+  function downloadCSV(rows,filename){
+    const csv = rows.map(r=>r.map(c=>{
+      const v=(c===undefined||c===null)?'':String(c);
+      if(/[",\n]/.test(v)) return '"'+v.replace(/"/g,'""')+'"';
+      return v;
+    }).join(',')).join('\\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
