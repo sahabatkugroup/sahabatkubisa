@@ -8,9 +8,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-  --sky-light: #d0e8ff;
-  --sky: #a3c9ff;
-  --sky-strong: #4a90e2;
+  --sky-light: #00CAFF;
+  --sky: #00CAFF;
+  --sky-strong: #00CAFF;
   --accent: #0077c8;
   --muted: #4a6fa5;
   --card-bg: #ffffff;
@@ -34,27 +34,7 @@ html, body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
 
-header {
-  background: linear-gradient(90deg, var(--sky-strong), #3f7edb);
-  color: white;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 8px 24px var(--shadow-strong);
-  font-weight: 700;
-  font-size: 1.25rem;
-  letter-spacing: 0.03em;
-}
-
-header .title {
-  font-weight: 900;
-  letter-spacing: 0.05em;
 }
 
 .container {
@@ -133,6 +113,12 @@ select:focus {
   font-size: 1rem;
   letter-spacing: 0.02em;
   transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.btnbar {
+  display: flex;
+  justify-content: flex-end; /* rata kanan */
+  gap: 10px; /* jarak antar tombol */
+  margin-top: 10px;
 }
 
 .btn:hover {
@@ -519,11 +505,6 @@ th {
   </style>
 </head>
 <body>
-<header>
-  <div class="title">Sahabatku Delivery Group</div>
-  <button id="btnLogout" class="btn danger hidden">Logout</button>
-</header>
-
 <div class="container">
 
   <!-- LOGIN -->
@@ -541,7 +522,6 @@ th {
       <div style="align-self:end">
         <div class="btnbar">
           <button id="btnLogin" class="btn">Masuk</button>
-          <button id="btnDemo" class="btn secondary"></button>
         </div>
       </div>
     </div>
@@ -560,6 +540,8 @@ th {
           <div class="small">No Nota berikutnya:</div>
           <div id="nextNota" style="font-weight:800;font-size:18px;color:#0b4870">-</div>
         </div>
+          <button id="btnLogout" class="btn danger hidden">Logout</button>
+
       </div>
     </div>
 
@@ -569,7 +551,7 @@ th {
         <button data-tab="riwayatTab">📑 Riwayat</button>
         <button data-tab="rekapTab">📊 Rekap</button>
         <button data-tab="pelacakTab">📋 Pelacak</button>
-        <button onclick="window.location.href='cek-ongkir.html'">📍 Cek Ongkir"</button>
+        <button onclick="window.location.href='cek-ongkir.html'">📍 Cek Ongkir</button>
         <button onclick="window.location.href='absensi-kurir-sahabatku.html'">✅ Absensi Kurir</button>
 
 
@@ -618,15 +600,16 @@ th {
         <div class="grid grid-3" style="margin-top:8px;align-items:end">
           <div>
             <label>Total</label>
-            <div id="totalPesanan" style="font-weight:800;font-size:22px;color:#0b4870">Rp 0</div>
+            <div id="totalPesanan" style="font-weight:800;font-size:22px;color:#FFF4A4">Rp 0</div>
             <div class="small">Subtotal item + ongkir + tambahan</div>
           </div>
           <div></div>
         <div class="btnbar" style="justify-content:flex-end">
-          <button id="btnClearAll" class="btn danger">Bersihkan Semua</button>
           <button id="btnSaveForm" class="btn">Simpan Nota</button>
           <button id="btnExportPreview" class="btn secondary">Simpan Foto</button>
           <button id="btnSharePreview" class="btn secondary">Bagikan WhatsApp</button>
+          <button id="btnClearAll" class="btn danger">Bersihkan Semua</button>
+
         </div>
         </div>
 
@@ -723,8 +706,6 @@ th {
      Login Dummy
   ====================*/
   const sampleUsers = {
-    "Sonia":"A0103","Alfan":"A0106","Hafiz":"A0108","Gilang":"A0109","Eblek":"A0112",
-    "Nandar":"A0117","Pitri":"A0115","Robi":"A0118","Hambali":"A0119","Ulum":"A0120","Admin":"A1111"
   };
   let currentUser = null;
   let lastNoNota = 0;   // cache untuk tampilkan next number
@@ -745,7 +726,6 @@ th {
   }
 
   // LOGIN
-  el('btnDemo').addEventListener('click', ()=>{ el('loginUser').value='Sonia'; el('loginPass').value='A0103'; });
   el('btnLogin').addEventListener('click', doLogin);
   el('btnLogout').addEventListener('click', ()=>{ localStorage.removeItem('currentUser'); location.reload(); });
   qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
@@ -796,11 +776,21 @@ th {
     refreshNotaHistory();
   }
 
-  window.addEventListener('load', ()=>{
-    const saved = localStorage.getItem('currentUser');
-    if(saved && sampleUsers[saved]){
-      el('loginUser').value = saved; el('loginPass').value = sampleUsers[saved];
-      doLogin();
+  window.addEventListener('load', async ()=>{
+    const savedUser = localStorage.getItem('currentUser');
+    if(savedUser){
+      try {
+        // Cek di Firebase Realtime DB
+        const snap = await get(ref(db, 'kurir/' + savedUser));
+        if(snap.exists() && snap.val().enabled){
+          loginSuccess(savedUser);
+        } else {
+          localStorage.removeItem('currentUser');
+        }
+      } catch(err){
+        console.error("Firebase error:", err);
+        localStorage.removeItem('currentUser');
+      }
     }
   });
 
@@ -813,6 +803,25 @@ th {
   el('btnAddItem').addEventListener('click', ()=>addItemUI());
   el('btnClearItems').addEventListener('click', ()=>{ itemsArea.innerHTML=''; addItemUI(); updateTotals(); });
   el('btnAddTambahan').addEventListener('click', ()=> addTambahanUI());
+  el('btnClearAll').addEventListener('click', () => {
+  if(!confirm('Bersihkan semua form nota?')) return;
+  // Hapus semua item & tambahan
+  itemsArea.innerHTML = '';
+  tambahanArea.innerHTML = '';
+
+  // Tambah satu baris default masing-masing
+  addItemUI();
+  addTambahanUI();
+
+  // Reset input lain
+  el('ongkir').value = 0;
+  el('custPhone').value = '';
+
+  // Reset total & preview
+  updateTotals();
+  el('notaPreview').innerText = 'Belum ada nota.';
+});
+
   el('ongkir').addEventListener('input', updateTotals);
 
   el('btnSaveForm').addEventListener('click', saveNoteToFirebase);
@@ -950,7 +959,7 @@ th {
     lines.push(`No    : ${noNota}`);
     lines.push(`Tanggal: ${new Date(createdAt).toLocaleString('id-ID')}`);
     lines.push('--------------------------');
-    items.forEach((it,i)=> lines.push(`${i+1}. ${it.name||'(tanpa nama)'} (${it.qty} x Rp ${it.price.toLocaleString('id-ID')}) = Rp ${it.subtotal.toLocaleString('id-ID')}`));
+    items.forEach((it,i)=> lines.push(`${i+1}. ${it.name||''} (${it.qty} x Rp ${it.price.toLocaleString('id-ID')}) = Rp ${it.subtotal.toLocaleString('id-ID')}`));
     lines.push('--------------------------');
     lines.push(`Ongkir   : Rp ${ongkir.toLocaleString('id-ID')}`);
     tambahans.forEach(t=> lines.push(`${t.type||'Tambahan'}: Rp ${Number(t.nominal).toLocaleString('id-ID')}`));
@@ -966,6 +975,7 @@ th {
       items,tambahans,ongkir,total,custPhone,text
     };
   }
+  
 
   /* ===================
      Counter No Nota per user
@@ -1074,11 +1084,65 @@ th {
     el('notaPreview').innerText = n.text||'';
     setActiveTab('notaTab');
   };
-  window.hapusNote = async (id)=>{
+window.hapusNote = async (id)=>{
     if(!confirm('Hapus nota ini dari Firebase?')) return;
+    const snap = await get(ref(db, `nota/${currentUser}/${id}`));
+    if(!snap.exists()){ alert('Nota tidak ditemukan'); return; }
+    const n = snap.val();
+
+    // 1️⃣ Hapus nota utama
     await remove(ref(db, `nota/${currentUser}/${id}`));
-    alert('Terhapus.');
-  };
+
+    // 2️⃣ Hapus dari pelacakByNo
+    if(n.noNota){
+      const pelacakNoRef = ref(db, `pelacakByNo/${n.noNota}/${id}`);
+      await remove(pelacakNoRef);
+    }
+
+    // 3️⃣ Hapus dari pelacakByDate
+    if(n.createdAt){
+      const dateKey = n.createdAt.slice(0,10);
+      const pelacakDateRef = ref(db, `pelacakByDate/${dateKey}/${id}`);
+      await remove(pelacakDateRef);
+    }
+
+    // 4️⃣ Update counter lastNoNota
+    const allSnap = await get(ref(db, `nota/${currentUser}`));
+    let maxNo = 0;
+    if(allSnap.exists()){
+        Object.values(allSnap.val()).forEach(nota=>{
+            const no = Number(nota.noNota) || 0;
+            if(no > maxNo) maxNo = no;
+        });
+    }
+    lastNoNota = maxNo;
+    await update(ref(db, `counters/${currentUser}`), { lastNoNota });
+    updateNextNotaLabel();
+
+    // 5️⃣ Jika nota yang dihapus sedang dibuka di preview, bersihkan preview
+    if(window.currentPreviewId === id){
+        clearPreviewNota();
+        totalPesanan = 0;
+        updateTotalPesananLabel();
+    }
+
+    alert('Nota berhasil dihapus. Nomor nota berikutnya telah diperbarui.');
+    refreshNotaHistory();
+};
+
+// Fungsi bantu
+function clearPreviewNota(){
+    const preview = document.getElementById('previewNota');
+    if(preview) preview.innerHTML = '';
+    window.currentPreviewId = null;
+}
+
+function updateTotalPesananLabel(){
+    const label = document.getElementById('totalPesananLabel');
+    if(label) label.textContent = totalPesanan;
+}
+
+
 
   /* ===================
      REKAP BULANAN
@@ -1163,56 +1227,81 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
   el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
 });
 
-  /* ===================
-     PELACAK: No Nota / Tanggal
-  ====================*/
-  el('btnCariNota').addEventListener('click', async ()=>{
-    const no = (el('trackNoNota').value||'').trim();
-    const date = (el('trackDate').value||'').trim();
-    const hasilEl = el('pelacakHasil');
-    hasilEl.innerHTML = 'Mencari...';
+/* ===================
+   PELACAK: Cari No Nota / Tanggal (khusus currentUser)
+====================*/
+el('btnCariNota').addEventListener('click', async ()=>{
+  const no = (el('trackNoNota').value||'').trim();
+  const date = (el('trackDate').value||'').trim();
+  const hasilEl = el('pelacakHasil');
+  hasilEl.innerHTML = 'Mencari...';
 
-    let html = '';
-    if(no){
-      const s = await get(ref(db, `pelacakByNo/${no}`));
-      if(s.exists()){
-        const arr = Object.entries(s.val()).map(([id,v])=>({id,...v})).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  if(!currentUser){ hasilEl.innerHTML = '<p class="small">Login dulu.</p>'; return; }
+
+  let html = '';
+  
+  // 1️⃣ Cari berdasarkan No Nota
+  if(no){
+    const s = await get(ref(db, `pelacakByNo/${no}`));
+    if(s.exists()){
+      const arr = Object.entries(s.val())
+                       .map(([id,v]) => ({id, ...v}))
+                       .filter(n => n.username === currentUser) // hanya currentUser
+                       .sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+      if(arr.length===0){
+        html += `<p class="small">No Nota ${no} tidak ditemukan untuk akun ini.</p>`;
+      } else {
         html += `<h4>Hasil No Nota ${no}</h4>`;
         arr.forEach(n=>{
-          html += `<div class="card" style="padding:10px">
+          html += `<div class="card" style="padding:10px;margin-bottom:6px">
             <div><b>${new Date(n.createdAt).toLocaleString('id-ID')}</b> — Kurir: ${n.username}</div>
             <div>Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
           </div>`;
         });
-      } else {
-        html += `<p class="small">Tidak ada catatan untuk No Nota ${no}.</p>`;
       }
+    } else {
+      html += `<p class="small">No Nota ${no} tidak ditemukan.</p>`;
     }
+  }
 
-    if(date){
-      const s2 = await get(ref(db, `pelacakByDate/${date}`));
-      if(s2.exists()){
-        const arr2 = Object.entries(s2.val()).map(([id,v])=>({id,...v})).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
-        html += `<h4>Hasil Tanggal ${new Date(date).toLocaleDateString('id-ID')}</h4>`;
-        arr2.forEach(n=>{
-          html += `<div class="card" style="padding:10px">
-            <div><b>${new Date(n.createdAt).toLocaleString('id-ID')}</b> — Kurir: ${n.username} — No: ${n.noNota||'-'}</div>
+  // 2️⃣ Cari berdasarkan tanggal
+  if(date){
+    const s = await get(ref(db, `pelacakByDate/${date}`));
+    if(s.exists()){
+      const arr = Object.entries(s.val())
+                       .map(([id,v])=> ({id, ...v}))
+                       .filter(n => n.username === currentUser) // filter user
+                       .sort((a,b)=> (b.noNota||'').localeCompare(a.noNota||''));
+      if(arr.length===0){
+        html += `<p class="small">Tidak ada nota untuk tanggal ${date} di akun ini.</p>`;
+      } else {
+        html += `<h4>Hasil Tanggal ${date}</h4>`;
+        arr.forEach(n=>{
+          html += `<div class="card" style="padding:10px;margin-bottom:6px">
+            <div><b>No Nota: ${n.noNota}</b></div>
             <div>Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
           </div>`;
         });
-      } else {
-        html += `<p class="small">Tidak ada catatan untuk tanggal ini.</p>`;
       }
+    } else if(!no){
+      html += `<p class="small">Tidak ada nota pada tanggal ${date}.</p>`;
     }
+  }
 
-    if(!no && !date){ html = '<p class="small">Isi No Nota atau Tanggal untuk mencari.</p>'; }
-    hasilEl.innerHTML = html;
-  });
-  el('btnCariReset').addEventListener('click', ()=>{
-    el('trackNoNota').value = '';
-    el('trackDate').value = '';
-    el('pelacakHasil').innerHTML = '';
-  });
+  if(!no && !date){
+    html = '<p class="small">Isi No Nota atau Tanggal untuk mencari.</p>';
+  }
+
+  hasilEl.innerHTML = html;
+});
+
+// Reset pencarian
+el('btnCariReset').addEventListener('click', ()=>{
+  el('trackNoNota').value = '';
+  el('trackDate').value = '';
+  el('pelacakHasil').innerHTML = '';
+});
+
 
   /* ===================
      Export / Share Image (Web)
