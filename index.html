@@ -100,6 +100,37 @@ select:focus {
   box-shadow: 0 0 8px var(--sky-strong);
   background: #f0f8ff;
 }
+/* Posisi pojok kanan atas */
+#btnLogout {
+  position: fixed;       /* selalu di atas */
+  top: 20px;
+  right: 20px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(45deg, #ff4b2b, #ff416c);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+/* Hover efek animasi keren */
+#btnLogout:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 6px 25px rgba(255,65,108,0.6);
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  text-shadow: 0 0 5px #fff;
+}
+
+/* Saat ditekan */
+#btnLogout:active {
+  transform: scale(0.95) rotate(0deg);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
 
 .btn {
   background: var(--sky-strong);
