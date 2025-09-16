@@ -385,6 +385,52 @@ th {
   color: white;
   letter-spacing: 0.03em;
 }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.input-wrap { position:relative; margin-bottom:20px; }
+select, input {
+  width:100%; padding:8px; margin-top:4px;
+  border:1px solid #ccc; border-radius:6px;
+}
+.suggest {
+  position:absolute;
+  top:100%; left:0; right:0;
+  background:#fff;
+  border:1px solid #ccc;
+  max-height:200px;
+  overflow-y:auto;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  z-index:1000;
+
+  /* animasi */
+  opacity:0;
+  transform:scale(0.95);
+  height:0;
+  transition: all 0.25s ease;
+  pointer-events:none;
+}
+
+.suggest.show {
+  opacity:1;
+  transform:scale(1);
+  height:auto;
+  pointer-events:auto;
+}
+
+.s-item {
+  padding:5px 8px;
+  cursor:pointer;
+  font-size:14px;
+}
+.s-item:hover {
+  background:#f5f5f5;
+}
+
+}
+.s-item { padding:6px 10px; cursor:pointer; }
+.s-item:hover { background:#f0f0f0; }
+.harga { font-size:20px; font-weight:bold; margin-top:4px; }
+
 
 /* Mobile tweaks */
 @media (max-width: 900px) {
@@ -400,6 +446,27 @@ th {
   .line-card-tambahan {
     grid-template-columns: 1fr 1.2fr 120px;
   }
+}
+.input-wrap { position: relative; }
+.suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.s-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.s-item:hover {
+  background: #f0f0f0;
 }
 
 @media (max-width: 600px) {
@@ -531,7 +598,6 @@ th {
   }
 }
 
-
     }
   </style>
 </head>
@@ -582,7 +648,7 @@ th {
         <button data-tab="riwayatTab">📑 Riwayat</button>
         <button data-tab="rekapTab">📊 Rekap</button>
         <button data-tab="pelacakTab">📋 Pelacak</button>
-        <button onclick="window.location.href='cek-ongkir.html'">📍 Cek Ongkir</button>
+        <button data-tab="ongkirTab">📍 Cek Ongkir</button>
         <button onclick="window.location.href='absensi-kurir-sahabatku.html'">✅ Absensi Kurir</button>
 
 
@@ -701,10 +767,53 @@ th {
         </div>
         <div id="pelacakHasil" style="margin-top:10px"></div>
       </div>
+      
+      <!-- ONGKIR TAB -->
+      <div id="ongkirTab" class="tabContent hidden">
+        <h3>Cek Ongkir</h3>
+        <div class="grid">
+          <!-- ASAL -->
+          <div>
+            <label>Asal (opsional)</label>
+            <select id="asalSelect"></select>
+            <input id="asalInput" type="text" placeholder="Ketik lokasi asal… (opsional)">
+            <div class="suggest" id="asalSuggest"></div>
+          </div>
+          <!-- TUJUAN -->
+          <div>
+            <label>Tujuan</label>
+            <select id="tujuanSelect"></select>
+            <input id="tujuanInput" type="text" placeholder="Ketik lokasi tujuan…">
+            <div class="suggest" id="tujuanSuggest"></div>
+          </div>
+        </div>
 
+        <div class="btnbar">
+          <button id="cekBtn" class="btn primary">Cek Ongkir</button>
+          <button id="bersihkanBtn" class="btn secondary">Bersihkan</button>
+        </div>
+        
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+          <span class="small">Isi salah satu = ongkir normal</span>
+          <span class="small">Isi dua-duanya = (Asal + Tujuan) − 6.000</span>
+        </div>
+        
+        <div class="results" id="results">
+          <div class="card">
+            <h4>Ongkir Normal</h4>
+            <div class="harga" id="normalHarga">–</div>
+            <div class="small" id="normalKeterangan">—</div>
+          </div>
+          <div class="card">
+            <h4>Ongkir Rute</h4>
+            <div class="harga" id="ruteHarga">–</div>
+            <div class="small" id="ruteKeterangan">—</div>
+            <div class="small" id="ruteFormula" style="display:none"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
 </div>
 
 
@@ -712,7 +821,7 @@ th {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  import { getDatabase, ref, set, get, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  import { getDatabase, ref, set, get, onValue, update, remove, child } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
   // === CONFIG DARI KAMU ===
   const firebaseConfig = {
@@ -823,6 +932,151 @@ th {
         localStorage.removeItem('currentUser');
       }
     }
+const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
+let ongkirData = [];
+
+// 🔹 Ambil data ongkir dari Firebase
+async function loadOngkir(){
+  const snapshot = await get(child(ref(db), "daftar_ongkir"));
+  if(snapshot.exists()){
+    const val = snapshot.val();
+    ongkirData = Object.keys(val).map(key => ({
+      lokasi: String(val[key].wilayah).trim(),
+      ongkir: Number(val[key].ongkir) || 0
+    }));
+    console.log("✅ Data Firebase:", ongkirData);
+    fillSelect("asalSelect", ongkirData);
+    fillSelect("tujuanSelect", ongkirData);
+  }
+}
+
+function fillSelect(selectId, data){
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = `<option value="">-- Pilih --</option>`;
+  data.forEach(o=>{
+    const opt = document.createElement("option");
+    opt.value = o.lokasi;
+    opt.textContent = `${o.lokasi} (Rp ${o.ongkir.toLocaleString("id-ID")})`;
+    sel.appendChild(opt);
+  });
+}
+
+function showSuggestions(input, suggestBox) {
+  const val = input.value.toLowerCase();
+  suggestBox.innerHTML = "";
+  suggestBox.classList.remove("show"); // sembunyikan dulu
+
+  if (!val) return;
+
+  const filtered = ongkirData.filter(o => o.lokasi.toLowerCase().includes(val));
+  if(filtered.length === 0){
+    suggestBox.innerHTML = "<div class='s-item' style='color:#888'>Tidak ditemukan</div>";
+    suggestBox.classList.add("show");
+    return;
+  }
+
+  filtered.forEach(o=>{
+    const div=document.createElement("div");
+    div.className="s-item";
+    div.textContent = `${o.lokasi} (Rp ${o.ongkir})`;
+    div.onclick=()=>{
+      input.value = o.lokasi;
+      suggestBox.innerHTML="";
+      suggestBox.classList.remove("show");
+    };
+    suggestBox.appendChild(div);
+  });
+
+  suggestBox.classList.add("show"); // tampil dengan animasi
+}
+
+function findByName(name){
+  if(!name) return null;
+  const clean = name.trim().toLowerCase();
+  return ongkirData.find(o => o.lokasi.trim().toLowerCase() === clean) || null;
+}
+
+function hitung(){
+  const asalVal   = document.getElementById("asalInput").value.trim();
+  const asalSel   = document.getElementById("asalSelect").value;
+  const tujuanVal = document.getElementById("tujuanInput").value.trim();
+  const tujuanSel = document.getElementById("tujuanSelect").value;
+
+  const asal   = asalVal ? findByName(asalVal) : findByName(asalSel);
+  const tujuan = tujuanVal ? findByName(tujuanVal) : findByName(tujuanSel);
+
+  const normalHarga = document.getElementById("normalHarga");
+  const normalKet   = document.getElementById("normalKeterangan");
+  const ruteHarga   = document.getElementById("ruteHarga");
+  const ruteKet     = document.getElementById("ruteKeterangan");
+  const ruteFormula = document.getElementById("ruteFormula");
+
+  if(tujuan){
+    normalHarga.innerText = formatRp(tujuan.ongkir);
+    normalKet.innerText = "Tujuan: " + tujuan.lokasi;
+  } else if(asal){
+    normalHarga.innerText = formatRp(asal.ongkir);
+    normalKet.innerText = "Asal: " + asal.lokasi;
+  } else {
+    normalHarga.innerText = "–";
+    normalKet.innerText = "Lokasi tidak ditemukan";
+  }
+
+  if(asal && tujuan){
+    if(asal.lokasi === tujuan.lokasi){
+      ruteHarga.innerText = "–";
+      ruteKet.innerText = "Asal & tujuan sama → ongkir normal saja";
+      ruteFormula.style.display="none";
+      return;
+    }
+    const total = (asal.ongkir + tujuan.ongkir) - 6000;
+    ruteHarga.innerText = formatRp(total);
+    ruteKet.innerText = `${asal.lokasi} + ${tujuan.lokasi} - Rp6.000`;
+    ruteFormula.style.display="block";
+    ruteFormula.innerText = `(${asal.ongkir} + ${tujuan.ongkir}) - 6000 = ${total}`;
+  } else {
+    ruteHarga.innerText = "–";
+    ruteKet.innerText = "Isi asal & tujuan untuk ongkir rute";
+    ruteFormula.style.display="none";
+  }
+}
+
+// 🔹 Event
+document.getElementById("asalInput").addEventListener("input", ()=> showSuggestions(
+  document.getElementById("asalInput"), document.getElementById("asalSuggest")
+));
+document.getElementById("tujuanInput").addEventListener("input", ()=> showSuggestions(
+  document.getElementById("tujuanInput"), document.getElementById("tujuanSuggest")
+));
+
+document.getElementById("asalSelect").addEventListener("change", ()=> document.getElementById("asalInput").value = document.getElementById("asalSelect").value);
+document.getElementById("tujuanSelect").addEventListener("change", ()=> document.getElementById("tujuanInput").value = document.getElementById("tujuanSelect").value);
+
+document.getElementById("cekBtn").addEventListener("click", hitung);
+
+document.getElementById("bersihkanBtn").addEventListener("click", ()=>{
+  document.getElementById("asalInput").value="";
+  document.getElementById("asalSelect").value="";
+  document.getElementById("tujuanInput").value="";
+  document.getElementById("tujuanSelect").value="";
+  document.getElementById("asalSuggest").innerHTML="";
+  document.getElementById("tujuanSuggest").innerHTML="";
+  document.getElementById("normalHarga").innerText="–";
+  document.getElementById("normalKeterangan").innerText="—";
+  document.getElementById("ruteHarga").innerText="–";
+  document.getElementById("ruteKeterangan").innerText="—";
+  document.getElementById("ruteFormula").style.display="none";
+});
+
+document.addEventListener("click",(e)=>{
+  if(!e.target.closest(".suggest") && !e.target.closest("input")){
+    document.getElementById("asalSuggest").innerHTML="";
+    document.getElementById("tujuanSuggest").innerHTML="";
+  }
+});
+
+// 🔹 Load data saat awal
+loadOngkir();
   });
 
   /* ===================
