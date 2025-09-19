@@ -649,6 +649,7 @@ select, input {
         <button data-tab="rekapTab">📊 Rekap</button>
         <button data-tab="pelacakTab">📋 Pelacak</button>
         <button data-tab="ongkirTab">📍 Cek Ongkir</button>
+        <button data-tab="pengaturanTab">⚙️ Pengaturan</button>
         <button onclick="window.location.href='absensi-kurir-sahabatku.html'">✅ Absensi Kurir</button>
 
 
@@ -812,6 +813,28 @@ select, input {
           </div>
         </div>
       </div>
+
+    <div id="pengaturanTab" class="tabContent hidden">
+        <h3>Pengaturan Akun</h3>
+        <p class="small" style="margin-top:-8px; margin-bottom:12px;">Ubah username dan password Anda. Username baru akan menjadi nama kurir baru Anda di sistem.</p>
+        <div class="card">
+            <div class="stack">
+                <div>
+                </div>
+                <div>
+                    <label>Password Baru</label>
+                    <input id="newPassword" type="password" placeholder="Masukkan password baru">
+                </div>
+                <div>
+                    <label>Konfirmasi Password Baru</label>
+                    <input id="confirmPassword" type="password" placeholder="Ketik ulang password baru">
+                </div>
+                <div class="btnbar">
+                    <button id="btnUpdateProfile" class="btn full">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+        <p id="profileUpdateMsg" class="small" style="color:#2ecc71;margin-top:8px"></p>
     </div>
   </div>
 </div>
@@ -822,6 +845,8 @@ select, input {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
   import { getDatabase, ref, set, get, onValue, update, remove, child } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"; // Import Firebase Auth
+
 
   // === CONFIG DARI KAMU ===
   const firebaseConfig = {
@@ -863,13 +888,52 @@ select, input {
     qsa('.tabContent').forEach(t=> t.classList.add('hidden'));
     el(id).classList.remove('hidden');
     if(id==='riwayatTab') refreshNotaHistory();
+    if(id==='pengaturanTab') el('newUsername').value = currentUser; 
   }
 
   // LOGIN
   el('btnLogin').addEventListener('click', doLogin);
   el('btnLogout').addEventListener('click', ()=>{ localStorage.removeItem('currentUser'); location.reload(); });
   qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
+// === FUNGSI UTAMA UNTUK UPDATE PASSWORD SAJA ===
+  el('btnUpdateProfile').addEventListener('click', async () => {
+      const newPassword = el('newPassword').value.trim();
+      const confirmPassword = el('confirmPassword').value.trim();
+      const msg = el('profileUpdateMsg');
+      
+      msg.innerText = '';
+      msg.style.color = '#2ecc71';
 
+      if (!newPassword || !confirmPassword) {
+          msg.innerText = 'Semua field harus diisi.';
+          msg.style.color = '#c0392b';
+          return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+          msg.innerText = 'Password baru tidak cocok.';
+          msg.style.color = '#c0392b';
+          return;
+      }
+
+      try {
+          // Menggunakan `update()` untuk memperbarui password di Firebase Realtime Database
+          const updates = {};
+          updates['/kurir/' + currentUser + '/password'] = newPassword;
+          await update(ref(db), updates);
+
+          // Notifikasi pop-up saat berhasil
+          alert('Password berhasil diperbarui!');
+          el('newPassword').value = '';
+          el('confirmPassword').value = '';
+          msg.innerText = ''; // Kosongkan pesan teks
+      } catch (error) {
+          console.error("Error updating password:", error);
+          // Notifikasi pop-up saat gagal
+          alert('Gagal memperbarui password: ' + error.message);
+          msg.innerText = ''; // Kosongkan pesan teks
+      }
+  });
   async function doLogin(){
     const u = el('loginUser').value.trim();
     const p = el('loginPass').value.trim();
@@ -1348,7 +1412,7 @@ loadOngkir();
         html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
           <div style="flex:1">
             <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
-            <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
+            <div style="fontml,-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
             <div class="small">${(n.items||[]).length} item • Ongkir Rp ${(Number(n.ongkir)||0).toLocaleString('id-ID')}</div>
           </div>
           <div class="btnbar">
