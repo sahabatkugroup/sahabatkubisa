@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Jadwal & Absensi Kurir — Admin</title>
+<title>Jadwal & Absensi Kurir — Sahabatku Delivery</title>
 <style>
   /* ===== Reset & Root ===== */
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +28,7 @@
   .topbar .btn.active { background: var(--primary-dark); box-shadow: 0 6px 20px var(--shadow-strong); }
   .admin-bar .btn.alt { background: #e8f4fb; color: var(--primary-dark); box-shadow: none; border: 1.5px solid var(--primary); }
   .admin-bar .btn.danger { background: var(--danger); box-shadow: none; }
-  .admin-bar { display: flex; }
+  .admin-bar { display: none; }
   .tab { display: none; }
   .tab.active { display: block; }
   .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1.5px solid #d6e4f0; margin-top: 16px; box-shadow: 0 6px 20px rgba(58, 141, 222, 0.05); }
@@ -47,6 +47,12 @@
   .btn-on:hover, .btn-off:hover, .btn-pending:hover, .btn-on:focus, .btn-off:focus, .btn-pending:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
   .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: saturate(1.2) blur(6px); }
   .overlay.active { display: flex; }
+  .login { background: #fff; width: min(92vw, 460px); border-radius: 20px; box-shadow: 0 12px 30px var(--shadow-light); padding: 28px 32px; text-align: center; user-select: none; }
+  .login h3 { color: var(--primary-dark); margin-bottom: 20px; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.03em; }
+  .login input { width: 100%; padding: 14px 16px; border: 1.5px solid #cfe5f5; border-radius: 14px; margin: 12px 0; font-size: 1rem; color: var(--text); transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; }
+  .login input:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--primary); outline: none; background: #f0f8ff; }
+  .login .btn { width: 100%; padding: 14px 0; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: background var(--transition-speed) ease, box-shadow var(--transition-speed) ease; user-select: none; }
+  .login .btn:hover, .login .btn:focus { background: var(--primary-dark); box-shadow: 0 8px 24px var(--shadow-strong); outline: none; }
   .small { font-size: 13px; color: var(--text-muted); margin-top: 12px; user-select: none; }
   #popup { position: fixed; top: 14px; right: 14px; width: min(92vw, 340px); background: rgba(255, 255, 255, 0.95); color: var(--text); border: 1.5px solid #d6e4f0; border-left: 6px solid var(--ok); border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16); padding: 16px 20px; display: none; z-index: 9998; backdrop-filter: saturate(1.2) blur(6px); opacity: 0; transform: translateY(-16px); transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.25s ease; user-select: none; }
   #popup.show { display: block; opacity: 1; transform: translateY(0); }
@@ -54,105 +60,112 @@
   #popup .meta { font-size: 13px; color: var(--text-muted); }
   select { padding: 12px 16px; border: 1.5px solid #cfe5f5; border-radius: 14px; min-width: 220px; background: #f8fcff; cursor: pointer; transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; font-weight: 600; color: var(--text); user-select: none; }
   select:hover, select:focus { border-color: var(--primary); box-shadow: 0 6px 18px rgba(58, 141, 222, 0.25); outline: none; }
-  #pengajuanForm { display: none; }
+  #pengajuanForm { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; justify-content: center; background: #f8fcff; padding: 20px 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(58, 141, 222, 0.08); border: 1.5px solid #d6e4f0; }
   #pengajuanForm select { min-width: 200px; padding: 12px 16px; border-radius: 14px; border: 1.5px solid #cfe5f5; background: white; font-weight: 600; color: var(--text); transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; }
   #pengajuanForm select:hover, #pengajuanForm select:focus { border-color: var(--primary); box-shadow: 0 6px 18px rgba(58, 141, 222, 0.25); outline: none; }
   #pengajuanForm button { background: var(--primary); border-radius: 14px; padding: 12px 20px; color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease; user-select: none; border: none; box-shadow: 0 6px 20px rgba(58, 141, 222, 0.2); }
-  #pengajuanForm button:hover, #pengajuanForm button:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 8px 24px rgba(58, 141, 222, 0.3); }
-  #btn-logout, #btn-kembali { display: none; }
-  .modal { background: #fff; width: min(92vw, 460px); border-radius: 20px; box-shadow: 0 12px 30px var(--shadow-light); padding: 28px 32px; text-align: center; user-select: none; }
-  .modal h3 { color: var(--primary-dark); margin-bottom: 20px; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.03em; }
-  .modal select { width: 100%; margin: 12px 0; }
-  .modal .btn { width: 100%; padding: 14px 0; border: none; border-radius: 14px; background: var(--danger); color: #fff; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: background var(--transition-speed) ease, box-shadow var(--transition-speed) ease; user-select: none; }
-  .modal .btn:hover, .modal .btn:focus { background: #b71c1c; box-shadow: 0 8px 24px var(--shadow-strong); outline: none; }
-  .modal .btn.cancel { background: #e8f4fb; color: var(--primary-dark); margin-top: 10px; }
+  #pengajuanForm button:hover, #pengajuanForm button:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 0 8px 24px rgba(58, 141, 222, 0.3); }
+  #btn-login { display: none; }
+  /* Update the existing .btn-kembali CSS rule */
+.btn-kembali {
+  display: inline-block; /* Make it visible */
+  position: absolute; /* Position it relative to the parent with position: relative */
+  top: 24px; /* Adjust top and right for spacing */
+  right: 32px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: #e8f4fb;
+  color: var(--primary-dark);
+  font-weight: 700;
+  text-decoration: none;
+  border: 1.5px solid var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition for animation */
+  z-index: 20; /* Ensure it's on top of other content */
+}
+
+/* Add a hover effect for a "cool animation" */
+.btn-kembali:hover {
+  transform: translateY(-2px); /* Lifts the button slightly */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  filter: brightness(0.95);
+}
+
+/* Adjust the .card class to be the positioning context */
+.card {
+  position: relative; /* This is crucial for absolute positioning of .btn-kembali */
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px var(--shadow-light);
+  padding: 28px 32px;
+  transition: box-shadow var(--transition-speed) ease;
+}
   @media (max-width: 900px) { .container { padding: 16px 20px; } #pengajuanForm { flex-direction: column; gap: 16px; } .topbar, .admin-bar { justify-content: flex-start; } .topbar .btn, .admin-bar .btn { flex: 1 1 100%; } table { font-size: 14px; } }
   @media (max-width: 600px) { .container { padding: 16px 16px; } h1 { font-size: clamp(20px, 7vw, 28px); margin-bottom: 16px; } .btn-kembali { padding: 10px 14px; font-size: 14px; top: 14px; right: 14px; } #pengajuanForm { flex-direction: column; gap: 16px; padding: 16px 16px; } #pengajuanForm select, #pengajuanForm button { min-width: 100% !important; width: 100% !important; } .topbar, .admin-bar { justify-content: flex-start; gap: 12px; } .topbar .btn, .admin-bar .btn { flex: 1 1 100%; width: 100%; } .table-wrap { overflow-x: auto; } table { min-width: 100%; font-size: 13px; } thead th, tbody td { padding: 10px 8px; } .badge { padding: 5px 10px; font-size: 11px; } .btn-mini { padding: 6px 10px; font-size: 12px; } .login { width: 90vw; padding: 20px 20px; } .login input { padding: 10px 12px; font-size: 0.9rem; } .login .btn { padding: 12px 0; font-size: 1rem; } }
 </style>
 </head>
 <body>
 <div class="container">
-<div class="card">
-<h1>Jadwal & Absensi Kurir (Admin)</h1>
-
-<div class="topbar" id="topbar">
-  <a href="index.html" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
-  <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
-  <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
-  <button class="btn ghost" id="btn-absensi-tab" data-tab="tab-absensi">Absensi Harian</button>
-  <button class="btn ghost" id="btn-approval-tab" data-tab="tab-approval">Approval Kurir</button>
-  <span class="split"></span>
-  <div class="month-wrap">
-    <label for="monthPick"><small>Bulan:</small></label>
-    <input type="month" id="monthPick"/>
-  </div>
-  <button class="btn" id="btn-logout">Logout</button>
-</div>
-
-<div class="admin-bar" id="adminBar">
-  <button class="btn alt" id="btn-save">Save Data (Firestore)</button>
-  <button class="btn" id="btn-add">Tambah Kurir</button>
-  <button class="btn danger" id="btn-del">Hapus Kurir</button>
-  <button class="btn alt" id="btn-regen">Regenerasi Off</button>
-</div>
-
-<div id="tab-jadwal" class="tab active">
-  <div id="pengajuanForm" style="display: none;"></div>
-  <div class="table-wrap">
-    <table id="tableJadwal">
-      <thead><tr><th>Tanggal</th><th>Hari</th><th>Kurir Off</th><th>Pengganti</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<div id="tab-absensi" class="tab">
-  <div class="table-wrap">
-    <table id="tableAbsensi">
-      <thead><tr><th>Tanggal</th><th>Nama Kurir</th><th>Status</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <div class="card">
+    <h1>Jadwal & Absensi Kurir</h1>
+    <div class="topbar" id="topbar">
+      <a href="index.html" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+      <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
+      <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
+      <div class="month-wrap">
+        <label for="monthPick"><small>Bulan:</small></label>
+        <input type="month" id="monthPick"/>
+      </div>
+      <button class="btn" id="btn-login">Login</button>
+    </div>
+    <div id="tab-jadwal" class="tab active">
+      <div id="pengajuanForm">
+        <select id="pengajuanTanggal"></select>
+        <select id="penggantiKurir"></select>
+        <select id="tanggalTukar"></select>
+        <button class="btn" id="btnAjukan">Ajukan Tukar Off</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tableJadwal">
+          <thead><tr><th>Tanggal</th><th>Hari</th><th>Kurir Off</th><th>Pengganti</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="tab-rekap" class="tab">
+      <div class="table-wrap">
+        <table id="tableRekap">
+          <thead><tr><th>Nama Kurir</th><th>Total On</th><th>Total Off</th><th>Skor Keaktifan</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
-
-<div id="tab-rekap" class="tab">
-  <div class="table-wrap">
-    <table id="tableRekap">
-      <thead><tr><th>Nama Kurir</th><th>Total On</th><th>Total Off</th><th>Skor Keaktifan</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<div id="tab-approval" class="tab">
-  <div class="table-wrap">
-    <table id="tableApproval">
-      <thead><tr><th>Tanggal</th><th>Kurir Asal</th><th>Pengganti</th><th>Status</th><th>Aksi</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-</div>
-</div>
-
-<div class="overlay" id="delKurirOverlay">
-  <div class="modal">
-    <h3>Hapus Kurir</h3>
-    <select id="delKurirSelect"></select>
-    <button class="btn danger" id="confirmDel">Hapus</button>
-    <button class="btn ghost cancel" id="cancelDel">Batal</button>
+<div class="overlay" id="overlay">
+  <div class="login">
+    <h3>Login Admin (Firebase)</h3>
+    <input id="fbEmail" placeholder="Email admin (Firebase)"/>
+    <input id="fbPass" placeholder="Password (Firebase)" type="password"/>
+    <button class="btn" id="doFirebaseLogin">Login</button>
+    <div class="small">Akses admin hanya untuk UID: <code>J2rOyqBbEVaehucXpJl7jHh90Iz2</code></div>
+    <div style="margin-top:10px">
+      <button class="btn ghost" id="closeOverlay">Tutup</button>
+    </div>
   </div>
 </div>
 <div id="popup">
   <div class="title"><span class="icon">✅</span><span id="popTitle">Semua On</span></div>
   <div class="meta" id="popMeta">–</div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-  // Seluruh kode JavaScript dari file asli
+  // Script JavaScript dari file asli, dengan modifikasi untuk menyembunyikan elemen admin
+  // dan mengarahkan pengguna ke halaman admin setelah login berhasil.
+  
+  // ===== Firebase Init =====
   const firebaseConfig = {
     apiKey: "AIzaSyD2tC4MlutCuUZvg06yGKT3jveaTGjtZAg",
     authDomain: "absensikurir.firebaseapp.com",
@@ -167,21 +180,23 @@
   const db = firebase.firestore();
   const ADMIN_UID = "J2rOyqBbEVaehucXpJl7jHh90Iz2";
 
+  // ===== Firestore Refs =====
   const MASTER_DOC = db.collection('appdata').doc('master');
   const JADWAL_COLLECTION = db.collection('jadwal_off');
   const PENGAJUAN_COLLECTION = db.collection('pengajuan_off');
 
-  let kurirList = {};
+  // ===== State =====
+  let kurirList = [];
   let jadwalData = {};
-  let isFirebaseAdmin = true; // Langsung true karena ini halaman admin
   let unsubJadwal = null;
-  let pengajuanCache = [];
   const idDays = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
+  // ===== Utils =====
   const pad2 = n => String(n).padStart(2,'0');
   const fmtISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
   const parseISODate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
-
+  
+  // Popup
   function popupShow(ok,title,meta){
     const el=document.getElementById('popup');
     el.classList.remove('ok','danger','pending');
@@ -193,24 +208,7 @@
     setTimeout(()=>el.classList.remove('show'),5000);
   }
 
-  function generateFairOffForMonth(ym){
-    const [y,m]=ym.split('-').map(Number), year=y, month=m-1;
-    const days = new Date(year, month+1, 0).getDate();
-    const pool = kurirList.slice();
-    if (pool.length === 0) { jadwalData[ym]=[]; return; }
-    const counts = Object.fromEntries(pool.map(k=>[k,0]));
-    const arr=[];
-    for(let d=1; d<=days; d++){
-      const minV = Math.min(...Object.values(counts));
-      const cands = pool.filter(k=>counts[k]===minV);
-      const pick = cands[Math.floor(Math.random()*cands.length)];
-      counts[pick]+=1;
-      const dt=new Date(year, month, d);
-      arr.push({ tanggal: fmtISO(dt), off: pick, pengganti: '' });
-    }
-    jadwalData[ym]=arr;
-  }
-
+  // Renderers
   function renderJadwal(ym){
     const tbody = document.querySelector('#tableJadwal tbody');
     tbody.innerHTML='';
@@ -226,50 +224,17 @@
       badge.className = it.off ? 'badge off' : 'badge on';
       badge.textContent = it.off || 'Semua On';
       badge.style.cursor = 'pointer';
-      badge.title = 'Klik kanan untuk ubah';
-      badge.oncontextmenu = async (e)=>{
-        e.preventDefault();
-        const nama = prompt('Set OFF hari ini untuk kurir (kosongkan untuk Semua On):', it.off || '');
-        if(nama!==null){
-          const newOff = nama.trim();
-          it.off = newOff;
-          it.pengganti = '';
-          await saveFirestoreJadwal(ym);
-          popupShow(true,'OFF diperbarui',`${it.tanggal}: ${it.off || 'Semua On'}`);
-        }
+      badge.title = 'Klik untuk mengajukan tukar off';
+      badge.onclick = ()=>{
+        document.getElementById('pengajuanTanggal').value = it.tanggal;
+        setupFormPengajuan();
+        popupShow('pending','Tanggal dipilih','Silakan lengkapi form pengajuan');
       };
       tdOff.appendChild(badge);
       const tdPeng = document.createElement('td');
       tdPeng.textContent = it.pengganti || '—';
       tr.append(tdTanggal, tdHari, tdOff, tdPeng);
       tbody.appendChild(tr);
-    });
-  }
-
-  function renderAbsensi(ym){
-    const tbody = document.querySelector('#tableAbsensi tbody');
-    tbody.innerHTML='';
-    if(!jadwalData[ym]) return;
-    jadwalData[ym].forEach(it=>{
-      kurirList.forEach(async k=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${it.tanggal}</td><td>${k}</td>`;
-        let status = (k===it.off)?'Off':'On';
-        const tdS=document.createElement('td');
-        const btn=document.createElement('button');
-        btn.className='btn-mini ' + (status==='On'?'btn-on':'btn-off');
-        btn.textContent=status;
-        btn.onclick=async ()=>{
-          const ymLocal = it.tanggal.slice(0,7);
-          const row = jadwalData[ymLocal].find(r=>r.tanggal===it.tanggal);
-          row.off = (status==='On') ? k : '';
-          row.pengganti = '';
-          await saveFirestoreJadwal(ymLocal);
-        };
-        tdS.appendChild(btn);
-        tr.appendChild(tdS);
-        tbody.appendChild(tr);
-      });
     });
   }
 
@@ -287,106 +252,76 @@
       tbody.appendChild(tr);
     });
   }
+  
+  function setupFormPengajuan(){
+    const tanggalSel = document.getElementById('pengajuanTanggal');
+    const kurirSel = document.getElementById('penggantiKurir');
+    const tanggalTukarSel = document.getElementById('tanggalTukar');
+    const ym = document.getElementById('monthPick').value;
 
-  function renderApproval(){
-    const tbody = document.querySelector('#tableApproval tbody');
-    tbody.innerHTML='';
-    pengajuanCache.forEach(item=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${item.tanggal}</td><td>${item.asal}</td><td>${item.pengganti}</td><td>${item.status}</td>`;
-      if(item.status==='Pending'){
-        const tdA = document.createElement('td');
-        const btnApprove = document.createElement('button');
-        btnApprove.textContent = 'Approve';
-        btnApprove.className = 'btn-mini btn-on';
-        btnApprove.onclick = async()=>{
-          if(!confirm('Yakin ingin menyetujui pengajuan ini?')) return;
-          const ym = item.tanggal.slice(0,7);
-          if(!jadwalData[ym]) return;
-          const row = jadwalData[ym].find(it=>it.tanggal===item.tanggal);
-          const swapRow = jadwalData[ym].find(it=>it.tanggal===item.tukarTanggal);
-          if(row && swapRow){
-            const tmp = row.off;
-            row.off = swapRow.off;
-            swapRow.off = tmp;
-            row.pengganti = '';
-            swapRow.pengganti = '';
-            await PENGAJUAN_COLLECTION.doc(item.id).update({status:'Approved', approvedBy:ADMIN_UID});
-            await saveFirestoreJadwal(ym);
-            popupShow(true,'Approval berhasil','Tanggal: '+item.tanggal+' ↔ '+item.tukarTanggal);
-          }
-        };
-        tdA.appendChild(btnApprove);
-        const btnReject = document.createElement('button');
-        btnReject.textContent = 'Tolak';
-        btnReject.className = 'btn-mini btn-off';
-        btnReject.style.marginLeft = '6px';
-        btnReject.onclick = async()=>{
-          if(!confirm('Yakin ingin MENOLAK pengajuan ini?')) return;
-          await PENGAJUAN_COLLECTION.doc(item.id).update({status:'Rejected', rejectedBy:ADMIN_UID});
-          popupShow(false,'Pengajuan ditolak','Tanggal: '+item.tanggal);
-        };
-        tdA.appendChild(btnReject);
-        tr.appendChild(tdA);
-      } else {
-        tr.appendChild(document.createElement('td'));
-      }
-      tbody.appendChild(tr);
+    tanggalSel.innerHTML = '';
+    kurirSel.innerHTML='';
+    tanggalTukarSel.innerHTML='';
+
+    if(!jadwalData[ym]) return;
+
+    jadwalData[ym].forEach(it=>{
+      const opt = document.createElement('option');
+      opt.value=it.tanggal;
+      opt.textContent = it.tanggal + (it.off?` (Off: ${it.off})`:' (Semua On)');
+      tanggalSel.appendChild(opt);
     });
-  }
 
-  function quickSync(){
-    const ym=document.getElementById('monthPick').value;
-    renderJadwal(ym);
-    renderAbsensi(ym);
-    renderRekap(ym);
-    renderApproval();
-  }
+    kurirList.forEach(k=>{
+      const opt = document.createElement('option');
+      opt.value=k;
+      opt.textContent=k;
+      kurirSel.appendChild(opt);
+    });
 
-  async function saveFirestoreJadwal(ym){
-    if(jadwalData[ym]) { await JADWAL_COLLECTION.doc(ym).set({data:jadwalData[ym]}); }
+    function refreshTanggalTukar(){
+      const kurir = kurirSel.value;
+      tanggalTukarSel.innerHTML='';
+      jadwalData[ym].forEach(it=>{
+        if(it.off===kurir){
+          const opt = document.createElement('option');
+          opt.value=it.tanggal;
+          opt.textContent=it.tanggal;
+          tanggalTukarSel.appendChild(opt);
+        }
+      });
+      if(!tanggalTukarSel.children.length){
+        const opt=document.createElement('option');
+        opt.value=''; opt.textContent='(Kurir ini tidak punya OFF di bulan ini)';
+        tanggalTukarSel.appendChild(opt);
+      }
+    }
+    tanggalSel.onchange = refreshTanggalTukar;
+    kurirSel.onchange = refreshTanggalTukar;
+    refreshTanggalTukar();
   }
-
-  async function saveKurirList(){
-    await MASTER_DOC.set({kurirList,updated:new Date().toISOString()});
-  }
-
+  
+  // Realtime Listeners
   function listenMasterKurir(){
     MASTER_DOC.onSnapshot(async doc=>{
-      if(doc.exists){
-        kurirList = Array.isArray(doc.data().kurirList) ? doc.data().kurirList : [];
-        quickSync();
-      }else{
-        quickSync();
-      }
+      if(doc.exists){ kurirList = Array.isArray(doc.data().kurirList) ? doc.data().kurirList : []; }
+      renderJadwal(document.getElementById('monthPick').value);
+      renderRekap(document.getElementById('monthPick').value);
+      setupFormPengajuan();
     });
   }
 
   function listenJadwal(ym){
     if(unsubJadwal) { unsubJadwal(); unsubJadwal=null; }
-    unsubJadwal = JADWAL_COLLECTION.doc(ym).onSnapshot(async doc=>{
-      if(doc.exists){
-        jadwalData[ym] = doc.data().data || [];
-        quickSync();
-      }else{
-        generateFairOffForMonth(ym);
-        await saveFirestoreJadwal(ym);
-        popupShow(true,'Jadwal dibuat','Bulan '+ym);
-      }
+    unsubJadwal = JADWAL_COLLECTION.doc(ym).onSnapshot(doc=>{
+      if(doc.exists){ jadwalData[ym] = doc.data().data || []; }
+      else{ jadwalData[ym]=[]; } // fallback jika tidak ada data
+      renderJadwal(ym);
+      renderRekap(ym);
+      setupFormPengajuan();
     });
   }
-
-  function listenPengajuan(){
-    PENGAJUAN_COLLECTION.orderBy('created','desc').onSnapshot(snap=>{
-      pengajuanCache = [];
-      snap.forEach(doc=>{
-        const d = doc.data();
-        pengajuanCache.push({ id: doc.id, ...d });
-      });
-      renderApproval();
-    });
-  }
-
+  
   // Tabs
   document.querySelectorAll('.topbar .btn[data-tab]').forEach(b=>{
     b.onclick=()=>{
@@ -397,63 +332,49 @@
     }
   });
 
-  // Admin Actions
-  document.getElementById('btn-add').onclick=async()=>{
-    const nama=prompt('Nama Kurir baru:');
-    if(nama){ kurirList.push(nama.trim()); await saveKurirList(); popupShow(true,'Kurir ditambahkan',nama); }
+  // Pengajuan Tukar
+  document.getElementById('btnAjukan').onclick = async()=>{
+    const tanggal = document.getElementById('pengajuanTanggal').value;
+    const pengganti = document.getElementById('penggantiKurir').value;
+    const tukarTanggal = document.getElementById('tanggalTukar').value;
+    if(!tanggal||!pengganti||!tukarTanggal) return alert('Pilih tanggal, kurir pengganti & tanggal tukar');
+    const ym = tanggal.slice(0,7);
+    const row = (jadwalData[ym]||[]).find(it=>it.tanggal===tanggal);
+    if(!row || !row.off) return alert('Tidak ada kurir off pada tanggal ini');
+    try{
+      await PENGAJUAN_COLLECTION.add({
+        tanggal,
+        tukarTanggal,
+        asal: row.off,
+        pengganti,
+        status: 'Pending',
+        created: firebase.firestore.FieldValue.serverTimestamp(),
+        uid: auth.currentUser ? auth.currentUser.uid : null,
+        email: auth.currentUser ? auth.currentUser.email : null
+      });
+      popupShow('pending','Pengajuan terkirim','Tunggu approval admin');
+    }catch(e){ alert('Gagal mengirim pengajuan: '+e.message); }
   };
   
-  // Modifikasi Hapus Kurir
-  const delKurirOverlay = document.getElementById('delKurirOverlay');
-  const delKurirSelect = document.getElementById('delKurirSelect');
-
-  document.getElementById('btn-del').onclick = () => {
-    delKurirSelect.innerHTML = '';
-    kurirList.forEach(k => {
-      const opt = document.createElement('option');
-      opt.value = k;
-      opt.textContent = k;
-      delKurirSelect.appendChild(opt);
-    });
-    delKurirOverlay.classList.add('active');
-  };
-
-  document.getElementById('confirmDel').onclick = async () => {
-    const nama = delKurirSelect.value;
-    const idx = kurirList.indexOf(nama);
-    if (idx > -1) {
-      kurirList.splice(idx, 1);
-      await saveKurirList();
-      popupShow(true, 'Kurir dihapus', nama);
-    }
-    delKurirOverlay.classList.remove('active');
-  };
-
-  document.getElementById('cancelDel').onclick = () => {
-    delKurirOverlay.classList.remove('active');
-  };
-
-  document.getElementById('btn-regen').onclick=async()=>{
-    const ym=document.getElementById('monthPick').value;
-    if(!ym) return;
-    generateFairOffForMonth(ym);
-    await saveFirestoreJadwal(ym);
-    popupShow(true,'Regenerasi selesai',ym);
-  };
-  document.getElementById('btn-save').onclick=async()=>{
+  // Firebase Login (akan dialihkan ke halaman admin jika berhasil)
+  document.getElementById('btn-login').onclick=()=>document.getElementById('overlay').style.display='flex';
+  document.getElementById('closeOverlay').onclick=()=>document.getElementById('overlay').style.display='none';
+  document.getElementById('doFirebaseLogin').onclick=async()=>{
+    const email=document.getElementById('fbEmail').value.trim();
+    const pass=document.getElementById('fbPass').value;
+    if(!email||!pass) return alert('Masukkan email & password Firebase.');
     try{
-      await saveKurirList();
-      const ym=document.getElementById('monthPick').value;
-      if(jadwalData[ym]) await saveFirestoreJadwal(ym);
-      popupShow(true,'Data disimpan di Firestore');
-    }catch(e){ popupShow(false,'Gagal save: '+e.message); }
+      const cred=await auth.signInWithEmailAndPassword(email,pass);
+      if(cred.user.uid===ADMIN_UID){
+        window.location.href = 'absensi-kurir-admin.html'; // Alihkan ke halaman admin
+      }else{ await auth.signOut(); alert('UID bukan admin.'); }
+    }catch(err){ alert('Login Firebase gagal: '+(err.message||err)); console.error(err); }
   };
   
   // Init
   const monthPick = document.getElementById('monthPick');
   monthPick.value = new Date().toISOString().slice(0,7);
   listenMasterKurir();
-  listenPengajuan();
   listenJadwal(monthPick.value);
   monthPick.onchange = ()=> listenJadwal(monthPick.value);
 </script>
