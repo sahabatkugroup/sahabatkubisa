@@ -132,6 +132,45 @@ select:focus {
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
 }
 
+/* --- Notifikasi Style --- */
+#notificationBtn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px var(--shadow-light);
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+#notificationBtn:hover {
+  background: #f0f8ff;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px var(--shadow-strong);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  background: #e74c3c;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
 .btn {
   background: var(--sky-strong);
   color: white;
@@ -598,13 +637,68 @@ select, input {
   }
 }
 
+    /* Modal Notifikasi */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .notification-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .notification-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-item.unread {
+      background-color: #f9f9f9;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- LOGIN -->
   <div id="loginCard" class="card">
     <h2>Login Kurir</h2>
     <div class="grid grid-3">
@@ -625,8 +719,9 @@ select, input {
     <p id="loginMsg" class="small" style="color:#c0392b;margin-top:8px"></p>
   </div>
 
-  <!-- APP -->
   <div id="app" class="hidden">
+    <button id="notificationBtn">🔔<span id="notificationBadge" class="badge hidden"></span></button>
+
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
@@ -658,8 +753,7 @@ select, input {
 
   </div>
 
-    <!-- NOTA TAB -->
-      <div id="notaTab" class="tabContent">
+    <div id="notaTab" class="tabContent">
         <h3>Buat / Edit Nota</h3>
 
         <div class="grid grid-3">
@@ -720,13 +814,11 @@ select, input {
         </div>
       </div>
 
-      <!-- RIWAYAT TAB -->
       <div id="riwayatTab" class="tabContent hidden">
         <h3>Riwayat Nota (akun ini)</h3>
         <div id="notaHistory"></div>
       </div>
 
-      <!-- REKAP TAB -->
       <div id="rekapTab" class="tabContent hidden">
         <h3>Rekap Bulanan</h3>
         <div class="grid grid-3">
@@ -747,7 +839,6 @@ select, input {
         </div>
       </div>
 
-      <!-- PELACAK TAB -->
       <div id="pelacakTab" class="tabContent hidden">
         <h3>Pelacak Orderan</h3>
         <div class="grid grid-3">
@@ -769,18 +860,15 @@ select, input {
         <div id="pelacakHasil" style="margin-top:10px"></div>
       </div>
       
-      <!-- ONGKIR TAB -->
       <div id="ongkirTab" class="tabContent hidden">
         <h3>Cek Ongkir</h3>
         <div class="grid">
-          <!-- ASAL -->
           <div>
             <label>Asal (opsional)</label>
             <select id="asalSelect"></select>
             <input id="asalInput" type="text" placeholder="Ketik lokasi asal… (opsional)">
             <div class="suggest" id="asalSuggest"></div>
           </div>
-          <!-- TUJUAN -->
           <div>
             <label>Tujuan</label>
             <select id="tujuanSelect"></select>
@@ -839,16 +927,21 @@ select, input {
   </div>
 </div>
 
-
-<!-- Firebase SDK (ESM) -->
+<div id="notificationModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Notifikasi</h3>
+    <ul id="notificationList" class="notification-list"></ul>
+    <p id="noNotifMsg" class="small hidden" style="text-align:center;">Tidak ada notifikasi.</p>
+  </div>
+</div>
+<audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
   import { getDatabase, ref, set, get, onValue, update, remove, child } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"; // Import Firebase Auth
+  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-
-  // === CONFIG DARI KAMU ===
   const firebaseConfig = {
     apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
     authDomain: "sahabatkuu-bisa.firebaseapp.com",
@@ -860,27 +953,21 @@ select, input {
     measurementId: "G-PFGYL96VPS"
   };
 
-  // Init Firebase
   const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e) {}
+  try {
+    getAnalytics(app);
+  } catch(e) {}
 
-  // Realtime DB
   const db = getDatabase(app);
-
-  /* ===================
-     Login Dummy
-  ====================*/
-  const sampleUsers = {
-  };
+  const sampleUsers = {};
   let currentUser = null;
-  let lastNoNota = 0;   // cache untuk tampilkan next number
+  let lastNoNota = 0;
   let notaCounterLoaded = false;
-
+  
   const el = (id)=>document.getElementById(id);
   const qs = (sel)=>document.querySelector(sel);
   const qsa = (sel)=>Array.from(document.querySelectorAll(sel));
 
-  // UI helpers
   function setActiveTab(id){
     qsa('nav#tabNav button').forEach(b=>{
       b.classList.toggle('active', b.dataset.tab===id);
@@ -888,62 +975,58 @@ select, input {
     qsa('.tabContent').forEach(t=> t.classList.add('hidden'));
     el(id).classList.remove('hidden');
     if(id==='riwayatTab') refreshNotaHistory();
-    if(id==='pengaturanTab') el('newUsername').value = currentUser; 
+    if(id==='pengaturanTab') el('newUsername').value = currentUser;
   }
-
-  // LOGIN
+  
   el('btnLogin').addEventListener('click', doLogin);
-  el('btnLogout').addEventListener('click', ()=>{ localStorage.removeItem('currentUser'); location.reload(); });
-  qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
-// === FUNGSI UTAMA UNTUK UPDATE PASSWORD SAJA ===
-  el('btnUpdateProfile').addEventListener('click', async () => {
-      const newPassword = el('newPassword').value.trim();
-      const confirmPassword = el('confirmPassword').value.trim();
-      const msg = el('profileUpdateMsg');
-      
-      msg.innerText = '';
-      msg.style.color = '#2ecc71';
-
-      if (!newPassword || !confirmPassword) {
-          msg.innerText = 'Semua field harus diisi.';
-          msg.style.color = '#c0392b';
-          return;
-      }
-      
-      if (newPassword !== confirmPassword) {
-          msg.innerText = 'Password baru tidak cocok.';
-          msg.style.color = '#c0392b';
-          return;
-      }
-
-      try {
-          // Menggunakan `update()` untuk memperbarui password di Firebase Realtime Database
-          const updates = {};
-          updates['/kurir/' + currentUser + '/password'] = newPassword;
-          await update(ref(db), updates);
-
-          // Notifikasi pop-up saat berhasil
-          alert('Password berhasil diperbarui!');
-          el('newPassword').value = '';
-          el('confirmPassword').value = '';
-          msg.innerText = ''; // Kosongkan pesan teks
-      } catch (error) {
-          console.error("Error updating password:", error);
-          // Notifikasi pop-up saat gagal
-          alert('Gagal memperbarui password: ' + error.message);
-          msg.innerText = ''; // Kosongkan pesan teks
-      }
+  el('btnLogout').addEventListener('click', ()=>{
+    localStorage.removeItem('currentUser');
+    location.reload();
   });
+  qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
+
+  el('btnUpdateProfile').addEventListener('click', async () => {
+    const newPassword = el('newPassword').value.trim();
+    const confirmPassword = el('confirmPassword').value.trim();
+    const msg = el('profileUpdateMsg');
+    msg.innerText = '';
+    msg.style.color = '#2ecc71';
+    
+    if (!newPassword || !confirmPassword) {
+      msg.innerText = 'Semua field harus diisi.';
+      msg.style.color = '#c0392b';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      msg.innerText = 'Password baru tidak cocok.';
+      msg.style.color = '#c0392b';
+      return;
+    }
+
+    try {
+      const updates = {};
+      updates['/kurir/' + currentUser + '/password'] = newPassword;
+      await update(ref(db), updates);
+
+      alert('Password berhasil diperbarui!');
+      el('newPassword').value = '';
+      el('confirmPassword').value = '';
+      msg.innerText = '';
+    } catch (error) {
+      console.error("Error updating password:", error);
+      alert('Gagal memperbarui password: ' + error.message);
+      msg.innerText = '';
+    }
+  });
+
   async function doLogin(){
     const u = el('loginUser').value.trim();
     const p = el('loginPass').value.trim();
-  
-    // 1️⃣ Cek sampleUsers (dummy)
+    
     if(u && sampleUsers[u]===p){
       return loginSuccess(u);
     }
-  
-    // 2️⃣ Cek di Firebase Realtime Database (kurir/{username})
+
     try {
       const snap = await get(ref(db, 'kurir/' + u));
       if(snap.exists()){
@@ -965,8 +1048,7 @@ select, input {
       el('loginMsg').innerText = 'Gagal konek Firebase!';
     }
   }
-  
-  // 🔹 Helper untuk login sukses
+
   function loginSuccess(username){
     currentUser = username;
     localStorage.setItem('currentUser', username);
@@ -978,6 +1060,118 @@ select, input {
     setActiveTab('notaTab');
     ensureCounter().then(updateNextNotaLabel);
     refreshNotaHistory();
+
+    startNotificationListener();
+  }
+
+  // ============== Notifikasi Section =================
+  const notificationSound = el('notificationSound');
+  const notificationModal = el('notificationModal');
+  const notificationListEl = el('notificationList');
+  const noNotifMsgEl = el('noNotifMsg');
+  const modalCloseBtn = qs('.modal .close');
+
+  function startNotificationListener() {
+    // Jalur Firebase diubah ke `messages`
+    const notificationRef = ref(db, `messages/${currentUser}`);
+    onValue(notificationRef, (snapshot) => {
+      let hasNewNotification = false;
+      if (snapshot.exists()) {
+        const notifications = snapshot.val();
+        for (const key in notifications) {
+          if (notifications[key] && !notifications[key].read) {
+            hasNewNotification = true;
+            break;
+          }
+        }
+      }
+      if (hasNewNotification) {
+        el('notificationBadge').classList.remove('hidden');
+        notificationSound.play().catch(e => console.warn("Audio play failed:", e));
+      } else {
+        el('notificationBadge').classList.add('hidden');
+      }
+    });
+  }
+
+  async function displayNotifications() {
+    notificationListEl.innerHTML = '';
+    noNotifMsgEl.classList.add('hidden');
+    
+    if (!currentUser) return;
+
+    try {
+      const notificationRef = ref(db, `messages/${currentUser}`);
+      const snapshot = await get(notificationRef);
+
+      if (snapshot.exists()) {
+        const allNotifications = snapshot.val();
+        const unreadNotifications = [];
+        const readNotifications = [];
+
+        // Sort notifications by timestamp descending (newest first)
+        const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
+          return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
+        });
+
+        for (const key of sortedKeys) {
+            const notification = allNotifications[key];
+            if (!notification.read) {
+                unreadNotifications.push({ key, ...notification });
+            } else {
+                readNotifications.push({ key, ...notification });
+            }
+        }
+
+        let notificationsToDisplay = [];
+        if (unreadNotifications.length > 0) {
+            // Jika ada pesan baru, hanya tampilkan pesan baru
+            notificationsToDisplay = unreadNotifications;
+            // Tandai pesan sebagai sudah dibaca
+            const updates = {};
+            unreadNotifications.forEach(notif => {
+                updates[`/messages/${currentUser}/${notif.key}/read`] = true;
+            });
+            await update(ref(db), updates);
+        } else {
+            // Jika tidak ada pesan baru, tampilkan semua pesan yang sudah dibaca
+            notificationsToDisplay = readNotifications;
+        }
+
+        if (notificationsToDisplay.length > 0) {
+            notificationsToDisplay.forEach(notif => {
+                const li = document.createElement('li');
+                li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+                li.innerHTML = `<strong>Pesan Baru:</strong><br>${notif.message || 'Tidak ada konten'}`;
+                notificationListEl.appendChild(li);
+            });
+        } else {
+            noNotifMsgEl.classList.remove('hidden');
+        }
+        
+        notificationModal.style.display = 'block';
+
+      } else {
+        noNotifMsgEl.classList.remove('hidden');
+        notificationModal.style.display = 'block';
+      }
+    } catch (error) {
+      console.error("Failed to display or sync notifications:", error);
+    }
+  }
+
+  el('notificationBtn').addEventListener('click', displayNotifications);
+  modalCloseBtn.addEventListener('click', () => {
+    notificationModal.style.display = 'none';
+  });
+  window.addEventListener('click', (event) => {
+    if (event.target == notificationModal) {
+      notificationModal.style.display = 'none';
+    }
+  });
+
+  if (localStorage.getItem('currentUser')) {
+    loginSuccess(localStorage.getItem('currentUser'));
   }
 
   window.addEventListener('load', async ()=>{
