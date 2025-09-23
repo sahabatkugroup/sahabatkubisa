@@ -1,409 +1,768 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Jadwal & Absensi Kurir — Sahabatku Delivery</title>
-<style>
-  /* ===== Reset & Root ===== */
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --primary: #00CAFF; --primary-dark: #0b3b5a; --bg: #00CAFF;
-    --ok: #43a047; --danger: #e53935; --pending: #f9a825;
-    --text: #1a2e4a; --text-muted: #5a6d8c;
-    --radius: 16px; --shadow-light: rgba(58, 141, 222, 0.15);
-    --shadow-strong: rgba(58, 141, 222, 0.25);
-    --popup-duration: 5000ms; --transition-speed: 0.3s;
-  }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Ubuntu, Arial, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; line-height: 1.6; font-size: 16px; }
-  .container { max-width: 1200px; margin: 24px auto; padding: 24px 32px; }
-  .card { background: #fff; border-radius: var(--radius); box-shadow: 0 12px 30px var(--shadow-light); padding: 28px 32px; transition: box-shadow var(--transition-speed) ease; }
-  .card:hover { box-shadow: 0 16px 40px var(--shadow-strong); }
-  h1 { color: var(--primary-dark); text-align: center; font-weight: 900; font-size: clamp(24px, 4vw, 36px); margin-bottom: 24px; letter-spacing: 0.04em; text-shadow: 0 1px 3px rgba(58, 141, 222, 0.2); }
-  .btn-kembali { display: none; }
-  .topbar, .admin-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; margin: 12px 0 20px; }
-  .topbar .btn, .admin-bar .btn { padding: 12px 18px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); user-select: none; }
-  .topbar .btn:hover, .admin-bar .btn:hover, .topbar .btn:focus, .admin-bar .btn:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
-  .topbar .btn.ghost { background: #e8f4fb; color: var(--primary-dark); box-shadow: none; border: 1.5px solid var(--primary); }
-  .topbar .btn.active { background: var(--primary-dark); box-shadow: 0 6px 20px var(--shadow-strong); }
-  .admin-bar .btn.alt { background: #e8f4fb; color: var(--primary-dark); box-shadow: none; border: 1.5px solid var(--primary); }
-  .admin-bar .btn.danger { background: var(--danger); box-shadow: none; }
-  .admin-bar { display: none; }
-  .tab { display: none; }
-  .tab.active { display: block; }
-  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1.5px solid #d6e4f0; margin-top: 16px; box-shadow: 0 6px 20px rgba(58, 141, 222, 0.05); }
-  table { width: 100%; border-collapse: collapse; font-size: 15px; color: var(--text); min-width: 600px; }
-  thead th { position: sticky; top: 0; background: var(--primary); color: #fff; font-weight: 700; padding: 14px 16px; letter-spacing: 0.03em; z-index: 10; text-align: center; user-select: none; box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.1); }
-  tbody td { padding: 14px 16px; border-bottom: 1.5px solid #d6e4f0; text-align: center; transition: background var(--transition-speed) ease; }
-  tbody tr:hover td { background: #d9eaff; cursor: default; }
-  .badge { display: inline-block; padding: 7px 16px; border-radius: 9999px; font-weight: 700; font-size: 13px; user-select: none; transition: background var(--transition-speed) ease, color var(--transition-speed) ease; white-space: nowrap; }
-  .badge.on { background: #e9f7ef; color: #1b5e20; border: 1.5px solid #cdebd6; }
-  .badge.off { background: #ffebee; color: #b71c1c; border: 1.5px solid #ffcdd2; }
-  .badge.pending { background: #fff8e1; color: #f9a825; border: 1.5px solid #ffe082; }
-  .btn-mini { padding: 8px 14px; border: none; border-radius: 14px; color: #fff; font-weight: 700; cursor: pointer; transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); user-select: none; font-size: 14px; }
-  .btn-on { background: var(--ok); }
-  .btn-off { background: var(--danger); }
-  .btn-pending { background: var(--pending); }
-  .btn-on:hover, .btn-off:hover, .btn-pending:hover, .btn-on:focus, .btn-off:focus, .btn-pending:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
-  .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: saturate(1.2) blur(6px); }
-  .overlay.active { display: flex; }
-  .login { background: #fff; width: min(92vw, 460px); border-radius: 20px; box-shadow: 0 12px 30px var(--shadow-light); padding: 28px 32px; text-align: center; user-select: none; }
-  .login h3 { color: var(--primary-dark); margin-bottom: 20px; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.03em; }
-  .login input { width: 100%; padding: 14px 16px; border: 1.5px solid #cfe5f5; border-radius: 14px; margin: 12px 0; font-size: 1rem; color: var(--text); transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; }
-  .login input:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--primary); outline: none; background: #f0f8ff; }
-  .login .btn { width: 100%; padding: 14px 0; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: background var(--transition-speed) ease, box-shadow var(--transition-speed) ease; user-select: none; }
-  .login .btn:hover, .login .btn:focus { background: var(--primary-dark); box-shadow: 0 8px 24px var(--shadow-strong); outline: none; }
-  .small { font-size: 13px; color: var(--text-muted); margin-top: 12px; user-select: none; }
-  #popup { position: fixed; top: 14px; right: 14px; width: min(92vw, 340px); background: rgba(255, 255, 255, 0.95); color: var(--text); border: 1.5px solid #d6e4f0; border-left: 6px solid var(--ok); border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16); padding: 16px 20px; display: none; z-index: 9998; backdrop-filter: saturate(1.2) blur(6px); opacity: 0; transform: translateY(-16px); transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.25s ease; user-select: none; }
-  #popup.show { display: block; opacity: 1; transform: translateY(0); }
-  #popup .title { font-weight: 800; margin-bottom: 6px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary-dark); }
-  #popup .meta { font-size: 13px; color: var(--text-muted); }
-  select { padding: 12px 16px; border: 1.5px solid #cfe5f5; border-radius: 14px; min-width: 220px; background: #f8fcff; cursor: pointer; transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; font-weight: 600; color: var(--text); user-select: none; }
-  select:hover, select:focus { border-color: var(--primary); box-shadow: 0 6px 18px rgba(58, 141, 222, 0.25); outline: none; }
-  #pengajuanForm { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; justify-content: center; background: #f8fcff; padding: 20px 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(58, 141, 222, 0.08); border: 1.5px solid #d6e4f0; }
-  #pengajuanForm select { min-width: 200px; padding: 12px 16px; border-radius: 14px; border: 1.5px solid #cfe5f5; background: white; font-weight: 600; color: var(--text); transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease; }
-  #pengajuanForm select:hover, #pengajuanForm select:focus { border-color: var(--primary); box-shadow: 0 6px 18px rgba(58, 141, 222, 0.25); outline: none; }
-  #pengajuanForm button { background: var(--primary); border-radius: 14px; padding: 12px 20px; color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease; user-select: none; border: none; box-shadow: 0 6px 20px rgba(58, 141, 222, 0.2); }
-  #pengajuanForm button:hover, #pengajuanForm button:focus { filter: brightness(0.9); transform: translateY(-2px); outline: none; box-shadow: 0 8px 24px rgba(58, 141, 222, 0.3); }
-  #btn-login { display: none; }
-  /* Update the existing .btn-kembali CSS rule */
-.btn-kembali {
-  display: inline-block; /* Make it visible */
-  position: absolute; /* Position it relative to the parent with position: relative */
-  top: 24px; /* Adjust top and right for spacing */
-  right: 32px;
-  padding: 10px 16px;
-  border-radius: 14px;
-  background: #e8f4fb;
-  color: var(--primary-dark);
-  font-weight: 700;
-  text-decoration: none;
-  border: 1.5px solid var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition for animation */
-  z-index: 20; /* Ensure it's on top of other content */
-}
-
-/* Add a hover effect for a "cool animation" */
-.btn-kembali:hover {
-  transform: translateY(-2px); /* Lifts the button slightly */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  filter: brightness(0.95);
-}
-
-/* Adjust the .card class to be the positioning context */
-.card {
-  position: relative; /* This is crucial for absolute positioning of .btn-kembali */
-  background: #fff;
-  border-radius: var(--radius);
-  box-shadow: 0 12px 30px var(--shadow-light);
-  padding: 28px 32px;
-  transition: box-shadow var(--transition-speed) ease;
-}
-  @media (max-width: 900px) { .container { padding: 16px 20px; } #pengajuanForm { flex-direction: column; gap: 16px; } .topbar, .admin-bar { justify-content: flex-start; } .topbar .btn, .admin-bar .btn { flex: 1 1 100%; } table { font-size: 14px; } }
-  @media (max-width: 600px) { .container { padding: 16px 16px; } h1 { font-size: clamp(20px, 7vw, 28px); margin-bottom: 16px; } .btn-kembali { padding: 10px 14px; font-size: 14px; top: 14px; right: 14px; } #pengajuanForm { flex-direction: column; gap: 16px; padding: 16px 16px; } #pengajuanForm select, #pengajuanForm button { min-width: 100% !important; width: 100% !important; } .topbar, .admin-bar { justify-content: flex-start; gap: 12px; } .topbar .btn, .admin-bar .btn { flex: 1 1 100%; width: 100%; } .table-wrap { overflow-x: auto; } table { min-width: 100%; font-size: 13px; } thead th, tbody td { padding: 10px 8px; } .badge { padding: 5px 10px; font-size: 11px; } .btn-mini { padding: 6px 10px; font-size: 12px; } .login { width: 90vw; padding: 20px 20px; } .login input { padding: 10px 12px; font-size: 0.9rem; } .login .btn { padding: 12px 0; font-size: 1rem; } }
-</style>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Jadwal & Absensi Kurir</title>
+    <style>
+        /* ===== Reset & Root ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #00CAFF;
+            --primary-dark: #0088B3;
+            --bg: #00CAFF;
+            --ok: #10B981;
+            --danger: #EF4444;
+            --pending: #F59E0B;
+            --text: #1F2937;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --radius: 16px;
+            --shadow: rgba(0, 0, 0, 0.06);
+            --shadow-lg: rgba(0, 0, 0, 0.12);
+            --transition-speed: 0.3s;
+            --gradient-primary: linear-gradient(135deg, #00CAFF 0%, #0088B3 100%);
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; 
+            background: linear-gradient(135deg, var(--bg) 0%, #e0f2fe 100%); 
+            color: var(--text); 
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale; 
+            line-height: 1.6; 
+            font-size: 16px; 
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px); 
+            border-radius: var(--radius); 
+            box-shadow: 0 8px 32px var(--shadow); 
+            padding: 32px; 
+            margin-bottom: 24px; 
+            position: relative; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 { 
+            color: var(--primary-dark); 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: clamp(28px, 4vw, 40px); 
+            margin-bottom: 32px; 
+            letter-spacing: 0.05em; 
+            background: var(--gradient-primary); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text;
+        }
+        h4 { 
+            color: var(--text); 
+            font-weight: 700; 
+            font-size: 1.375rem; 
+            margin-bottom: 24px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+        }
+        h4::before {
+            content: '🎛️'; 
+            font-size: 1.2em;
+        }
+        .btn-kembali {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-kembali::before {
+            content: '←';
+        }
+        .btn-kembali:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: translateX(-4px);
+            box-shadow: 0 4px 12px rgba(0, 202, 255, 0.3);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 24px;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            user-select: none;
+            background: var(--gradient-primary);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 202, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn:hover { 
+            background: var(--primary-dark); 
+            transform: translateY(-2px) scale(1.02); 
+            box-shadow: 0 8px 20px rgba(0, 202, 255, 0.4); 
+        }
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn.danger { 
+            background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+        .btn.danger:hover { 
+            background: #DC2626; 
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+        .btn.ghost { 
+            background: transparent; 
+            color: var(--primary); 
+            border-color: var(--primary); 
+            box-shadow: none; 
+        }
+        .btn.ghost:hover { 
+            background: var(--primary); 
+            color: #fff; 
+            box-shadow: 0 4px 14px rgba(0, 202, 255, 0.3); 
+        }
+        .btn.alt { 
+            background: rgba(255, 255, 255, 0.8); 
+            color: var(--text); 
+            border-color: var(--border-color); 
+            box-shadow: none; 
+        }
+        .btn.alt:hover { 
+            background: #F9FAFB; 
+            transform: none; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+        .btn-mini { 
+            padding: 8px 16px; 
+            font-size: 0.875rem; 
+            border-radius: 10px; 
+            font-weight: 600; 
+            min-width: 80px;
+            transition: all 0.2s ease;
+        }
+        .btn-mini:hover {
+            transform: scale(1.05);
+        }
+        .btn-on { 
+            background: linear-gradient(135deg, var(--ok) 0%, #059669 100%);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .btn-off { 
+            background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+        .btn-pending { 
+            background: linear-gradient(135deg, var(--pending) 0%, #D97706 100%);
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+        }
+        input, select {
+            padding: 14px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.9);
+            transition: all var(--transition-speed) ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 202, 255, 0.2);
+            transform: scale(1.02);
+        }
+        input[type="month"], input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .topbar, .admin-bar { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            align-items: center; 
+            margin-bottom: 32px; 
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+        .topbar .btn { 
+            flex: 1; 
+            min-width: 120px;
+            text-align: center; 
+            position: relative;
+        }
+        .topbar .btn.active { 
+            background: var(--gradient-primary); 
+            color: #fff; 
+            box-shadow: 0 6px 16px rgba(0, 202, 255, 0.4); 
+            transform: scale(1.05);
+        }
+        .topbar .month-wrap { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-left: auto; 
+            background: rgba(255, 255, 255, 0.5);
+            padding: 8px 16px;
+            border-radius: 10px;
+        }
+        .tab { display: none; animation: fadeIn 0.4s ease-in; }
+        .tab.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .table-wrap { 
+            overflow-x: auto; 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--radius); 
+            margin-top: 20px; 
+            background: rgba(255, 255, 255, 0.8);
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 15px; 
+            color: var(--text); 
+            min-width: 700px; 
+        }
+        thead th { 
+            background: var(--gradient-primary); 
+            color: #fff; 
+            font-weight: 700; 
+            padding: 16px 18px; 
+            text-align: center; 
+            position: sticky; 
+            top: 0;
+            z-index: 10;
+        }
+        tbody td { 
+            padding: 16px 18px; 
+            border-bottom: 1px solid var(--border-color); 
+            text-align: center; 
+            background: rgba(255, 255, 255, 0.9); 
+            transition: all 0.2s ease;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { 
+            background: rgba(0, 202, 255, 0.1); 
+            transform: scale(1.01);
+        }
+        .badge { 
+            display: inline-block; 
+            padding: 8px 16px; 
+            border-radius: 9999px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .badge:hover {
+            transform: scale(1.05);
+        }
+        .badge.on { 
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); 
+            color: var(--ok); 
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+        .badge.off { 
+            background: linear-gradient(135deg, #FEF2F2 0%, #FECACA 100%); 
+            color: var(--danger); 
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+        .badge.pending { 
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
+            color: var(--pending); 
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+        }
+        .small { 
+            font-size: 14px; 
+            color: var(--text-muted); 
+            margin-top: 16px; 
+            font-style: italic;
+        }
+        #popup { 
+            position: fixed; 
+            top: 20px; 
+            right: -400px; 
+            width: min(95vw, 380px); 
+            background: rgba(255, 255, 255, 0.98); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            border-left: 6px solid var(--ok); 
+            border-radius: var(--radius); 
+            box-shadow: 0 12px 40px var(--shadow-lg); 
+            padding: 20px 24px; 
+            display: none; 
+            z-index: 9999; 
+            opacity: 0; 
+            transform: translateY(-20px) scale(0.95); 
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            user-select: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #popup.show { 
+            display: block; 
+            right: 20px; 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+        }
+        #popup .title { 
+            font-weight: 800; 
+            font-size: 1.125rem; 
+            color: var(--primary-dark); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        #popup .icon {
+            font-size: 1.5em;
+            animation: bounceIn 0.6s ease-out;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        #popup .meta { 
+            font-size: 14px; 
+            color: var(--text-muted); 
+            line-height: 1.5;
+        }
+        #popup.error { border-left-color: var(--danger); }
+        #popup.pending { border-left-color: var(--pending); }
+        .search-bar {
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 24px; 
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+        .form-tukar-off {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .form-tukar-off select {
+            width: 100%;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        @media (max-width: 768px) {
+            .container { padding: 0 12px; }
+            .topbar, .admin-bar { flex-direction: column; align-items: stretch; }
+            .topbar .month-wrap { margin-left: 0; margin-top: 12px; justify-content: center; }
+            .topbar .btn, .admin-bar .btn { width: 100%; }
+            .card { padding: 20px; }
+            #popup { right: -100%; width: 95vw; }
+            #popup.show { right: 5px; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <div class="card">
-    <h1>Jadwal & Absensi Kurir</h1>
-    <div class="topbar" id="topbar">
-      <a href="index.html" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
-      <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
-      <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
-      <div class="month-wrap">
-        <label for="monthPick"><small>Bulan:</small></label>
-        <input type="month" id="monthPick"/>
-      </div>
-      <button class="btn" id="btn-login">Login</button>
-    </div>
-    <div id="tab-jadwal" class="tab active">
-      <div id="pengajuanForm">
-        <select id="pengajuanTanggal"></select>
-        <select id="penggantiKurir"></select>
-        <select id="tanggalTukar"></select>
-        <button class="btn" id="btnAjukan">Ajukan Tukar Off</button>
-      </div>
-      <div class="table-wrap">
-        <table id="tableJadwal">
-          <thead><tr><th>Tanggal</th><th>Hari</th><th>Kurir Off</th><th>Pengganti</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div id="tab-rekap" class="tab">
-      <div class="table-wrap">
-        <table id="tableRekap">
-          <thead><tr><th>Nama Kurir</th><th>Total On</th><th>Total Off</th><th>Skor Keaktifan</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="overlay" id="overlay">
-  <div class="login">
-    <h3>Login Admin (Firebase)</h3>
-    <input id="fbEmail" placeholder="Email admin (Firebase)"/>
-    <input id="fbPass" placeholder="Password (Firebase)" type="password"/>
-    <button class="btn" id="doFirebaseLogin">Login</button>
-    <div class="small">Akses admin hanya untuk UID: <code>J2rOyqBbEVaehucXpJl7jHh90Iz2</code></div>
-    <div style="margin-top:10px">
-      <button class="btn ghost" id="closeOverlay">Tutup</button>
-    </div>
-  </div>
-</div>
-<div id="popup">
-  <div class="title"><span class="icon">✅</span><span id="popTitle">Semua On</span></div>
-  <div class="meta" id="popMeta">–</div>
-</div>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script>
-  // Script JavaScript dari file asli, dengan modifikasi untuk menyembunyikan elemen admin
-  // dan mengarahkan pengguna ke halaman admin setelah login berhasil.
-  
-    const firebaseConfig = {
-      apiKey: "AIzaSyD2tC4MlutCuUZvg06yGKT3jveaTGjtZAg",
-      authDomain: "absensikurir.firebaseapp.com",
-      projectId: "absensikurir",
-      storageBucket: "absensikurir.firebasestorage.app",
-      messagingSenderId: "395111603667",
-      appId: "1:395111603667:web:119be647937508d890a326",
-      measurementId: "G-V4L30EH9GP"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const ADMIN_UID = "J2rOyqBbEVaehucXpJl7jHh90Iz2";
+    <div class="container">
+        <div class="card">
+            <a href="index.html" class="btn-kembali">Kembali</a>
+            <h1>Jadwal & Absensi Kurir</h1>
+            
+            <div class="topbar" id="topbar">
+                <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
+                <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
+                <button class="btn" data-tab="tab-pengajuan">Pengajuan Tukar Off</button>
+                <div class="month-wrap">
+                    <label for="monthPick" style="color: var(--text-muted);">Bulan:</label>
+                    <input type="month" id="monthPick"/>
+                </div>
+            </div>
 
-    // ===== Firestore Refs =====
-    const MASTER_DOC = db.collection('appdata').doc('master');
-    const JADWAL_COLLECTION = db.collection('jadwal_off');
-    const PENGAJUAN_COLLECTION = db.collection('pengajuan_off');
+            <div id="tab-jadwal" class="tab active">
+                <div class="table-wrap">
+                    <table id="tableJadwal">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Hari</th>
+                                <th>Kurir Off</th>
+                                <th>Pengganti</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
 
-    // ===== State =====
-    let kurirList = [];
-    let jadwalData = {};
-    let unsubJadwal = null;
-    const idDays = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+            <div id="tab-rekap" class="tab">
+                <div class="table-wrap">
+                    <table id="tableRekap">
+                        <thead>
+                            <tr>
+                                <th>Nama Kurir</th>
+                                <th>Total On</th>
+                                <th>Total Off</th>
+                                <th>Skor Keaktifan</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
 
-    // ===== Utils =====
-    const pad2 = n => String(n).padStart(2,'0');
-    const fmtISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-    const parseISODate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
-    
-    // Popup
-    function popupShow(ok,title,meta){
-      const el=document.getElementById('popup');
-      el.classList.remove('ok','danger','pending');
-      el.classList.add(ok==='pending'?'pending':ok?'ok':'danger');
-      el.querySelector('.icon').textContent=ok==='pending'?'⏳':ok?'✅':'⚠️';
-      document.getElementById('popTitle').textContent=title;
-      document.getElementById('popMeta').textContent=meta||'';
-      el.classList.add('show');
-      setTimeout(()=>el.classList.remove('show'),5000);
-    }
+            <div id="tab-pengajuan" class="tab">
+                <div class="form-tukar-off">
+                    <div class="form-group">
+                        <label for="tanggalOffAsal">Tanggal yang Off</label>
+                        <select id="tanggalOffAsal">
+                            <option value="">-- Pilih Tanggal Off Asal --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="namaKurirPengganti">Nama Kurir Pengganti</label>
+                        <select id="namaKurirPengganti">
+                            <option value="">-- Pilih Nama Kurir --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tanggalOffPengganti">Tanggal Off Kurir yang Dipilih</label>
+                        <select id="tanggalOffPengganti">
+                            <option value="">-- Pilih Tanggal Off Pengganti --</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="btn-ajukan">Ajukan</button>
+                </div>
+            </div>
 
-    // Renderers
-    function renderJadwal(ym){
-      const tbody = document.querySelector('#tableJadwal tbody');
-      tbody.innerHTML='';
-      if(!jadwalData[ym]) return;
-      jadwalData[ym].forEach(it=>{
-        const d = parseISODate(it.tanggal);
-        const hari = idDays[d.getDay()];
-        const tr = document.createElement('tr');
-        const tdTanggal = document.createElement('td'); tdTanggal.textContent = it.tanggal;
-        const tdHari = document.createElement('td'); tdHari.textContent = hari;
-        const tdOff = document.createElement('td');
-        const badge = document.createElement('span');
-        badge.className = it.off ? 'badge off' : 'badge on';
-        badge.textContent = it.off || 'Semua On';
-        badge.style.cursor = 'pointer';
-        badge.title = 'Klik untuk mengajukan tukar off';
-        badge.onclick = ()=>{
-          document.getElementById('pengajuanTanggal').value = it.tanggal;
-          setupFormPengajuan();
-          popupShow('pending','Tanggal dipilih','Silakan lengkapi form pengajuan');
+        </div>
+    </div>
+
+    <div id="popup">
+        <div class="title"><span class="icon">✅</span><span id="popTitle"></span></div>
+        <div class="meta" id="popMeta"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script>
+        // Inisialisasi Firebase (Ganti dengan konfigurasi Anda)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
+            authDomain: "sahabatkuu-bisa.firebaseapp.com",
+            databaseURL: "https://sahabatkuu-bisa-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "sahabatkuu-bisa",
+            storageBucket: "sahabatkuu-bisa.firebasestorage.app",
+            messagingSenderId: "315555564115",
+            appId: "1:315555564115:web:56f46dbceb8c154589d4a6",
+            measurementId: "G-PFGYL96VPS"
         };
-        tdOff.appendChild(badge);
-        const tdPeng = document.createElement('td');
-        tdPeng.textContent = it.pengganti || '—';
-        tr.append(tdTanggal, tdHari, tdOff, tdPeng);
-        tbody.appendChild(tr);
-      });
-    }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    function renderRekap(ym){
-      const tbody=document.querySelector('#tableRekap tbody');
-      tbody.innerHTML='';
-      if(!jadwalData[ym]) return;
-      const arr=jadwalData[ym];
-      const sum=Object.fromEntries(kurirList.map(k=>[k,{on:0,off:0}]));
-      arr.forEach(it=>{ kurirList.forEach(k=>{ if(k===it.off) sum[k].off++; else sum[k].on++; }); });
-      kurirList.forEach(k=>{
-        const {on,off}=sum[k]; const total=on+off||1; const skor=Math.round((on/total)*100);
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-    
-    function setupFormPengajuan(){
-      const tanggalSel = document.getElementById('pengajuanTanggal');
-      const kurirSel = document.getElementById('penggantiKurir');
-      const tanggalTukarSel = document.getElementById('tanggalTukar');
-      const btnAjukan = document.getElementById('btnAjukan');
-      const ym = document.getElementById('monthPick').value;
+        // Variabel global
+        let kurirList = [];
+        let jadwalData = {};
+        const idDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-      tanggalSel.innerHTML = '';
-      kurirSel.innerHTML='';
-      tanggalTukarSel.innerHTML='';
+        // Fungsi utility
+        const formatDate = (isoDate) => {
+            const date = new Date(isoDate + 'T00:00:00');
+            return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        };
 
-      if(!jadwalData[ym]) return;
+        const popupShow = (isSuccess, title, message) => {
+            const popup = document.getElementById('popup');
+            const popTitle = document.getElementById('popTitle');
+            const popMeta = document.getElementById('popMeta');
+            const icon = popup.querySelector('.icon');
 
-      jadwalData[ym].forEach(it=>{
-        const opt = document.createElement('option');
-        opt.value=it.tanggal;
-        opt.textContent = it.tanggal + (it.off?` (Off: ${it.off})`:' (Semua On)');
-        tanggalSel.appendChild(opt);
-      });
+            popup.classList.remove('show', 'error', 'pending');
+            popTitle.textContent = title;
+            popMeta.textContent = message;
 
-      kurirList.forEach(k=>{
-        const opt = document.createElement('option');
-        opt.value=k;
-        opt.textContent=k;
-        kurirSel.appendChild(opt);
-      });
+            if (isSuccess) {
+                icon.innerHTML = '✅';
+                popup.classList.add('show');
+            } else if (isSuccess === false) {
+                icon.innerHTML = '❌';
+                popup.classList.add('show', 'error');
+            } else {
+                icon.innerHTML = '⏳';
+                popup.classList.add('show', 'pending');
+            }
 
-      function refreshTanggalTukar(){
-        const tanggalPilihan = tanggalSel.value;
-        const tanggalRow = jadwalData[ym].find(it => it.tanggal === tanggalPilihan);
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 5000);
+        };
+
+        // Fungsi untuk mengelola tab
+        const switchTab = (tabId) => {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.topbar .btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        };
         
-        tanggalTukarSel.innerHTML='';
-
-        // Jika hari yang dipilih adalah hari OFF, tampilkan kurir yang bisa ditukar
-        if(tanggalRow && tanggalRow.off) {
-            const kurir = kurirSel.value;
+        // Render Jadwal Off
+        const renderJadwal = (ym) => {
+            const tableJadwalBody = document.querySelector('#tableJadwal tbody');
+            tableJadwalBody.innerHTML = '';
+            
+            if(!jadwalData[ym]) return;
             jadwalData[ym].forEach(it=>{
-                if(it.off===kurir){
-                    const opt = document.createElement('option');
-                    opt.value=it.tanggal;
-                    opt.textContent=it.tanggal;
-                    tanggalTukarSel.appendChild(opt);
+                const d = new Date(it.tanggal + 'T00:00:00');
+                const hari = idDays[d.getDay()];
+                const tr = document.createElement('tr');
+                const tdTanggal = document.createElement('td'); tdTanggal.textContent = it.tanggal.slice(8, 10);
+                const tdHari = document.createElement('td'); tdHari.textContent = hari;
+                const tdOff = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = it.off ? 'badge off' : 'badge on';
+                badge.textContent = it.off || 'Semua On';
+                tdOff.appendChild(badge);
+                const tdPeng = document.createElement('td');
+                tdPeng.textContent = it.pengganti || '—';
+                tr.append(tdTanggal, tdHari, tdOff, tdPeng);
+                tableJadwalBody.appendChild(tr);
+            });
+        };
+
+        // Render Rekap & Keaktifan
+        const renderRekap = () => {
+            const tableRekapBody = document.querySelector('#tableRekap tbody');
+            tableRekapBody.innerHTML = '';
+            const ym = document.getElementById('monthPick').value;
+            if(!jadwalData[ym]) return;
+            const arr=jadwalData[ym];
+            const sum=Object.fromEntries(kurirList.map(k=>[k,{on:0,off:0}]));
+            arr.forEach(it=>{ kurirList.forEach(k=>{ if(k===it.off) sum[k].off++; else sum[k].on++; }); });
+            kurirList.forEach(k=>{
+                const {on,off}=sum[k]; const total=on+off||1; const skor=Math.round((on/total)*100);
+                const tr=document.createElement('tr');
+                tr.innerHTML=`<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`;
+                tableRekapBody.appendChild(tr);
+            });
+        };
+
+        // Pengajuan Tukar Off Logic
+        const renderPengajuanForm = () => {
+            const selectTanggalOffAsal = document.getElementById('tanggalOffAsal');
+            const selectKurirPengganti = document.getElementById('namaKurirPengganti');
+            const selectTanggalOffPengganti = document.getElementById('tanggalOffPengganti');
+            const ym = document.getElementById('monthPick').value;
+
+            // Bersihkan dropdowns
+            selectTanggalOffAsal.innerHTML = '<option value="">-- Pilih Tanggal Off Asal --</option>';
+            selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
+            selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+
+            if(!jadwalData[ym]) return;
+
+            // Isi dropdown Tanggal Off Asal
+            jadwalData[ym].forEach(day => {
+                if(day.off && day.off !== '') {
+                    const option = document.createElement('option');
+                    option.value = day.tanggal;
+                    option.textContent = `${formatDate(day.tanggal)} (${day.off})`;
+                    selectTanggalOffAsal.appendChild(option);
+                } else {
+                    // Handle "Semua On" case
+                    const option = document.createElement('option');
+                    option.value = day.tanggal;
+                    option.textContent = `${formatDate(day.tanggal)} (Semua On)`;
+                    selectTanggalOffAsal.appendChild(option);
                 }
             });
-            if(!tanggalTukarSel.children.length){
-                const opt=document.createElement('option');
-                opt.value=''; opt.textContent='(Kurir ini tidak punya OFF di bulan ini)';
-                tanggalTukarSel.appendChild(opt);
+
+            // Isi dropdown Nama Kurir Pengganti
+            kurirList.forEach(kurir => {
+                const option = document.createElement('option');
+                option.value = kurir;
+                option.textContent = kurir;
+                selectKurirPengganti.appendChild(option);
+            });
+
+            // Listener untuk Tanggal Off Asal dan Nama Kurir Pengganti
+            selectTanggalOffAsal.onchange = (e) => {
+                const selectedDate = e.target.value;
+                const kurirOnThisDate = jadwalData[ym].find(day => day.tanggal === selectedDate).off;
+                
+                // Filter kurir list to exclude the one who is already off on that date
+                const filteredKurirList = kurirList.filter(kurir => kurir !== kurirOnThisDate);
+                
+                selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
+                filteredKurirList.forEach(kurir => {
+                    const option = document.createElement('option');
+                    option.value = kurir;
+                    option.textContent = kurir;
+                    selectKurirPengganti.appendChild(option);
+                });
+                selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+            };
+
+            selectKurirPengganti.onchange = (e) => {
+                const selectedCourier = e.target.value;
+                const tanggalOffAsal = document.getElementById('tanggalOffAsal').value;
+                selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+
+                if (selectedCourier) {
+                    const courierOffDates = jadwalData[ym].filter(day => day.off === selectedCourier);
+                    
+                    if(courierOffDates.length > 0) {
+                        courierOffDates.forEach(day => {
+                            const option = document.createElement('option');
+                            option.value = day.tanggal;
+                            option.textContent = formatDate(day.tanggal);
+                            selectTanggalOffPengganti.appendChild(option);
+                        });
+                    } else {
+                        // Jika kurir pengganti tidak ada hari off, maka dia bisa mengambil hari off dari kurir asal
+                        const option = document.createElement('option');
+                        option.value = 'Tidak Ada';
+                        option.textContent = 'Tidak Ada (Ambil Hari Off)';
+                        selectTanggalOffPengganti.appendChild(option);
+                    }
+                }
+            };
+        };
+
+
+        // Event handler for submission
+        document.getElementById('btn-ajukan').onclick = async () => {
+            const tanggalOffAsal = document.getElementById('tanggalOffAsal').value;
+            const namaKurirPengganti = document.getElementById('namaKurirPengganti').value;
+            const tanggalOffPengganti = document.getElementById('tanggalOffPengganti').value;
+
+            if (!tanggalOffAsal || !namaKurirPengganti || !tanggalOffPengganti) {
+                popupShow(false, 'Gagal', 'Semua field harus diisi.');
+                return;
             }
-            btnAjukan.textContent = 'Ajukan Tukar Off';
-        } else {
-            // Jika hari yang dipilih adalah hari "Semua On", tampilkan opsi "Tidak Ada"
-            const opt=document.createElement('option');
-            opt.value='Tidak Ada'; opt.textContent='(Tidak ada kurir yang bisa ditukar)';
-            tanggalTukarSel.appendChild(opt);
-            btnAjukan.textContent = 'Ajukan Off';
-        }
-      }
-      tanggalSel.onchange = refreshTanggalTukar;
-      kurirSel.onchange = refreshTanggalTukar;
-      refreshTanggalTukar();
-    }
-    
-    // Realtime Listeners
-    function listenMasterKurir(){
-      MASTER_DOC.onSnapshot(async doc=>{
-        if(doc.exists){ kurirList = Array.isArray(doc.data().kurirList) ? doc.data().kurirList : []; }
-        renderJadwal(document.getElementById('monthPick').value);
-        renderRekap(document.getElementById('monthPick').value);
-        setupFormPengajuan();
-      });
-    }
 
-    function listenJadwal(ym){
-      if(unsubJadwal) { unsubJadwal(); unsubJadwal=null; }
-      unsubJadwal = JADWAL_COLLECTION.doc(ym).onSnapshot(doc=>{
-        if(doc.exists){ jadwalData[ym] = doc.data().data || []; }
-        else{ jadwalData[ym]=[]; } // fallback jika tidak ada data
-        renderJadwal(ym);
-        renderRekap(ym);
-        setupFormPengajuan();
-      });
-    }
-    
-    // Tabs
-    document.querySelectorAll('.topbar .btn[data-tab]').forEach(b=>{
-      b.onclick=()=>{
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.topbar .btn[data-tab]').forEach(bb=>bb.classList.remove('active'));
-        document.getElementById(b.dataset.tab).classList.add('active');
-        b.classList.add('active');
-      }
-    });
+            const confirmTukar = confirm("Apakah Anda yakin ingin mengajukan pertukaran jadwal ini?");
+            if (!confirmTukar) return;
 
-    // Pengajuan Tukar
-    document.getElementById('btnAjukan').onclick = async()=>{
-      const tanggal = document.getElementById('pengajuanTanggal').value;
-      const pengganti = document.getElementById('penggantiKurir').value;
-      const tukarTanggal = document.getElementById('tanggalTukar').value;
-      
-      const isSwapRequest = (tukarTanggal !== 'Tidak Ada');
+            try {
+                const kurirAsal = jadwalData[tanggalOffAsal.slice(0, 7)].find(day => day.tanggal === tanggalOffAsal).off;
 
-      if(!tanggal || !pengganti || (!isSwapRequest && tukarTanggal !== 'Tidak Ada') || (isSwapRequest && !tukarTanggal)) {
-        return alert('Lengkapi semua data: tanggal off, nama kurir, dan tanggal tukar (jika ada).');
-      }
-      
-      const ym = tanggal.slice(0,7);
-      const row = (jadwalData[ym]||[]).find(it=>it.tanggal===tanggal);
-      
-      if(!isSwapRequest && row.off) {
-          return alert('Hari ini sudah ada kurir yang libur. Pilih tanggal lain atau ajukan tukar.');
-      }
-      if(isSwapRequest && !row.off) {
-          return alert('Pengajuan tukar tidak berlaku di tanggal "Semua On".');
-      }
-      
-      try{
-        await PENGAJUAN_COLLECTION.add({
-          tanggal,
-          tukarTanggal: isSwapRequest ? tukarTanggal : 'Tidak Ada',
-          asal: isSwapRequest ? row.off : pengganti, // Asal adalah kurir yang mengajukan tukar off
-          pengganti: isSwapRequest ? pengganti : null,
-          status: 'Pending',
-          created: firebase.firestore.FieldValue.serverTimestamp(),
-          uid: auth.currentUser ? auth.currentUser.uid : null,
-          email: auth.currentUser ? auth.currentUser.email : null
+                const newRequest = {
+                    tanggal: tanggalOffAsal,
+                    asal: kurirAsal,
+                    pengganti: namaKurirPengganti,
+                    tukarTanggal: (tanggalOffPengganti === 'Tidak Ada') ? null : tanggalOffPengganti,
+                    status: 'Pending',
+                    created: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('pengajuan_off').add(newRequest);
+                popupShow(null, 'Sedang Pending', 'Pengajuan tukar off berhasil diajukan dan menunggu persetujuan.');
+
+                // Reset form
+                document.getElementById('tanggalOffAsal').value = '';
+                document.getElementById('namaKurirPengganti').value = '';
+                document.getElementById('tanggalOffPengganti').innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+            } catch (e) {
+                popupShow(false, 'Gagal', 'Terjadi kesalahan: ' + e.message);
+                console.error("Error submitting request: ", e);
+            }
+        };
+
+        // Listeners
+        const listenMasterKurir = () => {
+            db.collection('appdata').doc('master').onSnapshot(doc => {
+                if (doc.exists) {
+                    kurirList = doc.data().kurirList || [];
+                    kurirList.sort();
+                } else {
+                    kurirList = [];
+                }
+                const ym = document.getElementById('monthPick').value;
+                listenJadwal(ym);
+            }, err => console.error("Error listening to master_kurir: ", err));
+        };
+
+        const listenJadwal = (ym) => {
+            db.collection('jadwal_off').doc(ym).onSnapshot(doc => {
+                if (doc.exists) {
+                    jadwalData[ym] = doc.data().data || [];
+                } else {
+                    jadwalData[ym] = [];
+                }
+                renderJadwal(ym);
+                renderRekap();
+                renderPengajuanForm();
+            }, err => console.error("Error listening to jadwal_off: ", err));
+        };
+
+        // Event listener untuk tombol tab
+        document.querySelectorAll('.topbar .btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                switchTab(tabId);
+            });
         });
-        popupShow('pending','Pengajuan terkirim','Tunggu approval admin');
-      }catch(e){ alert('Gagal mengirim pengajuan: '+e.message); }
-    };
-    
-    // Firebase Login (akan dialihkan ke halaman admin jika berhasil)
-    document.getElementById('btn-login').onclick=()=>document.getElementById('overlay').style.display='flex';
-    document.getElementById('closeOverlay').onclick=()=>document.getElementById('overlay').style.display='none';
-    document.getElementById('doFirebaseLogin').onclick=async()=>{
-      const email=document.getElementById('fbEmail').value.trim();
-      const pass=document.getElementById('fbPass').value;
-      if(!email||!pass) return alert('Masukkan email & password Firebase.');
-      try{
-        const cred=await auth.signInWithEmailAndPassword(email,pass);
-        if(cred.user.uid===ADMIN_UID){
-          window.location.href = 'absensi-kurir-admin.html'; // Alihkan ke halaman admin
-        }else{ await auth.signOut(); alert('UID bukan admin.'); }
-      }catch(err){ alert('Login Firebase gagal: '+(err.message||err)); console.error(err); }
-    };
-    
-    // Init
-    const monthPick = document.getElementById('monthPick');
-    monthPick.value = new Date().toISOString().slice(0,7);
-    listenMasterKurir();
-    listenJadwal(monthPick.value);
-    monthPick.onchange = ()=> listenJadwal(monthPick.value);
-</script>
+
+        // Init
+        const monthPick = document.getElementById('monthPick');
+        monthPick.value = new Date().toISOString().slice(0, 7);
+        listenMasterKurir();
+
+        monthPick.onchange = () => {
+            listenJadwal(monthPick.value);
+        };
+    </script>
 </body>
 </html>
