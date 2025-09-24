@@ -76,6 +76,8 @@ label {
 input[type="text"],
 input[type="password"],
 input[type="number"],
+input[type="month"],
+input[type="date"],
 textarea,
 select {
   width: 100%;
@@ -94,6 +96,8 @@ select {
 input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="number"]:focus,
+input[type="month"]:focus,
+input[type="date"]:focus,
 textarea:focus,
 select:focus {
   border-color: var(--sky-strong);
@@ -405,11 +409,17 @@ nav.tab button.active {
 }
 
 /* Table */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-top: 10px;
+}
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
   color: var(--text-primary);
+  min-width: 600px;
 }
 
 th, td {
@@ -596,6 +606,8 @@ select, input {
   input[type="text"],
   input[type="password"],
   input[type="number"],
+  input[type="month"],
+  input[type="date"],
   textarea,
   select {
     padding: 10px 12px;
@@ -605,10 +617,6 @@ select, input {
 
   /* Stack dan grid gap lebih kecil */
   .stack {
-    gap: 8px;
-  }
-
-  .grid {
     gap: 8px;
   }
 
@@ -636,7 +644,6 @@ select, input {
     margin-top: 6px;
   }
 }
-
     /* Modal Notifikasi */
     .modal {
       display: none;
@@ -694,6 +701,67 @@ select, input {
       background-color: #f9f9f9;
       font-weight: bold;
     }
+
+    /* Nota Preview Modal */
+    #notaPhotoModal {
+      padding-top: 20px;
+      z-index: 1002;
+    }
+    #notaPhotoModalContent {
+      max-width: 350px;
+      padding: 15px;
+      background: #f5faff;
+      border: 1.5px solid #c9dbf8;
+      border-radius: 16px;
+    }
+    #notaCanvasPreview {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Nota Teks Modal */
+    #notaTextModal {
+        display: none;
+        position: fixed;
+        z-index: 1003;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+        animation: fadeIn 0.3s ease;
+    }
+    #notaTextModalContent {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 20px;
+        max-width: 400px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    #notaModalText {
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.9rem;
+      color: #333;
+      line-height: 1.4;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      border-radius: 12px;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -726,7 +794,7 @@ select, input {
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
           <h2>Halo, <span id="curUser" style="color:#0b4870;font-weight:800"></span></h2>
-          <div class="small">Buat nota • Simpan Nota • Rekap bulanan • Pelacak • Cek Ongkir</div>
+          <div class="small">Buat nota • Simpan Nota • Rekap bulanan • Cek Ongkir</div>
         </div>
         <div>
           <div class="small">No Nota berikutnya:</div>
@@ -740,17 +808,13 @@ select, input {
     <div class="card">
       <nav class="tab" id="tabNav">
         <button data-tab="notaTab" class="active">📝 Nota</button>
-        <button data-tab="riwayatTab">📑 Riwayat</button>
-        <button data-tab="rekapTab">📊 Rekap</button>
-        <button data-tab="pelacakTab">📋 Pelacak</button>
+        <button data-tab="riwayatTab">📋 Riwayat</button>
+        <button data-tab="laporanRekapTab">📊 Rekap</button>
         <button data-tab="ongkirTab">📍 Cek Ongkir</button>
+        <button onclick="window.location.href='absensi-kurir-sahabatku.html'">🗓️️ Absensi Kurir</button>
+        <button data-tab="mitraTab">🤝 Data Mitra</button>
         <button data-tab="pengaturanTab">⚙️ Pengaturan</button>
-        <button onclick="window.location.href='absensi-kurir-sahabatku.html'">✅ Absensi Kurir</button>
-
-
       </nav>
-      
-
   </div>
 
     <div id="notaTab" class="tabContent">
@@ -801,7 +865,6 @@ select, input {
           <button id="btnExportPreview" class="btn secondary">Simpan Foto</button>
           <button id="btnSharePreview" class="btn secondary">Bagikan WhatsApp</button>
           <button id="btnClearAll" class="btn danger">Bersihkan Semua</button>
-
         </div>
         </div>
 
@@ -815,50 +878,79 @@ select, input {
       </div>
 
       <div id="riwayatTab" class="tabContent hidden">
-        <h3>Riwayat Nota (akun ini)</h3>
+        <h3>Riwayat Nota</h3>
+        <div class="card">
+            <div class="grid grid-3" style="grid-template-columns: 1fr 1fr 1fr;">
+              <div style="grid-column: span 2;">
+                <label>Cari Tanggal</label>
+                <input id="riwayatDate" type="date">
+              </div>
+              <div style="align-self:end">
+                <div class="btnbar">
+                  <button id="btnCariRiwayat" class="btn">Cari</button>
+                  <button id="btnResetRiwayat" class="btn secondary">Reset</button>
+                </div>
+              </div>
+            </div>
+        </div>
+        <h3 style="margin-top:20px;">Semua Riwayat Nota (Akun Ini)</h3>
         <div id="notaHistory"></div>
       </div>
 
-      <div id="rekapTab" class="tabContent hidden">
-        <h3>Rekap Bulanan</h3>
-        <div class="grid grid-3">
-          <div>
-            <label>Bulan</label>
-            <input id="rekapMonth" type="month">
-          </div>
-          <div style="align-self:end">
-            <button id="btnLoadRekap" class="btn">Muat Rekap</button>
-          </div>
-        </div>
+      <div id="laporanRekapTab" class="tabContent hidden">
+        <h3>Rekap</h3>
         <div class="card" style="margin-top:10px">
-          <table aria-label="Rekap Bulanan">
-            <thead><tr><th>Tanggal</th><th>Jumlah Nota</th><th>Ongkir</th><th>Tambahan</th><th>Total</th></tr></thead>
-            <tbody id="rekapBody"></tbody>
-            <tfoot><tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr></tfoot>
-          </table>
+            <h4>Rekap Bulanan</h4>
+            <div class="grid grid-3">
+              <div>
+                <label>Bulan</label>
+                <input id="rekapMonth" type="month">
+              </div>
+              <div style="align-self:end">
+                <button id="btnLoadRekap" class="btn">Muat Rekap</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table aria-label="Rekap Bulanan">
+                <thead><tr><th>Tanggal</th><th>Jumlah Nota</th><th>Ongkir</th><th>Tambahan</th><th>Total</th></tr></thead>
+                <tbody id="rekapBody"></tbody>
+                <tfoot><tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr></tfoot>
+              </table>
+            </div>
         </div>
       </div>
 
-      <div id="pelacakTab" class="tabContent hidden">
-        <h3>Pelacak Orderan</h3>
-        <div class="grid grid-3">
-          <div>
-            <label>No Nota</label>
-            <input id="trackNoNota" type="text" placeholder="cth: 00012">
-          </div>
-          <div>
-            <label>Tanggal (YYYY-MM-DD)</label>
-            <input id="trackDate" type="text" placeholder="2025-09-01">
-          </div>
-          <div style="align-self:end">
-            <div class="btnbar">
-              <button id="btnCariNota" class="btn">Cari</button>
-              <button id="btnCariReset" class="btn secondary">Reset</button>
+      <div id="mitraTab" class="tabContent hidden">
+        <h3>Data Mitra</h3>
+        <div class="card">
+            <label>Input Transaksi Mitra Hari Ini</label>
+            <div class="grid grid-2" style="align-items:end">
+                <select id="mitraSelect">
+                    <option value="">-- Pilih Mitra --</option>
+                </select>
+                <input id="trxMitraInput" type="number" min="1" value="1" placeholder="Jumlah TRX">
+                <div class="btnbar">
+                    <button id="btnAddTrxMitra" class="btn secondary">Tambah Transaksi</button>
+                </div>
             </div>
-          </div>
         </div>
-        <div id="pelacakHasil" style="margin-top:10px"></div>
-      </div>
+
+        <div class="card">
+            <div class="grid-2">
+              <div><label>Lihat Data Bulan</label><input id="mitraMonth" type="month"></div>
+              <div style="align-self:end"><button id="btnCariMitra" class="btn full">Tampilkan</button></div>
+            </div>
+        </div>
+        <div class="card">
+            <h4>Daftar Mitra & Transaksi Bulan Ini</h4>
+            <div class="table-container">
+            <table>
+                <thead><tr><th>Nama</th><th>Alamat</th><th>No HP</th><th>TRX</th><th>Target</th></tr></thead>
+                <tbody id="mitraListBody"></tbody>
+            </table>
+            </div>
+        </div>
+    </div>
       
       <div id="ongkirTab" class="tabContent hidden">
         <h3>Cek Ongkir</h3>
@@ -935,11 +1027,37 @@ select, input {
     <p id="noNotifMsg" class="small hidden" style="text-align:center;">Tidak ada notifikasi.</p>
   </div>
 </div>
+
+<div id="notaPhotoModal" class="modal">
+  <div class="modal-content" id="notaPhotoModalContent">
+    <span class="close" id="closeNotaPhotoModal">&times;</span>
+    <h3 style="margin-bottom:10px;">Preview Nota</h3>
+    <div id="notaPhotoPreviewContainer">
+      <img id="notaCanvasPreview" alt="Nota Preview">
+    </div>
+    <div class="btnbar" style="justify-content:center;margin-top:15px">
+      <button id="savePhotoBtn" class="btn full secondary">Simpan Foto</button>
+    </div>
+  </div>
+</div>
+
+<div id="notaTextModal" class="modal">
+  <div class="modal-content" id="notaTextModalContent">
+    <span class="close" id="closeNotaTextModal">&times;</span>
+    <h3 style="margin-bottom: 10px;">Preview Nota</h3>
+    <div id="notaModalText" class="nota-box"></div>
+    <div class="btnbar" style="justify-content:center;margin-top:15px">
+        <button id="savePhotoFromModalBtn" class="btn full secondary">Simpan Foto</button>
+    </div>
+  </div>
+</div>
+
+
 <audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  import { getDatabase, ref, set, get, onValue, update, remove, child } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  import { getDatabase, ref, set, get, onValue, update, remove, child, push } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
   import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -963,6 +1081,7 @@ select, input {
   let currentUser = null;
   let lastNoNota = 0;
   let notaCounterLoaded = false;
+  let mitraReminderInterval;
   
   const el = (id)=>document.getElementById(id);
   const qs = (sel)=>document.querySelector(sel);
@@ -976,6 +1095,8 @@ select, input {
     el(id).classList.remove('hidden');
     if(id==='riwayatTab') refreshNotaHistory();
     if(id==='pengaturanTab') el('newUsername').value = currentUser;
+    if(id==='laporanRekapTab') updateDailyReport();
+    if(id==='mitraTab') loadMitraData();
   }
   
   el('btnLogin').addEventListener('click', doLogin);
@@ -1049,7 +1170,7 @@ select, input {
     }
   }
 
-  function loginSuccess(username){
+  async function loginSuccess(username){
     currentUser = username;
     localStorage.setItem('currentUser', username);
     el('loginCard').classList.add('hidden');
@@ -1058,10 +1179,12 @@ select, input {
     el('curUser').innerText = currentUser;
     el('kurirName').value = currentUser;
     setActiveTab('notaTab');
-    ensureCounter().then(updateNextNotaLabel);
+    await ensureCounter();
+    updateNextNotaLabel();
     refreshNotaHistory();
-
+    checkAndDisplayNotifications();
     startNotificationListener();
+    startMitraReminder();
   }
 
   // ============== Notifikasi Section =================
@@ -1071,8 +1194,21 @@ select, input {
   const noNotifMsgEl = el('noNotifMsg');
   const modalCloseBtn = qs('.modal .close');
 
+  async function sendNotification(message) {
+    if (!currentUser) return;
+    try {
+        const newNotifKey = push(ref(db, `messages/${currentUser}`)).key;
+        await set(ref(db, `messages/${currentUser}/${newNotifKey}`), {
+            message: message,
+            read: false,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Failed to send notification:", error);
+    }
+}
+  
   function startNotificationListener() {
-    // Jalur Firebase diubah ke `messages`
     const notificationRef = ref(db, `messages/${currentUser}`);
     onValue(notificationRef, (snapshot) => {
       let hasNewNotification = false;
@@ -1094,73 +1230,51 @@ select, input {
     });
   }
 
-  async function displayNotifications() {
-    notificationListEl.innerHTML = '';
-    noNotifMsgEl.classList.add('hidden');
-    
+  async function checkAndDisplayNotifications() {
     if (!currentUser) return;
-
     try {
       const notificationRef = ref(db, `messages/${currentUser}`);
       const snapshot = await get(notificationRef);
-
       if (snapshot.exists()) {
         const allNotifications = snapshot.val();
-        const unreadNotifications = [];
-        const readNotifications = [];
-
-        // Sort notifications by timestamp descending (newest first)
-        const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
-          return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
-        });
-
-        for (const key of sortedKeys) {
-            const notification = allNotifications[key];
-            if (!notification.read) {
-                unreadNotifications.push({ key, ...notification });
-            } else {
-                readNotifications.push({ key, ...notification });
-            }
-        }
-
-        let notificationsToDisplay = [];
+        const unreadNotifications = Object.keys(allNotifications)
+            .filter(key => !allNotifications[key].read)
+            .map(key => ({ key, ...allNotifications[key] }));
         if (unreadNotifications.length > 0) {
-            // Jika ada pesan baru, hanya tampilkan pesan baru
-            notificationsToDisplay = unreadNotifications;
-            // Tandai pesan sebagai sudah dibaca
-            const updates = {};
-            unreadNotifications.forEach(notif => {
-                updates[`/messages/${currentUser}/${notif.key}/read`] = true;
-            });
-            await update(ref(db), updates);
-        } else {
-            // Jika tidak ada pesan baru, tampilkan semua pesan yang sudah dibaca
-            notificationsToDisplay = readNotifications;
+          displayModalNotifications(unreadNotifications);
+          const updates = {};
+          unreadNotifications.forEach(notif => {
+            updates[`/messages/${currentUser}/${notif.key}/read`] = true;
+          });
+          await update(ref(db), updates);
         }
-
-        if (notificationsToDisplay.length > 0) {
-            notificationsToDisplay.forEach(notif => {
-                const li = document.createElement('li');
-                li.className = `notification-item ${notif.read ? '' : 'unread'}`;
-                li.innerHTML = `<strong>Pesan Baru:</strong><br>${notif.message || 'Tidak ada konten'}`;
-                notificationListEl.appendChild(li);
-            });
-        } else {
-            noNotifMsgEl.classList.remove('hidden');
-        }
-        
-        notificationModal.style.display = 'block';
-
-      } else {
-        noNotifMsgEl.classList.remove('hidden');
-        notificationModal.style.display = 'block';
       }
     } catch (error) {
-      console.error("Failed to display or sync notifications:", error);
+      console.error("Failed to check notifications:", error);
     }
   }
 
-  el('notificationBtn').addEventListener('click', displayNotifications);
+  function displayModalNotifications(notifications) {
+    notificationListEl.innerHTML = '';
+    if (notifications.length > 0) {
+      notifications.forEach(notif => {
+        const li = document.createElement('li');
+        li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+        li.innerHTML = `<strong>Pesan Baru:</strong><br>${notif.message || 'Tidak ada konten'}`;
+        notificationListEl.appendChild(li);
+      });
+      noNotifMsgEl.classList.add('hidden');
+    } else {
+      noNotifMsgEl.classList.remove('hidden');
+    }
+    notificationModal.style.display = 'block';
+  }
+
+  el('notificationBtn').addEventListener('click', () => {
+    notificationListEl.innerHTML = '';
+    notificationModal.style.display = 'block';
+    loadAllNotifications();
+  });
   modalCloseBtn.addEventListener('click', () => {
     notificationModal.style.display = 'none';
   });
@@ -1169,6 +1283,41 @@ select, input {
       notificationModal.style.display = 'none';
     }
   });
+
+  async function loadAllNotifications() {
+      notificationListEl.innerHTML = '';
+      noNotifMsgEl.classList.add('hidden');
+      
+      if (!currentUser) return;
+
+      try {
+        const notificationRef = ref(db, `messages/${currentUser}`);
+        const snapshot = await get(notificationRef);
+
+        if (snapshot.exists()) {
+          const allNotifications = snapshot.val();
+          const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
+            return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
+          });
+          
+          if (sortedKeys.length > 0) {
+            sortedKeys.forEach(key => {
+                const notif = allNotifications[key];
+                const li = document.createElement('li');
+                li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+                li.innerHTML = `<strong>Pesan:</strong><br>${notif.message || 'Tidak ada konten'}`;
+                notificationListEl.appendChild(li);
+            });
+          } else {
+              noNotifMsgEl.classList.remove('hidden');
+          }
+        } else {
+          noNotifMsgEl.classList.remove('hidden');
+        }
+      } catch (error) {
+          console.error("Failed to load notifications:", error);
+      }
+  }
 
   if (localStorage.getItem('currentUser')) {
     loginSuccess(localStorage.getItem('currentUser'));
@@ -1192,6 +1341,8 @@ select, input {
     }
 const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
 let ongkirData = [];
+let todayNotes = [];
+let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
 
 // 🔹 Ambil data ongkir dari Firebase
 async function loadOngkir(){
@@ -1208,6 +1359,131 @@ async function loadOngkir(){
   }
 }
 
+
+    // --- Mitra Section (SYNCHRONIZED) ---
+// --- Mitra Section (SYNCHRONIZED) ---
+    el('btnCariMitra').addEventListener('click', loadMitraData);
+    el('btnAddTrxMitra').addEventListener('click', addMitraTrx);
+
+    // Otomatis atur bulan ke bulan saat ini saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        el('mitraMonth').value = `${year}-${month}`;
+        loadMitraData();
+        // Memulai pengingat harian
+        checkDailyTransactionStatusAndNotify();
+        setInterval(checkDailyTransactionStatusAndNotify, 6 * 60 * 60 * 1000); // Cek setiap 6 jam
+    });
+
+    async function loadMitraData() {
+      const mitraListBody = el('mitraListBody');
+      const mitraSelect = el('mitraSelect');
+      mitraListBody.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
+      const selectedMonth = el('mitraMonth').value;
+      if (!selectedMonth) return;
+
+      try {
+        const [mitraSnap, trxSnap, statusSnap] = await Promise.all([
+          get(ref(db, 'mitra')), get(ref(db, 'mitra_trx_monthly')), get(ref(db, 'mitra_status_monthly'))
+        ]);
+
+        if (!mitraSnap.exists()) {
+          mitraListBody.innerHTML = '<tr><td colspan="5">Belum ada data mitra.</td></tr>';
+          return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+        }
+
+        const activeMitra = Object.keys(mitraSnap.val())
+          .map(id => ({ id, ...mitraSnap.val()[id] }))
+          .filter(mitra => (statusSnap.val()?.[mitra.id]?.[selectedMonth]) !== 'inactive')
+          .sort((a, b) => a.nama.localeCompare(b.nama));
+        
+        if (activeMitra.length === 0) {
+          mitraListBody.innerHTML = '<tr><td colspan="5">Tidak ada mitra aktif bulan ini.</td></tr>';
+          return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+        }
+
+        mitraSelect.innerHTML = '<option value="">-- Pilih Mitra --</option>' + activeMitra.map(m => `<option value="${m.id}">${m.nama}</option>`).join('');
+        mitraListBody.innerHTML = activeMitra.map(m => {
+          const currentTrx = trxSnap.val()?.[m.id]?.[selectedMonth]?.trx || 0;
+          const cleanNoHp = m.noHp ? m.noHp.replace(/\D/g, '') : '';
+          const whatsappLink = cleanNoHp ? `https://wa.me/${cleanNoHp.startsWith('62') ? cleanNoHp : '62' + cleanNoHp}` : '#';
+          
+          const alamatText = m.alamat || '-';
+          const isGoogleMapsLink = alamatText.startsWith('http://') || alamatText.startsWith('https://');
+          const googleMapsLink = isGoogleMapsLink ? alamatText : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alamatText)}`;
+
+          return `<tr>
+                      <td>${m.nama}</td>
+                      <td>${m.alamat ? `<a href="${googleMapsLink}" target="_blank">${m.alamat}</a>` : '-'}</td>
+                      <td>${m.noHp ? `<a href="${whatsappLink}" target="_blank">${m.noHp}</a>` : '-'}</td>
+                      <td>${currentTrx}</td>
+                      <td>${m.targetTransaksi}</td>
+                  </tr>`;
+        }).join('');
+      } catch (error) {
+        mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
+      }
+    }
+
+    async function addMitraTrx() {
+      const mitraId = el('mitraSelect').value;
+      const trxToAdd = parseInt(el('trxMitraInput').value);
+      const selectedMonth = el('mitraMonth').value;
+      if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0) return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
+      
+      const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
+      const today = new Date().toISOString().slice(0, 10);
+      const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`);
+
+      try {
+        const snap = await get(trxRef);
+        const currentTrx = snap.exists() ? snap.val().trx : 0;
+        await set(trxRef, { trx: currentTrx + trxToAdd });
+
+        // Tambahkan transaksi harian
+        await set(trxDailyRef, { trx: true });
+
+        alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
+        el('trxMitraInput').value = '1';
+        el('mitraSelect').value = '';
+        loadMitraData();
+      } catch (error) {
+        alert("Gagal menambahkan transaksi: " + error.message);
+      }
+    }
+
+    // Fungsi untuk memeriksa dan mengirim notifikasi
+    async function checkDailyTransactionStatusAndNotify() {
+        const today = new Date().toISOString().slice(0, 10);
+        const notificationKey = `dailyTrxReminder-${today}`;
+
+        // Cek apakah notifikasi untuk hari ini sudah dikirim
+        if (localStorage.getItem(notificationKey) === 'sent') {
+            return;
+        }
+
+        const mitraSnap = await get(ref(db, 'mitra'));
+        if (!mitraSnap.exists()) return;
+        const allMitraIds = Object.keys(mitraSnap.val());
+        const hasTransactionToday = await Promise.all(
+            allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
+        ).then(snapshots => snapshots.some(snap => snap.exists()));
+
+        if (!hasTransactionToday) {
+            // Kirim notifikasi jika belum ada transaksi hari ini
+            const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
+            push(ref(db, `messages/${currentUser}`), {
+                message: message,
+                read: false,
+                timestamp: Date.now()
+            });
+
+            // Tandai notifikasi sudah dikirim untuk hari ini
+            localStorage.setItem(notificationKey, 'sent');
+        }
+    }
 function fillSelect(selectId, data){
   const sel = document.getElementById(selectId);
   sel.innerHTML = `<option value="">-- Pilih --</option>`;
@@ -1418,7 +1694,7 @@ loadOngkir();
       <option ${pref.type==='Tambahan Tempat'?'selected':''} value="Tambahan Tempat">Tambahan Tempat</option>
       <option ${pref.type==='Tambahan Hujan'?'selected':''} value="Tambahan Hujan">Tambahan Hujan</option>
       <option ${pref.type==='Tambahan Parkir'?'selected':''} value="Tambahan Parkir">Tambahan Parkir</option>
-      <option ${pref.type==='Tambahan Melebihi Kapasitas'?'selected':''} value="Tambahan Melebihi Kapasitas">Tambahan Melebihi Kapasitas</option>
+      <option ${pref.type==='Tambahan Kapasitas'?'selected':''} value="Tambahan Kapasitas">Tambahan Kapasitas</option>
       <option ${pref.type==='Tambahan Cash Minuman'?'selected':''} value="Tambahan Cash Minuman">Tambahan Cash Minuman</option>
       <option ${pref.type==='Lainnya'?'selected':''} value="Lainnya">Lainnya</option>
         </select>
@@ -1479,9 +1755,9 @@ loadOngkir();
     });
     // Tambahan
     const tambahans=[]; let tambahTotal=0;
-    tambahanArea.querySelectorAll('.line-card-tambahan').forEach(r=>{
-      const type=(r.querySelector('.t-type').value||'').trim();
-      const nominal=Number(r.querySelector('.t-nom').value)||0;
+    tambahanArea.querySelectorAll('.t-nom').forEach(r=>{
+      const type=(r.closest('.line-card-tambahan').querySelector('.t-type').value||'').trim();
+      const nominal=Number(r.value)||0;
       if(type || nominal) tambahans.push({type, nominal});
       tambahTotal += nominal;
     });
@@ -1557,9 +1833,7 @@ loadOngkir();
          tambahans:[{type,nominal}],
          ongkir,total,custPhone,text
        }
-     - /pelacakByNo/{noNota}/{noteId} : {username, createdAt, total}
-     - /pelacakByDate/{YYYY-MM-DD}/{noteId} : {username, noNota, total}
-     - /counters/{username} : {lastNoNota}
+     - /transaksi_mitra/{mitraId}/{YYYY-MM-DD}/{kurirId} : count
   ====================*/
   async function saveNoteToFirebase(){
     if(!currentUser){ alert('Login dulu.'); return; }
@@ -1573,60 +1847,132 @@ loadOngkir();
 
     // tulis ke /nota/{user}/{noteId}
     await set(ref(db, `nota/${currentUser}/${noteId}`), noteObj);
-
-    // index by No Nota (global-ish)
-    await set(ref(db, `pelacakByNo/${data.noNota}/${noteId}`), {
-      username: currentUser, createdAt: data.createdAt, total: data.total
-    });
-
-    // index by Date
-    const keyDate = data.createdAt.slice(0,10);
-    await set(ref(db, `pelacakByDate/${keyDate}/${noteId}`), {
-      username: currentUser, noNota: data.noNota, total: data.total
-    });
-
     alert(`Nota Tersimpan ✅ (No Nota ${data.noNota})`);
     refreshNotaHistory();
     updatePreviewFilename();
   }
 
   /* ===================
-     RIWAYAT (Realtime)
+     RIWAYAT & PELACAK (Realtime)
   ====================*/
-  function refreshNotaHistory(){
+function refreshNotaHistory(filterDate = null){
     if(!currentUser) return;
-    const listEl = el('notaHistory'); listEl.innerHTML = 'Memuat...';
+    const listEl = el('notaHistory'); 
+    listEl.innerHTML = 'Memuat...';
+
     const notesRef = ref(db, `nota/${currentUser}`);
-    onValue(notesRef, (snap)=>{
-      const val = snap.val()||{};
-      const arr = Object.values(val).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
-      if(arr.length===0){ listEl.innerHTML = '<p class="small">Belum ada nota.</p>'; return; }
-      let html = '<div class="list-v">';
-      arr.forEach(n=>{
+    
+    // Gunakan get() untuk sekali ambil data saat ada filter tanggal
+    if (filterDate) {
+        get(notesRef).then(snap => {
+            const val = snap.val() || {};
+            const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            const filteredNotes = allNotes.filter(n => n.createdAt.startsWith(filterDate));
+            displayNotes(filteredNotes, listEl, filterDate);
+        }).catch(error => {
+            console.error("Error fetching filtered notes:", error);
+            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
+        });
+    } else {
+        // Gunakan onValue() untuk load awal dan update realtime
+        onValue(notesRef, (snap) => {
+            const val = snap.val() || {};
+            allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            displayNotes(allNotes, listEl);
+            todayNotes = allNotes.filter(n => n.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10));
+            updateDailyReport();
+        }, (error) => {
+            console.error("Error fetching all notes:", error);
+            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
+        });
+    }
+}
+
+function displayNotes(notes, listEl, filterDate = null) {
+    if (notes.length === 0) {
+        if (filterDate) {
+            listEl.innerHTML = `<p class="small">Tidak ada nota pada tanggal ini.</p>`;
+        } else {
+            listEl.innerHTML = '<p class="small">Belum ada nota.</p>';
+        }
+        return;
+    }
+    
+    let html = '<div class="list-v">';
+    notes.forEach(n => {
         html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
-          <div style="flex:1">
-            <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
-            <div style="fontml,-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
-            <div class="small">${(n.items||[]).length} item • Ongkir Rp ${(Number(n.ongkir)||0).toLocaleString('id-ID')}</div>
-          </div>
-          <div class="btnbar">
-            <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
-            <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
-          </div>
+            <div style="flex:1">
+                <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
+                <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}</div>
+                <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
+            </div>
+            <div class="btnbar">
+                <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
+                <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
+            </div>
         </div>`;
-      });
-      html += '</div>';
-      listEl.innerHTML = html;
     });
-  }
+    html += '</div>';
+    listEl.innerHTML = html;
+}
+  
+  const notaTextModal = el('notaTextModal');
+  const notaModalText = el('notaModalText');
+  const closeNotaTextModalBtn = el('closeNotaTextModal');
+
   window.viewNote = async (id)=>{
     const snap = await get(ref(db, `nota/${currentUser}/${id}`));
     if(!snap.exists()){ alert('Nota tidak ditemukan'); return; }
     const n = snap.val();
-    // isi preview dari data tersimpan
-    el('notaPreview').innerText = n.text||'';
-    setActiveTab('notaTab');
+    notaModalText.innerText = n.text;
+    notaTextModal.style.display = 'block';
+    
+    el('savePhotoFromModalBtn').onclick = () => saveNotaPhotoFromModal(n);
   };
+  
+  async function saveNotaPhotoFromModal(notaData) {
+      try {
+          const notaText = notaData.text;
+          const tempDiv = document.createElement('div');
+          tempDiv.style.width = '350px';
+          tempDiv.style.whiteSpace = 'pre-wrap';
+          tempDiv.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
+          tempDiv.style.padding = '20px 24px';
+          tempDiv.style.backgroundColor = '#fff';
+          tempDiv.style.color = '#333';
+          tempDiv.style.borderRadius = '16px';
+          tempDiv.innerText = notaText;
+          
+          document.body.appendChild(tempDiv);
+          const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: '#fff' });
+          document.body.removeChild(tempDiv);
+          
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
+          const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          alert('Foto nota berhasil disimpan.');
+      } catch (e) {
+          console.error("Gagal menyimpan foto:", e);
+          alert('Gagal menyimpan foto nota.');
+      }
+  }
+
+
+  closeNotaTextModalBtn.addEventListener('click', () => {
+    notaTextModal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target == notaTextModal) {
+      notaTextModal.style.display = 'none';
+    }
+  });
+
 window.hapusNote = async (id)=>{
     if(!confirm('Hapus nota ini dari Firebase?')) return;
     const snap = await get(ref(db, `nota/${currentUser}/${id}`));
@@ -1636,20 +1982,7 @@ window.hapusNote = async (id)=>{
     // 1️⃣ Hapus nota utama
     await remove(ref(db, `nota/${currentUser}/${id}`));
 
-    // 2️⃣ Hapus dari pelacakByNo
-    if(n.noNota){
-      const pelacakNoRef = ref(db, `pelacakByNo/${n.noNota}/${id}`);
-      await remove(pelacakNoRef);
-    }
-
-    // 3️⃣ Hapus dari pelacakByDate
-    if(n.createdAt){
-      const dateKey = n.createdAt.slice(0,10);
-      const pelacakDateRef = ref(db, `pelacakByDate/${dateKey}/${id}`);
-      await remove(pelacakDateRef);
-    }
-
-    // 4️⃣ Update counter lastNoNota
+    // 2️⃣ Update counter lastNoNota
     const allSnap = await get(ref(db, `nota/${currentUser}`));
     let maxNo = 0;
     if(allSnap.exists()){
@@ -1662,7 +1995,7 @@ window.hapusNote = async (id)=>{
     await update(ref(db, `counters/${currentUser}`), { lastNoNota });
     updateNextNotaLabel();
 
-    // 5️⃣ Jika nota yang dihapus sedang dibuka di preview, bersihkan preview
+    // 3️⃣ Jika nota yang dihapus sedang dibuka di preview, bersihkan preview
     if(window.currentPreviewId === id){
         clearPreviewNota();
         totalPesanan = 0;
@@ -1685,11 +2018,38 @@ function updateTotalPesananLabel(){
     if(label) label.textContent = totalPesanan;
 }
 
+el('btnCariRiwayat').addEventListener('click', () => {
+    const date = el('riwayatDate').value;
+    if (date) {
+        refreshNotaHistory(date);
+    } else {
+        alert('Pilih tanggal untuk mencari.');
+    }
+});
+
+el('btnResetRiwayat').addEventListener('click', () => {
+    el('riwayatDate').value = '';
+    refreshNotaHistory();
+});
 
 
   /* ===================
-     REKAP BULANAN
+     REKAP & LAPORAN
   ====================*/
+function updateDailyReport() {
+    let ongkirHarian = 0;
+    let tambahanHarian = 0;
+    if(todayNotes.length > 0) {
+        todayNotes.forEach(note => {
+            ongkirHarian += Number(note.ongkir) || 0;
+            const t = Array.isArray(note.tambahans) ? note.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
+            tambahanHarian += t;
+        });
+    }
+    el('laporanNotaHarian').innerText = todayNotes.length;
+    el('laporanOngkirHarian').innerText = formatRp(ongkirHarian + tambahanHarian);
+}
+
 el('btnLoadRekap').addEventListener('click', async ()=>{
   if(!currentUser){ alert('Login dulu'); return; }
   const ym = el('rekapMonth').value;
@@ -1720,48 +2080,18 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
   let sumNota=0,sumO=0,sumT=0,sumTot=0;
 
   Object.keys(byDate).sort().forEach(k=>{
-    const v = byDate[k];
-    const totalHarian = v.ongkir + v.tambahan;
-
-    const tr = document.createElement('tr');
-
-    // Tanggal jadi bisa diklik untuk update
-    const tdDate = document.createElement('td');
-    tdDate.innerText = new Date(k).toLocaleDateString('id-ID');
-    tdDate.style.cursor = 'pointer';
-    tdDate.title = 'Klik untuk ubah tanggal';
-
-    tdDate.addEventListener('click', async ()=>{
-      const newDate = prompt('Tanggal baru (YYYY-MM-DD):', k);
-      if(!newDate || newDate===k) return;
-
-      const updates = {};
-      v.ids.forEach(id=>{
-        updates[`${id}/createdAt`] = newDate + val[id].createdAt.slice(10); // tetap ambil jam
-      });
-
-      await update(ref(db, `nota/${currentUser}`), updates);
-      alert('Tanggal berhasil diupdate');
-      el('btnLoadRekap').click(); // refresh tabel otomatis
-        const month = el('rekapMonth').value;
-        if(!month) return alert('Pilih bulan dulu.');
-        const filtered = allNota.filter(n => n.tanggal.slice(0,7) === month);
-        renderRekap(filtered);
-    });
-
-    tr.appendChild(tdDate);
-    tr.innerHTML += `
-      <td>${v.count}</td>
-      <td>${v.ongkir.toLocaleString('id-ID')}</td>
-      <td>${v.tambahan.toLocaleString('id-ID')}</td>
-      <td>${totalHarian.toLocaleString('id-ID')}</td>
-    `;
-    tbody.appendChild(tr);
-
-    sumNota += v.count;
-    sumO += v.ongkir; 
-    sumT += v.tambahan; 
-    sumTot += totalHarian;
+      const v = byDate[k];
+      const totalHarian = v.ongkir + v.tambahan;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+          <td>${new Date(k).toLocaleDateString('id-ID')}</td>
+          <td>${v.count}</td>
+          <td>${v.ongkir.toLocaleString('id-ID')}</td>
+          <td>${v.tambahan.toLocaleString('id-ID')}</td>
+          <td>${totalHarian.toLocaleString('id-ID')}</td>
+      `;
+      tbody.appendChild(tr);
+      sumNota += v.count; sumO += v.ongkir; sumT += v.tambahan; sumTot += totalHarian;
   });
 
   el('sumNota').innerText = sumNota;
@@ -1770,87 +2100,12 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
   el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
 });
 
+
 /* ===================
-   PELACAK: Cari No Nota / Tanggal (khusus currentUser)
+   Export / Share Image (Web)
+   - Save Foto: auto download JPG (nama file: {kurir}_nota_{noNota}.jpg)
+   - Share WA: pakai Web Share API file, fallback download
 ====================*/
-el('btnCariNota').addEventListener('click', async ()=>{
-  const no = (el('trackNoNota').value||'').trim();
-  const date = (el('trackDate').value||'').trim();
-  const hasilEl = el('pelacakHasil');
-  hasilEl.innerHTML = 'Mencari...';
-
-  if(!currentUser){ hasilEl.innerHTML = '<p class="small">Login dulu.</p>'; return; }
-
-  let html = '';
-  
-  // 1️⃣ Cari berdasarkan No Nota
-  if(no){
-    const s = await get(ref(db, `pelacakByNo/${no}`));
-    if(s.exists()){
-      const arr = Object.entries(s.val())
-                       .map(([id,v]) => ({id, ...v}))
-                       .filter(n => n.username === currentUser) // hanya currentUser
-                       .sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
-      if(arr.length===0){
-        html += `<p class="small">No Nota ${no} tidak ditemukan untuk akun ini.</p>`;
-      } else {
-        html += `<h4>Hasil No Nota ${no}</h4>`;
-        arr.forEach(n=>{
-          html += `<div class="card" style="padding:10px;margin-bottom:6px">
-            <div><b>${new Date(n.createdAt).toLocaleString('id-ID')}</b> — Kurir: ${n.username}</div>
-            <div>Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
-          </div>`;
-        });
-      }
-    } else {
-      html += `<p class="small">No Nota ${no} tidak ditemukan.</p>`;
-    }
-  }
-
-  // 2️⃣ Cari berdasarkan tanggal
-  if(date){
-    const s = await get(ref(db, `pelacakByDate/${date}`));
-    if(s.exists()){
-      const arr = Object.entries(s.val())
-                       .map(([id,v])=> ({id, ...v}))
-                       .filter(n => n.username === currentUser) // filter user
-                       .sort((a,b)=> (b.noNota||'').localeCompare(a.noNota||''));
-      if(arr.length===0){
-        html += `<p class="small">Tidak ada nota untuk tanggal ${date} di akun ini.</p>`;
-      } else {
-        html += `<h4>Hasil Tanggal ${date}</h4>`;
-        arr.forEach(n=>{
-          html += `<div class="card" style="padding:10px;margin-bottom:6px">
-            <div><b>No Nota: ${n.noNota}</b></div>
-            <div>Total: Rp ${(Number(n.total)||0).toLocaleString('id-ID')}</div>
-          </div>`;
-        });
-      }
-    } else if(!no){
-      html += `<p class="small">Tidak ada nota pada tanggal ${date}.</p>`;
-    }
-  }
-
-  if(!no && !date){
-    html = '<p class="small">Isi No Nota atau Tanggal untuk mencari.</p>';
-  }
-
-  hasilEl.innerHTML = html;
-});
-
-// Reset pencarian
-el('btnCariReset').addEventListener('click', ()=>{
-  el('trackNoNota').value = '';
-  el('trackDate').value = '';
-  el('pelacakHasil').innerHTML = '';
-});
-
-
-  /* ===================
-     Export / Share Image (Web)
-     - Save Foto: auto download JPG (nama file: {kurir}_nota_{noNota}.jpg)
-     - Share WA: pakai Web Share API file, fallback download
-  ====================*/
   function canvasToBlob(canvas, type='image/jpeg', quality=0.9){
     return new Promise(res=> canvas.toBlob(b=>res(b), type, quality));
   }
@@ -1860,6 +2115,45 @@ el('btnCariReset').addEventListener('click', ()=>{
     const canvas = await html2canvas(node, {scale:2, backgroundColor:'#fff'});
     const blob = await canvasToBlob(canvas, 'image/jpeg', 0.9);
     return blob;
+  }
+  
+  async function showNotaPhotoModal(notaData) {
+    const notaPreview = el('notaPreview');
+    notaPreview.innerText = notaData.text;
+
+    el('notaPhotoModal').style.display = 'block';
+
+    const canvas = await html2canvas(notaPreview, { scale: 2, backgroundColor: '#fff' });
+    el('notaCanvasPreview').src = canvas.toDataURL('image/jpeg', 0.9);
+    
+    // Simpan data nota untuk tombol save
+    el('savePhotoBtn').onclick = () => saveNotaPhoto(notaData);
+  }
+
+  el('closeNotaPhotoModal').addEventListener('click', () => {
+    el('notaPhotoModal').style.display = 'none';
+  });
+  
+  async function saveNotaPhoto(notaData) {
+    try {
+      const notaPreview = el('notaPreview');
+      notaPreview.innerText = notaData.text; // Pastikan konten sama
+      const canvas = await html2canvas(notaPreview, { scale: 2, backgroundColor: '#fff' });
+      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.9);
+      const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('Foto nota diunduh. Cek folder Downloads/Galeri anda.');
+    } catch (e) {
+      console.error(e);
+      alert('Gagal simpan foto nota');
+    }
   }
 
   async function savePreviewAsImage(){
@@ -1903,5 +2197,5 @@ el('btnCariReset').addEventListener('click', ()=>{
   updatePreviewFilename();
 
 </script>
-</body>        
+</body>
 </html>
