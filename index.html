@@ -943,6 +943,8 @@ select, input {
         </div>
         <div class="card">
             <h4>Daftar Mitra & Transaksi Bulan Ini</h4>
+            <label>Cari Mitra</label>
+            <input id="mitraSearchInput" type="text" placeholder="Ketik nama mitra">
             <div class="table-container">
             <table>
                 <thead><tr><th>Nama</th><th>Alamat</th><th>No HP</th><th>TRX</th><th>Target</th></tr></thead>
@@ -1359,8 +1361,44 @@ async function loadOngkir(){
   }
 }
 
+// Deklarasi Elemen Baru
+const mitraSearchInput = el('mitraSearchInput'); 
 
-    // --- Mitra Section (SYNCHRONIZED) ---
+// --- Fungsi Pencarian Mitra Real-time ---
+function filterMitraTable(){
+    const mitraListBody = el('mitraListBody');
+    // Periksa jika elemen tidak ada (misalnya, jika berada di tab lain)
+    if (!mitraSearchInput || !mitraListBody) return; 
+
+    const searchTerm = mitraSearchInput.value.toLowerCase().trim();
+    const rows = mitraListBody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        
+        // Dapatkan nama mitra dari atribut data-nama
+        const mitraName = row.getAttribute('data-nama');
+        
+        // Skip baris loading atau baris kosong
+        if (!mitraName) {
+            row.style.display = "";
+            continue;
+        }
+        
+        // Tampilkan jika nama mitra mengandung teks pencarian (case-insensitive)
+        if (mitraName.includes(searchTerm)) {
+            row.style.display = ""; // Tampilkan baris
+        } else {
+            row.style.display = "none"; // Sembunyikan baris
+        }
+    }
+}
+
+// Tambahkan event listener untuk memicu pencarian saat pengguna mengetik
+if(mitraSearchInput) {
+    mitraSearchInput.addEventListener('input', filterMitraTable);
+}
+
 // --- Mitra Section (SYNCHRONIZED) ---
     el('btnCariMitra').addEventListener('click', loadMitraData);
     el('btnAddTrxMitra').addEventListener('click', addMitraTrx);
@@ -1377,56 +1415,69 @@ async function loadOngkir(){
         setInterval(checkDailyTransactionStatusAndNotify, 6 * 60 * 60 * 1000); // Cek setiap 6 jam
     });
 
+    // GANTI SELURUH FUNGSI loadMitraData() ANDA DENGAN INI
     async function loadMitraData() {
-      const mitraListBody = el('mitraListBody');
-      const mitraSelect = el('mitraSelect');
-      mitraListBody.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
-      const selectedMonth = el('mitraMonth').value;
-      if (!selectedMonth) return;
-
-      try {
-        const [mitraSnap, trxSnap, statusSnap] = await Promise.all([
-          get(ref(db, 'mitra')), get(ref(db, 'mitra_trx_monthly')), get(ref(db, 'mitra_status_monthly'))
-        ]);
-
-        if (!mitraSnap.exists()) {
-          mitraListBody.innerHTML = '<tr><td colspan="5">Belum ada data mitra.</td></tr>';
-          return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+        const mitraListBody = el('mitraListBody');
+        const mitraSelect = el('mitraSelect');
+        mitraListBody.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
+        const selectedMonth = el('mitraMonth').value;
+        if (!selectedMonth) return;
+    
+        try {
+            const [mitraSnap, trxSnap, statusSnap] = await Promise.all([
+                get(ref(db, 'mitra')), get(ref(db, 'mitra_trx_monthly')), get(ref(db, 'mitra_status_monthly'))
+            ]);
+    
+            if (!mitraSnap.exists()) {
+                mitraListBody.innerHTML = '<tr><td colspan="5">Belum ada data mitra.</td></tr>';
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+            }
+    
+            const activeMitra = Object.keys(mitraSnap.val())
+                .map(id => ({ id, ...mitraSnap.val()[id] }))
+                .filter(mitra => (statusSnap.val()?.[mitra.id]?.[selectedMonth]) !== 'inactive')
+                .sort((a, b) => a.nama.localeCompare(b.nama));
+            
+            if (activeMitra.length === 0) {
+                mitraListBody.innerHTML = '<tr><td colspan="5">Tidak ada mitra aktif bulan ini.</td></tr>';
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+            }
+    
+            mitraSelect.innerHTML = '<option value="">-- Pilih Mitra --</option>' + activeMitra.map(m => `<option value="${m.id}">${m.nama}</option>`).join('');
+            
+            // --- PENAMBAHAN UNTUK PENCARIAN ---
+            // 1. Reset input pencarian saat data baru dimuat
+            if (mitraSearchInput) mitraSearchInput.value = '';
+    
+            // 2. Tambahkan atribut data-nama pada setiap <tr>
+            mitraListBody.innerHTML = activeMitra.map(m => {
+                const currentTrx = trxSnap.val()?.[m.id]?.[selectedMonth]?.trx || 0;
+                const cleanNoHp = m.noHp ? m.noHp.replace(/\D/g, '') : '';
+                const whatsappLink = cleanNoHp ? `https://wa.me/${cleanNoHp.startsWith('62') ? cleanNoHp : '62' + cleanNoHp}` : '#';
+                
+                const alamatText = m.alamat || '-';
+                const isGoogleMapsLink = alamatText.startsWith('http://') || alamatText.startsWith('https://');
+                // PERBAIKAN LINK GOOGLE MAPS: Pastikan format URL benar
+                const googleMapsLink = isGoogleMapsLink ? alamatText : `http://maps.google.com/?q=${encodeURIComponent(alamatText)}`;
+    
+                // BARIS PENTING: data-nama ditambahkan
+                return `<tr data-nama="${m.nama.toLowerCase()}">
+                            <td>${m.nama}</td>
+                            <td>${m.alamat ? `<a href="${googleMapsLink}" target="_blank">${m.alamat}</a>` : '-'}</td>
+                            <td>${m.noHp ? `<a href="${whatsappLink}" target="_blank">${m.noHp}</a>` : '-'}</td>
+                            <td>${currentTrx}</td>
+                            <td>${m.targetTransaksi}</td>
+                        </tr>`;
+            }).join('');
+    
+            // 3. Panggil filterTable setelah data dimuat untuk memastikan semua baris terlihat
+            filterMitraTable();
+            // --- AKHIR PENAMBAHAN ---
+    
+        } catch (error) {
+            mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
         }
-
-        const activeMitra = Object.keys(mitraSnap.val())
-          .map(id => ({ id, ...mitraSnap.val()[id] }))
-          .filter(mitra => (statusSnap.val()?.[mitra.id]?.[selectedMonth]) !== 'inactive')
-          .sort((a, b) => a.nama.localeCompare(b.nama));
-        
-        if (activeMitra.length === 0) {
-          mitraListBody.innerHTML = '<tr><td colspan="5">Tidak ada mitra aktif bulan ini.</td></tr>';
-          return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
-        }
-
-        mitraSelect.innerHTML = '<option value="">-- Pilih Mitra --</option>' + activeMitra.map(m => `<option value="${m.id}">${m.nama}</option>`).join('');
-        mitraListBody.innerHTML = activeMitra.map(m => {
-          const currentTrx = trxSnap.val()?.[m.id]?.[selectedMonth]?.trx || 0;
-          const cleanNoHp = m.noHp ? m.noHp.replace(/\D/g, '') : '';
-          const whatsappLink = cleanNoHp ? `https://wa.me/${cleanNoHp.startsWith('62') ? cleanNoHp : '62' + cleanNoHp}` : '#';
-          
-          const alamatText = m.alamat || '-';
-          const isGoogleMapsLink = alamatText.startsWith('http://') || alamatText.startsWith('https://');
-          const googleMapsLink = isGoogleMapsLink ? alamatText : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alamatText)}`;
-
-          return `<tr>
-                      <td>${m.nama}</td>
-                      <td>${m.alamat ? `<a href="${googleMapsLink}" target="_blank">${m.alamat}</a>` : '-'}</td>
-                      <td>${m.noHp ? `<a href="${whatsappLink}" target="_blank">${m.noHp}</a>` : '-'}</td>
-                      <td>${currentTrx}</td>
-                      <td>${m.targetTransaksi}</td>
-                  </tr>`;
-        }).join('');
-      } catch (error) {
-        mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
-      }
     }
-
     async function addMitraTrx() {
       const mitraId = el('mitraSelect').value;
       const trxToAdd = parseInt(el('trxMitraInput').value);
