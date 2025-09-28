@@ -1082,6 +1082,7 @@ select, input {
   const sampleUsers = {};
   let currentUser = null;
   let lastNoNota = 0;
+  let selectedMitraId = ''; 
   let notaCounterLoaded = false;
   let mitraReminderInterval;
   
@@ -1320,7 +1321,53 @@ select, input {
           console.error("Failed to load notifications:", error);
       }
   }
+// Fungsi wrapper untuk menjalankan pengecekan saat login dan setiap 3 jam
+function startMitraReminder() {
+    // Jalankan saat pertama kali login
+    checkDailyTransactionStatusAndNotify();
+    
+    // Hapus interval lama jika ada (untuk menghindari duplikasi saat login ulang)
+    if (mitraReminderInterval) clearInterval(mitraReminderInterval);
+    
+    // Set interval untuk menjalankan pengecekan setiap 3 jam (3 jam * 60 menit * 60 detik * 1000 ms)
+    mitraReminderInterval = setInterval(checkDailyTransactionStatusAndNotify, 3 * 60 * 60 * 1000); 
+}
 
+
+// Fungsi untuk memeriksa dan mengirim notifikasi
+async function checkDailyTransactionStatusAndNotify() {
+    // Pastikan currentUser sudah ada, jika belum, hentikan
+    if (!currentUser) return; 
+
+    const today = new Date().toISOString().slice(0, 10);
+    const notificationKey = `dailyTrxReminder-${today}`;
+
+    // 1. Cek apakah notifikasi untuk hari ini sudah dikirim (via localStorage)
+    if (localStorage.getItem(notificationKey) === 'sent') {
+        return;
+    }
+
+    // 2. Ambil semua ID Mitra
+    const mitraSnap = await get(ref(db, 'mitra'));
+    if (!mitraSnap.exists()) return;
+    const allMitraIds = Object.keys(mitraSnap.val());
+    
+    // 3. Cek apakah ada satupun transaksi hari ini di path mitra_trx_daily/{id}/{today}
+    const hasTransactionToday = await Promise.all(
+        allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
+    ).then(snapshots => snapshots.some(snap => snap.exists()));
+
+    if (!hasTransactionToday) {
+        // 4. Kirim notifikasi jika belum ada transaksi hari ini
+        const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
+        
+        // Panggil fungsi sendNotification yang sudah Anda definisikan di atas!
+        await sendNotification(message); 
+
+        // 5. Tandai notifikasi sudah dikirim untuk hari ini (agar tidak berulang)
+        localStorage.setItem(notificationKey, 'sent');
+    }
+}
   if (localStorage.getItem('currentUser')) {
     loginSuccess(localStorage.getItem('currentUser'));
   }
@@ -1480,38 +1527,65 @@ if(mitraSearchInput) {
         }
     }
     async function addMitraTrx() {
-      const mitraId = el('mitraSelect').value;
-      const trxToAdd = parseInt(el('trxMitraInput').value);
-      const selectedMonth = el('mitraMonth').value;
-      if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0) return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
-      
-      const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
-      const today = new Date().toISOString().slice(0, 10);
-      const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`);
+        const mitraId = el('mitraSelect').value;
+        const trxToAdd = parseInt(el('trxMitraInput').value);
+        const selectedMonth = el('mitraMonth').value;
+        // PENTING: Pastikan variabel global 'currentUser' (ID Kurir) sudah terisi
+        const kurirId = currentUser; 
 
-      try {
-        const snap = await get(trxRef);
-        const currentTrx = snap.exists() ? snap.val().trx : 0;
-        await set(trxRef, { trx: currentTrx + trxToAdd });
+        if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0 || !kurirId) {
+             // Tambahkan cek kurirId di sini
+            if (!kurirId) return alert('Error: ID Kurir tidak ditemukan. Mohon Login ulang.');
+            return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
+        }
+        
+        const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // >>> PERBAIKAN: Aktifkan deklarasi trxDailyRef di sini <<<
+        const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
 
-        // Tambahkan transaksi harian
-        await set(trxDailyRef, { trx: true });
+        try {
+            const snap = await get(trxRef);
+            const currentTrx = snap.exists() ? snap.val().trx : 0;
+            
+            // 1. Update total TRX bulanan
+            await set(trxRef, { trx: currentTrx + trxToAdd });
 
-        alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
-        el('trxMitraInput').value = '1';
-        el('mitraSelect').value = '';
-        loadMitraData();
-      } catch (error) {
-        alert("Gagal menambahkan transaksi: " + error.message);
-      }
+            // 2. SIMPAN LOG DETAIL TRANSAKSI (Untuk laporan Kurir di Admin)
+            const logRef = push(ref(db, 'mitra_trx_log')); 
+            
+            await set(logRef, {
+                kurirId: kurirId, 
+                mitraId: mitraId, 
+                trxCount: trxToAdd, 
+                timestamp: Date.now(),
+                bulanTujuan: selectedMonth
+            });
+
+            // 3. Tambahkan transaksi harian
+            await set(trxDailyRef, { trx: true }); // Sekarang trxDailyRef sudah terdefinisi
+
+            alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
+            el('trxMitraInput').value = '1';
+            el('mitraSelect').value = '';
+            // loadMitraData(); 
+        } catch (error) {
+            console.error("Gagal menambahkan transaksi:", error); // Tampilkan error di console untuk debugging
+            alert("Gagal menambahkan transaksi: " + error.message);
+        }
     }
 
     // Fungsi untuk memeriksa dan mengirim notifikasi
+// Fungsi untuk memeriksa dan mengirim notifikasi
     async function checkDailyTransactionStatusAndNotify() {
+        // Pastikan currentUser sudah ada
+        if (!currentUser) return;
+
         const today = new Date().toISOString().slice(0, 10);
         const notificationKey = `dailyTrxReminder-${today}`;
 
-        // Cek apakah notifikasi untuk hari ini sudah dikirim
+        // 1. Cek apakah notifikasi untuk hari ini sudah dikirim
         if (localStorage.getItem(notificationKey) === 'sent') {
             return;
         }
@@ -1519,6 +1593,8 @@ if(mitraSearchInput) {
         const mitraSnap = await get(ref(db, 'mitra'));
         if (!mitraSnap.exists()) return;
         const allMitraIds = Object.keys(mitraSnap.val());
+        
+        // Cek apakah ada satupun transaksi hari ini
         const hasTransactionToday = await Promise.all(
             allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
         ).then(snapshots => snapshots.some(snap => snap.exists()));
@@ -1526,11 +1602,9 @@ if(mitraSearchInput) {
         if (!hasTransactionToday) {
             // Kirim notifikasi jika belum ada transaksi hari ini
             const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
-            push(ref(db, `messages/${currentUser}`), {
-                message: message,
-                read: false,
-                timestamp: Date.now()
-            });
+            
+            // >>> KOREKSI DI SINI: Ganti push(...) dengan await sendNotification(message) <<<
+            await sendNotification(message); 
 
             // Tandai notifikasi sudah dikirim untuk hari ini
             localStorage.setItem(notificationKey, 'sent');
