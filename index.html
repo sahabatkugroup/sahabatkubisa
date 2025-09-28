@@ -924,19 +924,17 @@ select, input {
         <h3>Data Mitra</h3>
         <div class="card">
             <label>Input Transaksi Mitra Hari Ini</label>
-            <div class="input-wrap" style="margin-bottom: 10px;">
-                <div class="input-wrap">
-                    <label style="margin-top:0px;">Nama Mitra</label>
-                    <input id="mitraInputTrx" type="text" placeholder="Ketik nama mitra...">
-                    <div class="suggest" id="mitraSuggest"></div>
-                </div>
-                <div class="input-wrap" style="margin-bottom: 10px;">
+            <div class="grid grid-2" style="align-items:end">
+                <select id="mitraSelect">
+                    <option value="">-- Pilih Mitra --</option>
+                </select>
                 <input id="trxMitraInput" type="number" min="1" value="1" placeholder="Jumlah TRX">
                 <div class="btnbar">
                     <button id="btnAddTrxMitra" class="btn secondary">Tambah Transaksi</button>
                 </div>
             </div>
         </div>
+
         <div class="card">
             <div class="grid-2">
               <div><label>Lihat Data Bulan</label><input id="mitraMonth" type="month"></div>
@@ -1210,7 +1208,7 @@ select, input {
     } catch (error) {
         console.error("Failed to send notification:", error);
     }
-}
+  }
   
   function startNotificationListener() {
     const notificationRef = ref(db, `messages/${currentUser}`);
@@ -1343,85 +1341,29 @@ select, input {
         localStorage.removeItem('currentUser');
       }
     }
-const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
-let ongkirData = [];
-let todayNotes = [];
-let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
-
-// 🔹 Ambil data ongkir dari Firebase
-async function loadOngkir(){
-  const snapshot = await get(child(ref(db), "daftar_ongkir"));
-  if(snapshot.exists()){
-    const val = snapshot.val();
-    ongkirData = Object.keys(val).map(key => ({
-      lokasi: String(val[key].wilayah).trim(),
-      ongkir: Number(val[key].ongkir) || 0
-    }));
-    console.log("✅ Data Firebase:", ongkirData);
-    fillSelect("asalSelect", ongkirData);
-    fillSelect("tujuanSelect", ongkirData);
-  }
-}
-// --- VARIABEL GLOBAL BARU ---
-let allMitraData = []; // Menyimpan data mitra aktif untuk autosuggest
-
-// --- IMPLEMENTASI FUNGSI AUTOSUGGEST MITRA ---
-
-const mitraInputTrx = el('mitraInputTrx');
-const mitraSuggest = el('mitraSuggest');
-
-function renderMitraSuggest(list) {
-  mitraSuggest.innerHTML = '';
-  if (list.length === 0 || mitraInputTrx.value.trim() === '') {
-    mitraSuggest.classList.remove('show');
-    return;
-  }
-
-  list.forEach(mitra => {
-    const item = document.createElement('div');
-    item.className = 's-item';
-    item.textContent = mitra.nama; 
-    item.dataset.id = mitra.id; 
-
-    item.addEventListener('click', () => {
-      mitraInputTrx.value = mitra.nama; 
-      mitraInputTrx.dataset.selectedId = mitra.id; // Simpan ID mitra yang dipilih
-      mitraSuggest.classList.remove('show');
-    });
-    mitraSuggest.appendChild(item);
-  });
+  const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
+  let ongkirData = [];
+  let todayNotes = [];
+  let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
   
-  mitraSuggest.classList.add('show');
-}
-
-function handleMitraInput() {
-  const searchTerm = mitraInputTrx.value.toLowerCase().trim();
-  // Reset ID saat user mengetik
-  mitraInputTrx.dataset.selectedId = ''; 
-  
-  if (searchTerm.length < 2) { 
-    mitraSuggest.classList.remove('show');
-    return;
+  // 🔹 Ambil data ongkir dari Firebase
+  async function loadOngkir(){
+    const snapshot = await get(child(ref(db), "daftar_ongkir"));
+    if(snapshot.exists()){
+      const val = snapshot.val();
+      ongkirData = Object.keys(val).map(key => ({
+        lokasi: String(val[key].wilayah).trim(),
+        ongkir: Number(val[key].ongkir) || 0
+      }));
+      console.log("✅ Data Firebase:", ongkirData);
+      fillSelect("asalSelect", ongkirData);
+      fillSelect("tujuanSelect", ongkirData
+    );
   }
-
-  const filteredList = allMitraData.filter(mitra => 
-    mitra.nama.toLowerCase().includes(searchTerm)
-  );
-
-  renderMitraSuggest(filteredList);
 }
 
-// Event Listeners untuk input baru
-if (mitraInputTrx) {
-  mitraInputTrx.addEventListener('input', handleMitraInput);
-  mitraInputTrx.addEventListener('focus', handleMitraInput);
-  mitraInputTrx.addEventListener('blur', () => {
-    // Jeda 150ms agar event click pada saran sempat dieksekusi
-    setTimeout(() => {
-      mitraSuggest.classList.remove('show');
-    }, 150);
-  });
-}
+// Deklarasi Elemen Baru
+const mitraSearchInput = el('mitraSearchInput'); 
 
 // --- Fungsi Pencarian Mitra Real-time ---
 function filterMitraTable(){
@@ -1471,12 +1413,13 @@ if(mitraSearchInput) {
         loadMitraData();
         // Memulai pengingat harian
         checkDailyTransactionStatusAndNotify();
-        setInterval(checkDailyTransactionStatusAndNotify, 6 * 60 * 60 * 1000); // Cek setiap 6 jam
+        setInterval(checkDailyTransactionStatusAndNotify, 3 * 60 * 60 * 1000); // Cek setiap 3 jam
     });
 
-    // GANTI SELURUH FUNGSI loadMitraData() LAMA DENGAN KODE INI
+    // GANTI SELURUH FUNGSI loadMitraData() ANDA DENGAN INI
     async function loadMitraData() {
         const mitraListBody = el('mitraListBody');
+        const mitraSelect = el('mitraSelect');
         mitraListBody.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
         const selectedMonth = el('mitraMonth').value;
         if (!selectedMonth) return;
@@ -1488,28 +1431,26 @@ if(mitraSearchInput) {
     
             if (!mitraSnap.exists()) {
                 mitraListBody.innerHTML = '<tr><td colspan="5">Belum ada data mitra.</td></tr>';
-                allMitraData = [];
-                return;
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
             }
     
-            // Filter mitra aktif bulan ini
             const activeMitra = Object.keys(mitraSnap.val())
                 .map(id => ({ id, ...mitraSnap.val()[id] }))
                 .filter(mitra => (statusSnap.val()?.[mitra.id]?.[selectedMonth]) !== 'inactive')
                 .sort((a, b) => a.nama.localeCompare(b.nama));
             
-            // Simpan data mitra aktif ke variabel global allMitraData (PENTING!)
-            allMitraData = activeMitra;
-    
             if (activeMitra.length === 0) {
                 mitraListBody.innerHTML = '<tr><td colspan="5">Tidak ada mitra aktif bulan ini.</td></tr>';
-                return;
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
             }
     
-            // Hapus kode pengisian mitraSelect.innerHTML
-    
+            mitraSelect.innerHTML = '<option value="">-- Pilih Mitra --</option>' + activeMitra.map(m => `<option value="${m.id}">${m.nama}</option>`).join('');
+            
+            // --- PENAMBAHAN UNTUK PENCARIAN ---
+            // 1. Reset input pencarian saat data baru dimuat
             if (mitraSearchInput) mitraSearchInput.value = '';
     
+            // 2. Tambahkan atribut data-nama pada setiap <tr>
             mitraListBody.innerHTML = activeMitra.map(m => {
                 const currentTrx = trxSnap.val()?.[m.id]?.[selectedMonth]?.trx || 0;
                 const cleanNoHp = m.noHp ? m.noHp.replace(/\D/g, '') : '';
@@ -1517,61 +1458,54 @@ if(mitraSearchInput) {
                 
                 const alamatText = m.alamat || '-';
                 const isGoogleMapsLink = alamatText.startsWith('http://') || alamatText.startsWith('https://');
-                const googleMapsLink = isGoogleMapsLink ? alamatText : `http://googleusercontent.com/maps.google.com/4{encodeURIComponent(alamatText)}`;
+                // PERBAIKAN LINK GOOGLE MAPS: Pastikan format URL benar
+                const googleMapsLink = isGoogleMapsLink ? alamatText : `http://maps.google.com/?q=${encodeURIComponent(alamatText)}`;
     
+                // BARIS PENTING: data-nama ditambahkan
                 return `<tr data-nama="${m.nama.toLowerCase()}">
                             <td>${m.nama}</td>
                             <td>${m.alamat ? `<a href="${googleMapsLink}" target="_blank">${m.alamat}</a>` : '-'}</td>
                             <td>${m.noHp ? `<a href="${whatsappLink}" target="_blank">${m.noHp}</a>` : '-'}</td>
-                            <td>${m.targetTransaksi}</td>
                             <td>${currentTrx}</td>
+                            <td>${m.targetTransaksi}</td>
                         </tr>`;
             }).join('');
     
+            // 3. Panggil filterTable setelah data dimuat untuk memastikan semua baris terlihat
             filterMitraTable();
+            // --- AKHIR PENAMBAHAN ---
     
         } catch (error) {
-            console.error("Gagal memuat data mitra:", error);
             mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
-            allMitraData = [];
         }
     }
-    // GANTI SELURUH FUNGSI addMitraTrx() LAMA DENGAN KODE INI
     async function addMitraTrx() {
-        // UBAH: Ambil ID dari atribut data-selected-id pada input baru
-        const mitraId = el('mitraInputTrx').dataset.selectedId; 
-        const trxToAdd = parseInt(el('trxMitraInput').value);
-        const selectedMonth = el('mitraMonth').value;
-        
-        // Validasi
-        if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0) {
-            return alert('Pilih mitra dari saran, pilih bulan, dan isi jumlah TRX yang valid.');
-        }
-        
-        const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
-        const today = new Date().toISOString().slice(0, 10);
-        const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`);
-    
-        try {
-            const snap = await get(trxRef);
-            const currentTrx = snap.exists() ? snap.val().trx : 0;
-            await update(trxRef, { trx: currentTrx + trxToAdd }); 
-    
-            // Tambahkan transaksi harian
-            await set(trxDailyRef, { trx: true });
-    
-            alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
-            el('trxMitraInput').value = '1';
-            
-            // Bersihkan input autosuggest setelah berhasil
-            el('mitraInputTrx').value = '';
-            el('mitraInputTrx').dataset.selectedId = ''; // Reset ID
-            
-            loadMitraData();
-        } catch (error) {
-            alert("Gagal menambahkan transaksi: " + error.message);
-        }
+      const mitraId = el('mitraSelect').value;
+      const trxToAdd = parseInt(el('trxMitraInput').value);
+      const selectedMonth = el('mitraMonth').value;
+      if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0) return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
+      
+      const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
+      const today = new Date().toISOString().slice(0, 10);
+      const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`);
+
+      try {
+        const snap = await get(trxRef);
+        const currentTrx = snap.exists() ? snap.val().trx : 0;
+        await set(trxRef, { trx: currentTrx + trxToAdd });
+
+        // Tambahkan transaksi harian
+        await set(trxDailyRef, { trx: true });
+
+        alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
+        el('trxMitraInput').value = '1';
+        el('mitraSelect').value = '';
+        loadMitraData();
+      } catch (error) {
+        alert("Gagal menambahkan transaksi: " + error.message);
+      }
     }
+
     // Fungsi untuk memeriksa dan mengirim notifikasi
     async function checkDailyTransactionStatusAndNotify() {
         const today = new Date().toISOString().slice(0, 10);
@@ -1757,7 +1691,7 @@ loadOngkir();
   // Reset total & preview
   updateTotals();
   el('notaPreview').innerText = 'Belum ada nota.';
-});
+  });
 
   el('ongkir').addEventListener('input', updateTotals);
 
