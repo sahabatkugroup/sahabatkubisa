@@ -1181,6 +1181,11 @@ select, input {
     el('btnLogout').classList.remove('hidden');
     el('curUser').innerText = currentUser;
     el('kurirName').value = currentUser;
+    const currentMonth = getCurrentMonthString();
+    el('rekapMonth').value = currentMonth;
+    el('mitraMonth').value = currentMonth; 
+    const currentDate = getCurrentDateString();
+    el('riwayatDate').value = currentDate;
     setActiveTab('notaTab');
     await ensureCounter();
     updateNextNotaLabel();
@@ -1188,6 +1193,23 @@ select, input {
     checkAndDisplayNotifications();
     startNotificationListener();
     startMitraReminder();
+  }
+
+  function getCurrentMonthString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    // getMonth() adalah 0-indexed (Januari=0), jadi kita tambahkan 1
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+  // Fungsi untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  function getCurrentDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    // getMonth() adalah 0-indexed, jadi kita tambahkan 1
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // Format YYYY-MM-DD
   }
 
   // ============== Notifikasi Section =================
