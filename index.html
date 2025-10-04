@@ -1085,7 +1085,7 @@ select, input {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
   import { getDatabase, ref, set, get, onValue, update, remove, child, push } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"; 
+  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
@@ -1104,32 +1104,13 @@ select, input {
   } catch(e) {}
 
   const db = getDatabase(app);
-  const auth = getAuth(app); 
   const sampleUsers = {};
   let currentUser = null;
   let lastNoNota = 0;
   let selectedMitraId = ''; 
   let notaCounterLoaded = false;
   let mitraReminderInterval;
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // User sedang login
-            currentUser = user.displayName || user.email.split('@')[0];
-            
-            // Logika UI untuk menyembunyikan/menampilkan elemen login
-            el('loginContainer').classList.add('hidden');
-            el('mainApp').classList.remove('hidden');
-            
-            // Panggil fungsi PENGINGAT TRANSAKSI di sini
-            checkDailyTransactionStatusAndNotify(); 
-            
-        } else {
-            // User telah logout
-            currentUser = null;
-            el('loginContainer').classList.remove('hidden');
-            el('mainApp').classList.add('hidden');
-        }
-    });
+  
   const el = (id)=>document.getElementById(id);
   const qs = (sel)=>document.querySelector(sel);
   const qsa = (sel)=>Array.from(document.querySelectorAll(sel));
@@ -1387,7 +1368,6 @@ select, input {
           console.error("Failed to load notifications:", error);
       }
   }
-
 // Fungsi wrapper untuk menjalankan pengecekan saat login dan setiap 3 jam
 function startMitraReminder() {
     // Jalankan saat pertama kali login
@@ -1601,9 +1581,6 @@ if(mitraSearchInput) {
         const mitraSelectEl = el('mitraSelect');
         const mitraId = mitraSelectEl.value;
         const trxToAdd = parseInt(el('trxMitraInput').value);
-        const kurirDailyRef = ref(db, `kurir_daily_status/${kurirId}/${today}`);
-        await set(kurirDailyRef, { status: true, timestamp: Date.now() });
-
         // Asumsi Anda sudah menambahkan input 'mitraMonth' di HTML dan mengisinya
         const selectedMonth = el('mitraMonth').value; 
         
@@ -1742,37 +1719,40 @@ if(mitraSearchInput) {
             });
         });
     }
-async function checkDailyTransactionStatusAndNotify() {
-    // Pastikan currentUser sudah ada
-    if (!currentUser) return;
+    // Fungsi untuk memeriksa dan mengirim notifikasi
+// Fungsi untuk memeriksa dan mengirim notifikasi
+    async function checkDailyTransactionStatusAndNotify() {
+        // Pastikan currentUser sudah ada
+        if (!currentUser) return;
 
-    const today = new Date().toISOString().slice(0, 10);
-    const notificationKey = `dailyTrxReminder-${today}`;
+        const today = new Date().toISOString().slice(0, 10);
+        const notificationKey = `dailyTrxReminder-${today}`;
 
-    // 1. Cek apakah notifikasi untuk hari ini sudah dikirim (personal check)
-    if (localStorage.getItem(notificationKey) === 'sent') {
-        return;
-    }
-    
-    // 2. Cek status transaksi SPESIFIK untuk kurir yang login
-    const kurirDailyRef = ref(db, `kurir_daily_status/${currentUser}/${today}`);
-    const kurirDailySnap = await get(kurirDailyRef);
+        // 1. Cek apakah notifikasi untuk hari ini sudah dikirim
+        if (localStorage.getItem(notificationKey) === 'sent') {
+            return;
+        }
 
-    // Cek apakah KURIR INI sudah memiliki transaksi hari ini
-    const hasTransactionTodayForThisKurir = kurirDailySnap.exists();
-    
-    // 3. Kirim notifikasi jika KURIR INI belum input
-    if (!hasTransactionTodayForThisKurir) {
-        const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini oleh Anda. Segera input untuk menghindari keterlambatan.";
+        const mitraSnap = await get(ref(db, 'mitra'));
+        if (!mitraSnap.exists()) return;
+        const allMitraIds = Object.keys(mitraSnap.val());
         
-        // Asumsi fungsi sendNotification(message) sudah tersedia di kode Anda
-        await sendNotification(message); 
+        // Cek apakah ada satupun transaksi hari ini
+        const hasTransactionToday = await Promise.all(
+            allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
+        ).then(snapshots => snapshots.some(snap => snap.exists()));
 
-        // Tandai notifikasi sudah dikirim untuk hari ini
-        localStorage.setItem(notificationKey, 'sent');
+        if (!hasTransactionToday) {
+            // Kirim notifikasi jika belum ada transaksi hari ini
+            const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
+            
+            // >>> KOREKSI DI SINI: Ganti push(...) dengan await sendNotification(message) <<<
+            await sendNotification(message); 
+
+            // Tandai notifikasi sudah dikirim untuk hari ini
+            localStorage.setItem(notificationKey, 'sent');
+        }
     }
-    // Hapus kode lama yang mengecek semua mitra, karena tidak lagi diperlukan.
-}
 function fillSelect(selectId, data){
   const sel = document.getElementById(selectId);
   sel.innerHTML = `<option value="">-- Pilih --</option>`;
