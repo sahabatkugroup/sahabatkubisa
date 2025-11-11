@@ -1221,6 +1221,7 @@ select, input {
         <div id="riwayatTab" class="tabContent hidden">
           <h3>Riwayat Nota</h3>
           <div class="card">
+            <div class="grid grid-3" style="grid-template-columns: 1fr 1fr 1fr;">
               <div style="grid-column: span 2;">
                 <label>Cari Tanggal</label>
                 <input id="riwayatDate" type="date">
@@ -2513,7 +2514,7 @@ loadOngkir();
     lines.push(`Kurir   : ${kurir}`);
     lines.push(`No Nota : ${noNota}`);
     lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
-    lines.push('---------------------------------------------------');
+    lines.push('----------------------------------------------------');
     
     // format item dua baris
     items.forEach((it, i) => {
