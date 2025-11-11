@@ -249,10 +249,11 @@ select:focus {
 
 nav.tab {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
+
 
 nav.tab button {
   padding: 14px 0;
@@ -326,72 +327,147 @@ nav.tab button.active {
   color: var(--sky-strong);
   font-size: 1.1rem;
 }
+.section-title .small {
+  color: #00CAFF !important;
+  font-size: 1.1rem;     /* ukuran sedikit lebih besar dari default */
+  font-weight: 700;
+  letter-spacing: 0.3px; /* biar lebih rapi */
+}
+
 
 .list-v {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
-/* Item & Tambahan cards sejajar */
+/* === Kartu Item Dua Baris === */
 .line-card {
+  background: #00CAFF;
   border: 1.5px solid var(--border);
-  border-radius: 18px;
-  background: var(--card-bg);
-  padding: 14px 18px;
-  display: grid;
-  grid-template-columns: 2.5fr 90px 180px 130px 100px;
-  gap: 12px;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.07);
-  transition: box-shadow 0.3s ease;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 .line-card:hover {
-  box-shadow: 0 8px 24px var(--shadow-light);
+  box-shadow: 0 8px 20px rgba(0, 128, 255, 0.1);
+  transform: translateY(-2px);
 }
 
-.line-card .sub {
-  font-weight: 700;
-  text-align: center;
-  color: var(--sky-strong);
-  font-size: 0.95rem;
+/* === Baris Atas === */
+.top-row {
+  display: grid;
+  grid-template-columns: 2fr 0.6fr 1fr;
+  gap: 12px;
+  align-items: end;
 }
 
-.line-card .mini-btn {
-  width: 100%;
-  border-radius: 14px;
-  padding: 8px 0;
+.top-row label.small {
+  font-size: 12px;
+  color: var(--muted);
   font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.top-row input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  text-align: center;
   font-size: 0.9rem;
-  background: var(--sky);
-  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.top-row input:focus {
+  border-color: var(--sky-strong);
+  box-shadow: 0 0 5px var(--sky-strong);
+  background: #f0f8ff;
+}
+
+/* === Baris Bawah (Proporsional) === */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 2fr 1.6fr; /* kiri = Nama Item, kanan = Qty+Harga */
+  gap: 12px;
+  align-items: end;
+  margin-top: 10px;
+}
+
+/* Kolom kiri bawah (Hapus) */
+.bottom-row .mini-btn {
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #ff6b6b;
+  color: white;
   border: none;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-.line-card .mini-btn:hover {
-  background: var(--sky-strong);
-  color: white;
+.bottom-row .mini-btn:hover {
+  background: #e04e4e;
+  transform: translateY(-1px);
 }
 
-/* Tambahan card */
-.line-card-tambahan {
-  border: 1.5px solid var(--border);
-  border-radius: 18px;
-  background: var(--card-bg);
-  padding: 14px 18px;
-  display: grid;
-  grid-template-columns: 1.8fr 1.2fr 130px;
-  gap: 12px;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.07);
-  transition: box-shadow 0.3s ease;
+/* Kolom kanan bawah (Subtotal) */
+.bottom-row .col-right {
+  text-align: right;
 }
 
-.line-card-tambahan:hover {
-  box-shadow: 0 8px 24px var(--shadow-light);
+.bottom-row .col-right label.small {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.bottom-row .sub {
+  background: #f5faff;
+  border: 1.5px solid #c9dbf8;
+  border-radius: 10px;
+  padding: 10px 20px;             /* sedikit lebih tinggi */
+  font-weight: 800;  
+  color: var(--sky-strong);
+  font-size: 1.25rem;   
+  display: inline-block;
+  min-width: 130px;
+  text-align: right;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* === Responsif HP === */
+@media (max-width: 700px) {
+  .top-row {
+    grid-template-columns: 1.6fr 0.6fr 1fr;
+    gap: 8px;
+  }
+
+  .bottom-row {
+    grid-template-columns: 1.6fr 1.6fr;
+    gap: 8px;
+  }
+
+  .bottom-row .mini-btn {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  .bottom-row .sub {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+  .bottom-row .sub {
+  font-size: 1.1rem;   /* sedikit kecil saat di layar kecil */
+  padding: 8px 14px;
+
 }
 
 /* Nota Preview */
@@ -492,9 +568,7 @@ select, input {
   .line-card {
     grid-template-columns: 1fr 90px 140px 120px 90px;
   }
-  .line-card-tambahan {
-    grid-template-columns: 1fr 1.2fr 120px;
-  }
+
 }
 .input-wrap { position: relative; }
 .suggest {
@@ -522,10 +596,7 @@ select, input {
   .line-card {
     grid-template-columns: 4fr 70px 90px 100px;
   }
-  .line-card-tambahan {
-    grid-template-columns: 1fr 1fr 90px;
-  }
-}
+
 /* Penyesuaian khusus untuk layar kecil (HP) */
 @media (max-width: 600px) {
   /* Container lebih sempit dan padding lebih kecil */
@@ -552,11 +623,6 @@ select, input {
     gap: 8px;
   }
 
-  .line-card-tambahan {
-    grid-template-columns: 1.5fr 1fr 80px;
-    padding: 12px 14px;
-    gap: 8px;
-  }
 
   /* Font dan padding lebih kecil untuk teks dan tombol mini */
   .line-card .sub {
@@ -634,7 +700,7 @@ select, input {
 
   /* Section title font lebih kecil */
   .section-title {
-    font-size: 1rem;
+    font-size: 11px;
     margin-top: 8px;
   }
 
@@ -701,95 +767,354 @@ select, input {
       background-color: #f9f9f9;
       font-weight: bold;
     }
+    #notaPreview {
+      font-family: "Courier New", Courier, monospace !important;
+      white-space: pre !important;      /* jaga format baris */
+      overflow-x: auto;
+      background: #00CAFF;
+      color: #111;
+      border: 1px dashed #ccc;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+      line-height: 1.35;
+      box-sizing: border-box;
+      max-height: 240px;
+      width: 100%;
+    }
 
-    /* Nota Preview Modal */
+
+
+    /* === Modal Preview (Foto Nota) === */
     #notaPhotoModal {
       padding-top: 20px;
       z-index: 1002;
     }
+    
     #notaPhotoModalContent {
-      max-width: 350px;
-      padding: 15px;
-      background: #f5faff;
+      max-width: 340px;                  /* sedikit kecil dari sebelumnya */
+      padding: 12px;
+      background: #f8fbff;
       border: 1.5px solid #c9dbf8;
-      border-radius: 16px;
+      border-radius: 14px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+    
     #notaCanvasPreview {
       width: 100%;
       height: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
     
-    /* Nota Teks Modal */
+    /* === Modal Teks Nota (Popup Teks) === */
     #notaTextModal {
-        display: none;
-        position: fixed;
-        z-index: 1003;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.5);
-        animation: fadeIn 0.3s ease;
+      display: none;
+      position: fixed;
+      z-index: 1003;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s ease;
     }
+    
     #notaTextModalContent {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border-radius: 20px;
-        max-width: 400px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      background-color: #00CAFF;
+      margin: 6% auto;
+      padding: 16px;
+      border-radius: 18px;
+      max-width: 360px;                  /* lebih ramping */
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
+    
     #notaModalText {
       white-space: pre-wrap;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size: 0.9rem;
+      font-size: 0.8rem;                 /* lebih kecil */
       color: #333;
-      line-height: 1.4;
-      padding: 10px;
+      line-height: 1.3;
+      padding: 8px;
       border: 1px dashed #ccc;
-      border-radius: 12px;
+      border-radius: 10px;
+      background: #fafafa;
     }
     
+    /* Animasi */
     @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     @keyframes slideIn {
-        from { transform: translateY(-50px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+      from { transform: translateY(-40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Nota Card Style */
+    .nota-card {
+      background: linear-gradient(180deg, #00CAFF 50%, #00CAFF 100%);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 8px 24px rgba(0, 128, 255, 0.1);
+      margin-top: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .nota-card:hover {
+      box-shadow: 0 10px 30px rgba(0, 128, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* --- Daftar Item Rapi --- */
+    .item-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px var(--shadow-light);
+    }
+    
+    .item-table th, .item-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    
+    .item-table th {
+      background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    
+    .item-table td input[type="text"],
+    .item-table td input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .item-table td button {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .item-table td .btn-edit {
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 2.2fr 0.6fr 1fr; /* sama kayak baris atas */
+      align-items: end;
+      margin-top: 10px;
+    }
+    
+    .bottom-row .col-left {
+      grid-column: 1 / 2;
+    }
+    
+    .bottom-row .col-right {
+      grid-column: 3 / 4;
+      justify-self: end;
+      text-align: right;
+    }
+    
+    .bottom-row .col-right label.small {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+    
+    .bottom-row .mini-btn {
+      width: 100%;
+      padding: 8px 0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    
+    .bottom-row .mini-btn:hover {
+      background: #e04e4e;
+      transform: translateY(-1px);
+    }
+    
+    .bottom-row .sub {
+      background: #f5faff;
+      border: 1.5px solid #c9dbf8;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-weight: 700;
+      color: var(--sky-strong);
+      font-size: 1rem;
+      min-width: 130px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .iprice::placeholder {
+      color: #b0c6e0;
+      font-style: italic;
+    }
+    /* Tombol kecil modern di pojok kanan atas */
+    .btn-fab {
+      position: absolute;
+      top: -4px;
+      right: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: var(--sky-strong);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+    }
+    .btn-fab.secondary {
+      background: #2ecc71 !important; 
+      color: #ffffff !important;      /* Teks putih */
+      border: 2px solid #2ecc71 !important;
+    }
+    .btn-fab.secondary:hover {
+      /* Override hover shadow dengan warna hijau agar serasi */
+      box-shadow: 0 6px 18px rgba(46, 204, 113, 0.6); 
+      transform: scale(1.15); /* Biar tombolnya membesar juga */
+    }
+    .line-card-tambahan {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    .line-card-tambahan:hover {
+      box-shadow: 0 8px 20px rgba(0,128,255,0.1);
+      transform: translateY(-2px);
+    }
+    
+    /* baris atas sejajar seperti daftar item */
+    .line-card-tambahan .top-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr; /* kiri panjang, kanan sempit */
+      gap: 12px;
+      align-items: end;
+    }
+    
+    /* tombol hapus full panjang di bawah */
+    .line-card-tambahan .bottom-row {
+      margin-top: 12px;
+    }
+    .line-card-tambahan .bottom-row .mini-btn {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .line-card-tambahan .bottom-row .mini-btn:hover {
+      background: #e04e4e;
+      transform: translateY(-1px);
+    }
+    
+    /* Responsif di HP */
+    @media (max-width: 700px) {
+      .line-card-tambahan .top-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    #previewFilename {
+      font-size: 0.7rem !important;   /* kecilin ukuran teks */
+      color: #aaa !important;         /* warna abu lembut */
+      font-weight: 400;               /* jangan tebal */
+      letter-spacing: 0.2px;
+    }
+    .preview-subtext {
+      font-size: 0.7rem !important;
+      color: #aaa !important;
+    }
+    /* Tambahkan ini di akhir tag <style> */
+    .btn-fab.secondary {
+      background: #2ecc71 !important; 
+      color: #ffffff !important;
+      border: 2px solid #2ecc71 !important;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3) !important;
+      animation: pulse 2s infinite; /* Animasi pulse berulang */
+      transition: all 0.3s ease !important; /* Transisi halus */
+    }
+    
+    .btn-fab.secondary:hover {
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.8) !important; /* Glow lebih kuat */
+      transform: scale(1.2) !important; /* Membesar saat hover */
+      animation: none; /* Hentikan pulse saat hover */
+    }
+    
+    .btn-fab.secondary:active {
+      transform: scale(0.95) !important; /* Bounce kecil saat klik */
+      box-shadow: 0 2px 8px rgba(46, 204, 113, 0.5) !important;
+    }
+    
+    /* Definisi animasi pulse */
+    @keyframes pulse {
+      0% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
+      50% { box-shadow: 0 6px 16px rgba(46, 204, 113, 0.6); }
+      100% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
     }
   </style>
 </head>
 <body>
-<div class="container">
-
-  <div id="loginCard" class="card">
-    <h2>Login Kurir</h2>
-    <div class="grid grid-3">
-      <div>
-        <label>Username</label>
-        <input id="loginUser" type="text" placeholder="Nama kurir (contoh: Tom Haye)" autocomplete="username">
-      </div>
-      <div>
-        <label>Password</label>
-        <input id="loginPass" type="password" placeholder="ID Card (contoh: A1234)" autocomplete="current-password">
-      </div>
-      <div style="align-self:end">
-        <div class="btnbar">
-          <button id="btnLogin" class="btn">Masuk</button>
+  <div class="container">
+    <div id="loginCard" class="card">
+      <h2>Login Kurir</h2>
+      <div class="grid grid-3">
+        <div>
+          <label for="loginUser">Username</label>
+          <input id="loginUser" type="text" placeholder="Nama kurir (contoh: Tom Haye)" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="loginPass">Password</label>
+          <input id="loginPass" type="password" placeholder="ID Card (contoh: A1234)" autocomplete="current-password" required>
+        </div>
+        <div style="align-self: end;">
+          <div class="btnbar">
+            <button id="btnLogin" class="btn primary" aria-label="Masuk ke aplikasi">Masuk</button>
+          </div>
         </div>
       </div>
+      <p id="loginMsg" class="small" style="color: var(--danger-color); margin-top: 8px;"></p>
     </div>
-    <p id="loginMsg" class="small" style="color:#c0392b;margin-top:8px"></p>
-  </div>
 
-  <div id="app" class="hidden">
-    <button id="notificationBtn">🔔<span id="notificationBadge" class="badge hidden"></span></button>
-
+    <div id="app" class="hidden">
+      <button id="notificationBtn" aria-label="Buka notifikasi">🔔<span id="notificationBadge" class="badge hidden"></span></button>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
@@ -805,108 +1130,103 @@ select, input {
       </div>
     </div>
 
-    <div class="card">
-      <nav class="tab" id="tabNav">
-        <button data-tab="notaTab" class="active">📝 Nota</button>
-        <button data-tab="riwayatTab">📋 Riwayat</button>
-        <button data-tab="laporanRekapTab">📊 Rekap</button>
-        <button data-tab="ongkirTab">📍 Cek Ongkir</button>
-        <button onclick="window.location.href='absensi-kurir-sahabatku.html'">🗓️️ Absensi Kurir</button>
-        <button data-tab="mitraTab">🤝 Data Mitra</button>
-        <button data-tab="pengaturanTab">⚙️ Pengaturan</button>
-      </nav>
-  </div>
-
-    <div id="notaTab" class="tabContent">
-        <h3>Buat / Edit Nota</h3>
-
-        <div class="grid grid-3">
-          <div>
-            <label>Nama Kurir</label>
-            <input id="kurirName" type="text" readonly>
+      <div class="card">
+        <nav class="tab" id="tabNav">
+          <button data-tab="notaTab" class="active" aria-label="Tab Nota">📝 Nota</button>
+          <button data-tab="riwayatTab" aria-label="Tab Riwayat">📋 Riwayat</button>
+          <button data-tab="laporanRekapTab" aria-label="Tab Rekap">📊 Rekap</button>
+          <button data-tab="ongkirTab" aria-label="Tab Cek Ongkir">📍 Cek Ongkir</button>
+          <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓️ Absensi Kurir</button>
+          <button data-tab="mitraTab" aria-label="Tab Data Mitra">🤝 Data Mitra</button>
+          <button data-tab="pengaturanTab" aria-label="Tab Pengaturan">⚙️ Pengaturan</button>
+        </nav>
+        <div id="notaTab" class="tabContent active">
+          <h3>Buat / Edit Nota</h3>
+          <div class="nota-card">
+            <div class="grid grid-3">
+              <div>
+                <label for="kurirName">Nama Kurir</label>
+                <input id="kurirName" type="text" readonly>
+              </div>
+              <div>
+                <label for="custPhone">Nomor WhatsApp Customer</label>
+                <input id="custPhone" type="text" placeholder="6281234... (opsional)">
+              </div>
+              <div>
+                <label for="ongkir">Ongkir (Rp)</label>
+                <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()">
+              </div>
+            </div>
           </div>
-          <div>
-            <label>Nomor WhatsApp Customer</label>
-            <input id="custPhone" type="text" placeholder="6281234... (opsional)">
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Daftar Item</div>
+            <button id="btnAddItem" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah item">+</button>
           </div>
-          <div>
-            <label>Ongkir (Rp)</label>
-            <input id="ongkir" type="number" value="0" min="0">
+          <div id="itemsArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Tambahan Biaya</div>
+            <button id="btnAddTambahan" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah biaya tambahan">+</button>
+          </div>
+          <div id="tambahanArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="grid grid-3" style="margin-top: 8px; align-items: end;">
+            <div class="nota-card">
+              <div>
+                <label>Total</label>
+                <div id="totalPesanan" style="font-weight: 800; font-size: 22px; color: var(--danger-color);">Rp 0</div>
+                <div class="small">Subtotal item + ongkir + tambahan</div>
+              </div>
+              <div></div>
+              <div class="btnbar" style="justify-content: flex-end;">
+                <button id="btnSaveForm" class="btn secondary" aria-label="Simpan nota">Simpan Nota</button>
+                <button id="btnExportPreview" class="btn secondary" aria-label="Simpan foto">Simpan Foto</button>
+                <button id="btnSharePreview" class="btn secondary" aria-label="Bagikan WhatsApp">Bagikan WhatsApp</button>
+                <button id="btnClearAll" class="btn danger" aria-label="Bersihkan semua">Bersihkan Semua</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card preview-card" style="margin-top: 10px;">
+            <div class="section-title">
+              <h3 style="margin: 0;">Preview Nota</h3>
+              <div class="small"><span id="previewFilename">-</span></div>
+            </div>
+            <div id="notaPreview" class="nota-box">Belum ada nota.</div>
           </div>
         </div>
 
-        <div class="section-title" style="margin-top:14px">
-          <div class="small" style="font-weight:700">Daftar Item</div>
-          <div class="btnbar">
-            <button id="btnAddItem" class="btn">+ Item</button>
-            <button id="btnClearItems" class="btn secondary">Bersihkan</button>
-          </div>
-        </div>
-
-        <div id="itemsArea" class="list-v" style="margin-top:10px"></div>
-
-        <div class="section-title" style="margin-top:14px">
-          <div class="small" style="font-weight:700">Tambahan Biaya</div>
-          <div class="btnbar">
-            <button id="btnAddTambahan" class="btn secondary">+ Tambahan</button>
-          </div>
-        </div>
-        <div id="tambahanArea" class="list-v" style="margin-top:10px"></div>
-
-        <div class="grid grid-3" style="margin-top:8px;align-items:end">
-          <div>
-            <label>Total</label>
-            <div id="totalPesanan" style="font-weight:800;font-size:22px;color:#FFF4A4">Rp 0</div>
-            <div class="small">Subtotal item + ongkir + tambahan</div>
-          </div>
-          <div></div>
-        <div class="btnbar" style="justify-content:flex-end">
-          <button id="btnSaveForm" class="btn secondary">Simpan Nota</button>
-          <button id="btnExportPreview" class="btn secondary">Simpan Foto</button>
-          <button id="btnSharePreview" class="btn secondary">Bagikan WhatsApp</button>
-          <button id="btnClearAll" class="btn danger">Bersihkan Semua</button>
-        </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div class="section-title">
-            <h3 style="margin:0">Preview Nota</h3>
-            <div class="small">Nama file: <span id="previewFilename">-</span></div>
-          </div>
-          <div id="notaPreview" class="nota-box">Belum ada nota.</div>
-        </div>
-      </div>
-
-      <div id="riwayatTab" class="tabContent hidden">
-        <h3>Riwayat Nota</h3>
-        <div class="card">
+        <div id="riwayatTab" class="tabContent hidden">
+          <h3>Riwayat Nota</h3>
+          <div class="card">
             <div class="grid grid-3" style="grid-template-columns: 1fr 1fr 1fr;">
               <div style="grid-column: span 2;">
                 <label>Cari Tanggal</label>
                 <input id="riwayatDate" type="date">
               </div>
-              <div style="align-self:end">
+              <div style="align-self: end;">
                 <div class="btnbar">
                   <button id="btnCariRiwayat" class="btn">Cari</button>
                   <button id="btnResetRiwayat" class="btn secondary">Reset</button>
                 </div>
               </div>
             </div>
+          </div>
+          <h3 style="margin-top: 20px;">Semua Riwayat Nota (Akun Ini)</h3>
+          <div id="notaHistory"></div>
         </div>
-        <h3 style="margin-top:20px;">Semua Riwayat Nota (Akun Ini)</h3>
-        <div id="notaHistory"></div>
-      </div>
 
-      <div id="laporanRekapTab" class="tabContent hidden">
-        <h3>Rekap</h3>
-        <div class="card" style="margin-top:10px">
+        <div id="laporanRekapTab" class="tabContent hidden">
+          <h3>Rekap</h3>
+          <div class="card" style="margin-top: 10px;">
             <h4>Rekap Bulanan</h4>
             <div class="grid grid-3">
               <div>
                 <label>Bulan</label>
                 <input id="rekapMonth" type="month">
               </div>
-              <div style="align-self:end">
+              <div style="align-self: end;">
                 <button id="btnLoadRekap" class="btn">Muat Rekap</button>
               </div>
             </div>
@@ -917,167 +1237,170 @@ select, input {
                 <tfoot><tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr></tfoot>
               </table>
             </div>
+          </div>
         </div>
-      </div>
 
-      <div id="mitraTab" class="tabContent hidden">
-        <h3>Data Mitra</h3>
-        <div class="card">
+        <div id="mitraTab" class="tabContent hidden">
+          <h3>Data Mitra</h3>
+          <div class="card">
             <label>Input Transaksi Mitra Hari Ini</label>
-            <div class="grid grid-2" style="align-items:end">
-                <select id="mitraSelect">
-                    <option value="">-- Pilih Mitra --</option>
-                </select>
-                <input id="trxMitraInput" type="number" min="1" value="1" placeholder="Jumlah TRX">
-                <div class="btnbar">
-                    <button id="btnAddTrxMitra" class="btn secondary">Tambah Transaksi</button>
-                </div>
+            <div class="grid grid-2" style="align-items: end;">
+              <select id="mitraSelect">
+                <option value="">-- Pilih Mitra --</option>
+              </select>
+              <input id="trxMitraInput" type="number" min="1" value="1" placeholder="Jumlah TRX">
+              <div class="btnbar">
+                <button id="btnAddTrxMitra" class="btn secondary">Tambah Transaksi</button>
+              </div>
             </div>
-        </div>
-        <div class="card">
+          </div>
+          <div class="card">
             <div class="btnbar">
-                <button id="btnToggleTrxHistory" class="btn full secondary">Lihat Riwayat Transaksi Mitra</button>
+              <button id="btnToggleTrxHistory" class="btn full secondary">Lihat Riwayat Transaksi Mitra</button>
             </div>
-            
+
             <div id="trxMitraHistoryContainer" class="hidden" style="margin-top: 20px;">
-                <h4>Riwayat Transaksi Mitra (Akun Ini)</h4>
-                <div class="table-container">
-                    <table aria-label="Riwayat Transaksi Mitra">
-                        <thead>
-                            <tr>
-                                <th style="width:150px">Tanggal & Waktu</th>
-                                <th>Nama Mitra</th>
-                                <th style="width:100px">Jumlah TRX</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trxMitraHistoryBody">
-                            <tr><td colspan="3">Tekan tombol di atas untuk memuat riwayat.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="btnbar" style="margin-top: 10px;">
-                    <button id="btnCloseTrxHistory" class="btn secondary">Tutup Riwayat</button>
-                </div>
+              <h4>Riwayat Transaksi Mitra (Akun Ini)</h4>
+              <div class="table-container">
+                <table aria-label="Riwayat Transaksi Mitra">
+                  <thead>
+                    <tr>
+                      <th style="width: 150px;">Tanggal & Waktu</th>
+                      <th>Nama Mitra</th>
+                      <th style="width: 100px;">Jumlah TRX</th>
+                    </tr>
+                  </thead>
+                  <tbody id="trxMitraHistoryBody">
+                    <tr><td colspan="3">Tekan tombol di atas untuk memuat riwayat.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="btnbar" style="margin-top: 10px;">
+                <button id="btnCloseTrxHistory" class="btn secondary">Tutup Riwayat</button>
+              </div>
             </div>
-        </div>
-        <div class="card">
-            <div class="grid-2">
-              <div><label>Lihat Data Bulan</label><input id="mitraMonth" type="month"></div>
-              <div style="align-self:end"><button id="btnCariMitra" class="btn full">Tampilkan</button></div>
+          </div>
+          <div class="card">
+            <div>
+              <label>Lihat Data Bulan</label>
+              <input id="mitraMonth" type="month" class="full-input">
             </div>
-        </div>
-        <div class="card">
+            <div style="margin-top: 10px;">
+              <button id="btnCariMitra" class="btn full">Tampilkan</button>
+            </div>
+          </div>
+
+          <div class="card">
             <h4>Daftar Mitra & Transaksi Bulan Ini</h4>
             <label>Cari Mitra</label>
             <input id="mitraSearchInput" type="text" placeholder="Ketik nama mitra">
             <div class="table-container">
-            <table>
+              <table>
                 <thead><tr><th>Nama</th><th>Alamat</th><th>No HP</th><th>TRX</th><th>Target</th></tr></thead>
                 <tbody id="mitraListBody"></tbody>
-            </table>
+              </table>
             </div>
-        </div>
-    </div>
-      
-      <div id="ongkirTab" class="tabContent hidden">
-        <h3>Cek Ongkir</h3>
-        <div class="grid">
-          <div>
-            <label>Asal (opsional)</label>
-            <select id="asalSelect"></select>
-            <input id="asalInput" type="text" placeholder="Ketik lokasi asal… (opsional)">
-            <div class="suggest" id="asalSuggest"></div>
-          </div>
-          <div>
-            <label>Tujuan</label>
-            <select id="tujuanSelect"></select>
-            <input id="tujuanInput" type="text" placeholder="Ketik lokasi tujuan…">
-            <div class="suggest" id="tujuanSuggest"></div>
           </div>
         </div>
 
-        <div class="btnbar">
-          <button id="cekBtn" class="btn primary">Cek Ongkir</button>
-          <button id="bersihkanBtn" class="btn secondary">Bersihkan</button>
-        </div>
-        
-        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
-          <span class="small">Isi salah satu = ongkir normal</span>
-          <span class="small">Isi dua-duanya = (Asal + Tujuan) − 6.000</span>
-        </div>
-        
-        <div class="results" id="results">
-          <div class="card">
-            <h4>Ongkir Normal</h4>
-            <div class="harga" id="normalHarga">–</div>
-            <div class="small" id="normalKeterangan">—</div>
+        <div id="ongkirTab" class="tabContent hidden">
+          <h3>Cek Ongkir</h3>
+          <div class="grid">
+            <div>
+              <label>Asal (opsional)</label>
+              <select id="asalSelect"></select>
+              <input id="asalInput" type="text" placeholder="Ketik lokasi asal… (opsional)">
+              <div class="suggest" id="asalSuggest"></div>
+            </div>
+            <div>
+              <label>Tujuan</label>
+              <select id="tujuanSelect"></select>
+              <input id="tujuanInput" type="text" placeholder="Ketik lokasi tujuan…">
+              <div class="suggest" id="tujuanSuggest"></div>
+            </div>
           </div>
+
+          <div class="btnbar">
+            <button id="cekBtn" class="btn primary">Cek Ongkir</button>
+            <button id="bersihkanBtn" class="btn secondary">Bersihkan</button>
+          </div>
+
+          <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="small">Isi salah satu = ongkir normal</span>
+            <span class="small">Isi dua-duanya = (Asal + Tujuan) − 6.000</span>
+          </div>
+
+          <div class="results" id="results">
+            <div class="card">
+              <h4>Ongkir Normal</h4>
+              <div class="harga" id="normalHarga">–</div>
+              <div class="small" id="normalKeterangan">—</div>
+            </div>
+            <div class="card">
+              <h4>Ongkir Rute</h4>
+              <div class="harga" id="ruteHarga">–</div>
+              <div class="small" id="ruteKeterangan">—</div>
+              <div class="small" id="ruteFormula" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="pengaturanTab" class="tabContent hidden">
+          <h3>Pengaturan Akun</h3>
+          <p class="small" style="margin-top: -8px; margin-bottom: 12px;">Ubah username dan password Anda. Username baru akan menjadi nama kurir baru Anda di sistem.</p>
           <div class="card">
-            <h4>Ongkir Rute</h4>
-            <div class="harga" id="ruteHarga">–</div>
-            <div class="small" id="ruteKeterangan">—</div>
-            <div class="small" id="ruteFormula" style="display:none"></div>
+            <div class="stack">
+              <div>
+                <label>Username Baru</label>
+                <input id="newUsername" type="text" placeholder="Masukkan username baru">
+              </div>
+              <div>
+                <label>Password Baru</label>
+                <input id="newPassword" type="password" placeholder="Masukkan password baru">
+              </div>
+              <div>
+                <label>Konfirmasi Password Baru</label>
+                <input id="confirmPassword" type="password" placeholder="Ketik ulang password baru">
+              </div>
+              <div class="btnbar">
+                <button id="btnUpdateProfile" class="btn full">Simpan Perubahan</button>
+              </div>
+            </div>
+          </div>
+          <p id="profileUpdateMsg" class="small" style="color: #2ecc71; margin-top: 8px;"></p>
+        </div>
+      </div>
+      <div id="notificationModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h3>Notifikasi</h3>
+          <ul id="notificationList" class="notification-list"></ul>
+          <p id="noNotifMsg" class="small hidden" style="text-align: center;">Tidak ada notifikasi.</p>
+        </div>
+      </div>
+      <div id="notaPhotoModal" class="modal">
+        <div class="modal-content" id="notaPhotoModalContent">
+          <span class="close" id="closeNotaPhotoModal">&times;</span>
+          <h3 style="margin-bottom:10px;">Preview Nota</h3>
+          <div id="notaPhotoPreviewContainer">
+            <img id="notaCanvasPreview" alt="Nota Preview">
+          </div>
+          <div class="btnbar" style="justify-content:center;margin-top:15px">
+            <button id="savePhotoBtn" class="btn full secondary">Simpan Foto</button>
           </div>
         </div>
       </div>
-
-    <div id="pengaturanTab" class="tabContent hidden">
-        <h3>Pengaturan Akun</h3>
-        <p class="small" style="margin-top:-8px; margin-bottom:12px;">Ubah username dan password Anda. Username baru akan menjadi nama kurir baru Anda di sistem.</p>
-        <div class="card">
-            <div class="stack">
-                <div>
-                </div>
-                <div>
-                    <label>Password Baru</label>
-                    <input id="newPassword" type="password" placeholder="Masukkan password baru">
-                </div>
-                <div>
-                    <label>Konfirmasi Password Baru</label>
-                    <input id="confirmPassword" type="password" placeholder="Ketik ulang password baru">
-                </div>
-                <div class="btnbar">
-                    <button id="btnUpdateProfile" class="btn full">Simpan Perubahan</button>
-                </div>
-            </div>
+      
+      <div id="notaTextModal" class="modal">
+        <div class="modal-content" id="notaTextModalContent">
+          <span class="close" id="closeNotaTextModal">&times;</span>
+          <h3 style="margin-bottom: 10px;">Preview Nota</h3>
+          <div id="notaModalText" class="nota-box"></div>
+          <div class="btnbar" style="justify-content:center;margin-top:15px">
+              <button id="savePhotoFromModalBtn" class="btn full secondary">Simpan Foto</button>
+          </div>
         </div>
-        <p id="profileUpdateMsg" class="small" style="color:#2ecc71;margin-top:8px"></p>
     </div>
-  </div>
-</div>
-
-<div id="notificationModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h3>Notifikasi</h3>
-    <ul id="notificationList" class="notification-list"></ul>
-    <p id="noNotifMsg" class="small hidden" style="text-align:center;">Tidak ada notifikasi.</p>
-  </div>
-</div>
-
-<div id="notaPhotoModal" class="modal">
-  <div class="modal-content" id="notaPhotoModalContent">
-    <span class="close" id="closeNotaPhotoModal">&times;</span>
-    <h3 style="margin-bottom:10px;">Preview Nota</h3>
-    <div id="notaPhotoPreviewContainer">
-      <img id="notaCanvasPreview" alt="Nota Preview">
-    </div>
-    <div class="btnbar" style="justify-content:center;margin-top:15px">
-      <button id="savePhotoBtn" class="btn full secondary">Simpan Foto</button>
-    </div>
-  </div>
-</div>
-
-<div id="notaTextModal" class="modal">
-  <div class="modal-content" id="notaTextModalContent">
-    <span class="close" id="closeNotaTextModal">&times;</span>
-    <h3 style="margin-bottom: 10px;">Preview Nota</h3>
-    <div id="notaModalText" class="nota-box"></div>
-    <div class="btnbar" style="justify-content:center;margin-top:15px">
-        <button id="savePhotoFromModalBtn" class="btn full secondary">Simpan Foto</button>
-    </div>
-  </div>
-</div>
 
 
 <audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
@@ -1889,7 +2212,6 @@ loadOngkir();
   const tambahanArea = el('tambahanArea');
 
   el('btnAddItem').addEventListener('click', ()=>addItemUI());
-  el('btnClearItems').addEventListener('click', ()=>{ itemsArea.innerHTML=''; addItemUI(); updateTotals(); });
   el('btnAddTambahan').addEventListener('click', ()=> addTambahanUI());
   el('btnClearAll').addEventListener('click', () => {
   if(!confirm('Bersihkan semua form nota?')) return;
@@ -1919,87 +2241,201 @@ loadOngkir();
   // Default satu baris item + satu baris tambahan di awal
   addItemUI();
   addTambahanUI();
-
-  function addItemUI(pref={}){
+  function addItemUI(pref = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'line-card';
     wrap.innerHTML = `
-      <div>
-        <label class="small">Nama Item</label>
-        <input class="iname" type="text" value="${pref.name||''}" placeholder="Nama menu / barang">
+      <div class="top-row">
+        <div class="col-name">
+          <label class="small">Nama Item</label>
+          <input class="iname" type="text" value="${pref.name || ''}" placeholder="Nama menu / barang">
+        </div>
+        <div class="col-qty">
+          <label class="small">Qty</label>
+          <input class="iqty" type="number" min="1" value="${pref.qty || 1}">
+        </div>
+        <div class="col-price">
+          <label class="small">Harga (Rp)</label>
+          <input class="iprice" type="text" inputmode="numeric" 
+            value="${pref.price ? pref.price.toLocaleString('id-ID') : ''}" 
+            placeholder="0">
+        </div>
       </div>
-      <div>
-        <label class="small">Qty</label>
-        <input class="iqty" type="number" min="1" value="${pref.qty||1}">
-      </div>
-      <div>
-        <label class="small">Harga (Rp)</label>
-        <input class="iprice" type="number" min="0" value="${pref.price||0}">
-      </div>
-      <div>
-        <label class="small">Subtotal</label>
-        <div class="sub isub">0</div>
-      </div>
-      <div>
-        <button class="btn danger mini-btn removeBtn">Hapus</button>
+  
+      <div class="bottom-row">
+        <button class="btn danger mini-btn removeBtn">🗑 Hapus</button>
+        <div class="sub isub">Rp 0</div>
       </div>
     `;
+  
     itemsArea.appendChild(wrap);
-    wrap.querySelectorAll('input').forEach(i=> i.addEventListener('input', updateTotals));
-    wrap.querySelector('.removeBtn').addEventListener('click', ()=>{ wrap.remove(); updateTotals(); });
+  
+    const qtyInput = wrap.querySelector('.iqty');
+    const priceInput = wrap.querySelector('.iprice');
+    priceInput.addEventListener('input', (e) => {
+      let value = e.target.value;
+    
+      // hapus semua kecuali angka
+      value = value.replace(/\D/g, '');  
+    
+      if (value === '') {
+        e.target.value = '';
+      } else {
+        // ubah jadi angka murni
+        const numericValue = Number(value);
+    
+        // tampilkan dengan format ribuan di input
+        e.target.value = numericValue.toLocaleString('id-ID');
+      }
+    
+      updateTotals(); // update subtotal / total
+    });
+
+  
+    qtyInput.addEventListener('input', updateTotals);
+    wrap.querySelector('.iname').addEventListener('input', updateTotals);
+    wrap.querySelector('.removeBtn').addEventListener('click', () => {
+      wrap.remove();
+      updateTotals();
+    });
+  
     updateTotals();
   }
 
-  function addTambahanUI(pref={}){
-    const row = document.createElement('div');
-    row.className = 'line-card-tambahan';
-    row.innerHTML = `
-      <div>
-        <label class="small">Jenis Tambahan</label>
-        <select class="t-type">
-      <option ${!pref.type?'selected':''} value="">-- Pilih --</option>
-      <option ${pref.type==='Tambahan Ojeg'?'selected':''} value="Tambahan Ojeg">Tambahan Ojeg</option>
-      <option ${pref.type==='Tambahan Malam'?'selected':''} value="Tambahan Malam">Tambahan Malam</option>
-      <option ${pref.type==='Tambahan Tempat'?'selected':''} value="Tambahan Tempat">Tambahan Tempat</option>
-      <option ${pref.type==='Tambahan Hujan'?'selected':''} value="Tambahan Hujan">Tambahan Hujan</option>
-      <option ${pref.type==='Tambahan Parkir'?'selected':''} value="Tambahan Parkir">Tambahan Parkir</option>
-      <option ${pref.type==='Tambahan Kapasitas'?'selected':''} value="Tambahan Kapasitas">Tambahan Kapasitas</option>
-      <option ${pref.type==='Tambahan Cash Minuman'?'selected':''} value="Tambahan Cash Minuman">Tambahan Cash Minuman</option>
-      <option ${pref.type==='Lainnya'?'selected':''} value="Lainnya">Lainnya</option>
-        </select>
-      </div>
-      <div>
-        <label class="small">Nominal (Rp)</label>
-        <input class="t-nom" type="number" min="0" value="${pref.nominal||0}">
-      </div>
-      <div>
-        <button class="btn secondary mini-btn t-remove">Hapus</button>
-      </div>
-    `;
-    tambahanArea.appendChild(row);
-    row.querySelector('.t-nom').addEventListener('input', updateTotals);
-    row.querySelector('.t-type').addEventListener('change', updateTotals);
-    row.querySelector('.t-remove').addEventListener('click', ()=>{ row.remove(); updateTotals(); });
-    updateTotals();
-  }
-
-  function updateTotals(){
+  function addTambahanUI(pref = {}) {
+      const row = document.createElement("div");
+      row.className = "line-card line-card-tambahan";
+      
+      // Perhatikan bahwa di sini saya sudah memastikan input nominal bertipe text
+      // dan sudah diformat di awal: value="${(pref.nominal || 0).toLocaleString('id-ID')}"
+      row.innerHTML = `
+        <div class="top-row" style="
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 14px;
+            align-items: end;
+        ">
+          <div>
+            <label class="small">Jenis Tambahan</label>
+            <select class="t-type" style="width: 100%;">
+              <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
+              <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
+              <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
+              <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
+              <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
+              <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
+              <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
+              <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
+              <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Nominal (Rp)</label>
+            <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" style="width: 100%;">
+          </div>
+        </div>
+        
+        <div class="bottom-row" style="margin-top: 14px;">
+          <button class="mini-btn t-remove" style="width: 100%;">Hapus Tambahan</button>
+        </div>
+      `;
+      
+      tambahanArea.appendChild(row);
+      
+      // Ambil referensi elemen setelah mereka dimasukkan ke dalam DOM
+      const typeSelect = row.querySelector(".t-type");
+      const nominalInput = row.querySelector(".t-nom");
+  
+      // 🎯 KODE BARU DIMULAI DI SINI 🎯
+      
+      // 1. Event Listener INPUT pada Nominal (Untuk Formatting 2.000, 5.000, dll.)
+      nominalInput.addEventListener("input", (e) => {
+          let value = e.target.value;
+          value = value.replace(/\D/g, ''); // Hapus semua non-digit (termasuk titik/koma)
+  
+          if (value === '') {
+              e.target.value = '';
+          } else {
+              const numericValue = Number(value);
+              e.target.value = numericValue.toLocaleString('id-ID');
+          }
+          updateTotals(); // Hitung ulang total
+      });
+  
+      // 2. Event Listener CHANGE pada Tipe Tambahan (Untuk Harga Otomatis)
+      typeSelect.addEventListener("change", () => {
+          const selectedType = typeSelect.value;
+          let autoNominal = 0;
+  
+          switch(selectedType) {
+              case "Tambahan Ojeg":
+              case "Tambahan Malam":
+              case "Tambahan Hujan":
+              case "Tambahan Parkir":
+              case "Tambahan Tempat":
+                  autoNominal = 2000;
+                  break;
+              case "Tambahan Cash Minuman":
+                  autoNominal = 5000;
+                  break;
+              // Tambahan Kapasitas & Lainnya akan tetap 0 (input manual)
+              default:
+                  autoNominal = 0; 
+                  break;
+          }
+  
+          // Set nilai nominal input. Gunakan toLocaleString agar tampil 2.000 atau 5.000
+          nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
+          
+          // Setelah nilai berubah, panggil updateTotals
+          updateTotals();
+      });
+      
+      // 3. Event Listener Hapus (Kode lama Anda)
+      row.querySelector(".t-remove").addEventListener("click", () => {
+        row.remove();
+        updateTotals();
+      });
+      
+      updateTotals();
+   }
+  function updateTotals() {
     let total = 0;
-    itemsArea.querySelectorAll('.line-card').forEach(c=>{
-      const qty = Number(c.querySelector('.iqty').value)||0;
-      const price = Number(c.querySelector('.iprice').value)||0;
-      const sub = qty*price;
-      c.querySelector('.isub').innerText = sub.toLocaleString('id-ID');
+  
+    // Loop semua item
+    itemsArea.querySelectorAll('.line-card').forEach(c => {
+      const qty = parseInt(c.querySelector('.iqty').value) || 0;
+  
+      // 🔹 Ambil harga dan bersihkan titik pemisah
+      const priceRaw = c.querySelector('.iprice').value.replace(/\./g, '') || '0';
+      const price = parseInt(priceRaw);
+  
+      const sub = qty * price;
+  
+      // 🔹 Tampilkan subtotal dengan format "Rp 10.000"
+      c.querySelector('.isub').innerText = 'Rp ' + sub.toLocaleString('id-ID');
+  
       total += sub;
     });
-    const ong = Number(el('ongkir').value)||0; total += ong;
-    let t = 0;
-    tambahanArea.querySelectorAll('.t-nom').forEach(n=> t += Number(n.value)||0);
-    total += t;
+  
+    // 🔹 Tambahkan ongkir (hapus titik dulu)
+    const ong = parseInt((el('ongkir')?.value || '0').replace(/\./g, '')) || 0;
+    total += ong;
+  
+    // 🔹 Tambahan biaya (hapus titik juga)
+    let tambahan = 0;
+    tambahanArea.querySelectorAll('.t-nom').forEach(n => {
+      tambahan += parseInt((n.value || '0').replace(/\./g, '')) || 0;
+    });
+    total += tambahan;
+  
+    // 🔹 Tampilkan total keseluruhan dengan format ribuan
     el('totalPesanan').innerText = 'Rp ' + total.toLocaleString('id-ID');
+  
     updatePreviewFilename();
     return total;
   }
+
 
   function leftPad(num, len=5){
     return String(num).padStart(len,'0');
@@ -2011,14 +2447,23 @@ loadOngkir();
     el('previewFilename').innerText = filename;
     return filename;
   }
-
+  function getNumericValueFromInput(inputElement) {
+      // Membaca nilai dari elemen input
+      const value = inputElement.value || '0'; 
+      // Menghapus semua karakter non-digit (titik, koma, dsb.)
+      const cleanedString = value.replace(/\D/g, '');
+      // Mengubah string bersih menjadi angka (misal: "10000" → 10000)
+      return Number(cleanedString) || 0;
+  }
   function buildNotaObject(){
     // Items
     const items = []; let subtotal=0;
     itemsArea.querySelectorAll('.line-card').forEach((c,i)=>{
       const name = (c.querySelector('.iname').value||'').trim();
-      const qty = Number(c.querySelector('.iqty').value)||0;
-      const price = Number(c.querySelector('.iprice').value)||0;
+      // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+      const qty = getNumericValueFromInput(c.querySelector('.iqty'))||0;
+      const price = getNumericValueFromInput(c.querySelector('.iprice'))||0;
+      
       const sub = qty*price; subtotal += sub;
       items.push({name, qty, price, subtotal: sub});
     });
@@ -2026,12 +2471,14 @@ loadOngkir();
     const tambahans=[]; let tambahTotal=0;
     tambahanArea.querySelectorAll('.t-nom').forEach(r=>{
       const type=(r.closest('.line-card-tambahan').querySelector('.t-type').value||'').trim();
-      const nominal=Number(r.value)||0;
+      // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+      const nominal=getNumericValueFromInput(r)||0;
       if(type || nominal) tambahans.push({type, nominal});
       tambahTotal += nominal;
     });
 
-    const ongkir = Number(el('ongkir').value)||0;
+    // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+    const ongkir = getNumericValueFromInput(el('ongkir'))||0;
     const custPhone=(el('custPhone').value||'').replace(/\D/g,'');
     const kurir = currentUser || '';
 
@@ -2042,29 +2489,97 @@ loadOngkir();
     // Text nota
     const lines = [];
     lines.push('🧾 NOTA SAHABATKU DELIVERY');
-    lines.push('==========================');
-    lines.push(`Kurir : ${kurir}`);
-    lines.push(`No    : ${noNota}`);
-    lines.push(`Tanggal: ${new Date(createdAt).toLocaleString('id-ID')}`);
-    lines.push('--------------------------');
-    items.forEach((it,i)=> lines.push(`${i+1}. ${it.name||''} (${it.qty} x Rp ${it.price.toLocaleString('id-ID')}) = Rp ${it.subtotal.toLocaleString('id-ID')}`));
-    lines.push('--------------------------');
-    lines.push(`Ongkir   : Rp ${ongkir.toLocaleString('id-ID')}`);
-    tambahans.forEach(t=> lines.push(`${t.type||'Tambahan'}: Rp ${Number(t.nominal).toLocaleString('id-ID')}`));
-    lines.push(`TOTAL    : Rp ${total.toLocaleString('id-ID')}`);
+    lines.push('=====================================');
+    lines.push(`Kurir   : ${kurir}`);
+    lines.push(`No Nota : ${noNota}`);
+    lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
+    lines.push('-------------------------------------');
+    
+    // format item dua baris
+    items.forEach((it, i) => {
+      const name = (it.name || '').trim();
+      const qtyText = `${it.qty}x`;
+      const priceText = `Rp${it.price.toLocaleString('id-ID')}`;
+      const subtotalText = `Rp${it.subtotal.toLocaleString('id-ID')}`;
+    
+      // baris 1 → nama item
+      lines.push(`${i + 1}. ${name}`);
+    
+      // baris 2 → qty, harga, subtotal sejajar kanan
+      const leftPart = `   (${qtyText} ${priceText})`;
+      const rightPart = `= ${subtotalText}`;
+      const colWidth = 20; // atur jarak antar kolom
+      const spaces = colWidth - leftPart.length;
+      lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
+    });
+    
+    lines.push('-------------------------------------');
+    lines.push(`Ongkir   : Rp${ongkir.toLocaleString('id-ID')}`);
+    tambahans.forEach(t => {
+      const type = (t.type || 'Tambahan').padEnd(10, ' ');
+      lines.push(`${type}: Rp${Number(t.nominal).toLocaleString('id-ID')}`);
+    });
+    lines.push('-------------------------------------');
+    lines.push(`TOTAL    : Rp${total.toLocaleString('id-ID')}`);
     lines.push('');
-    lines.push('Terima kasih sudah menggunakan Sahabatku Delivery 🙏');
-
-    const text = lines.join('\n');
-    el('notaPreview').innerText = text;
-
+    lines.push('Terima kasih sudah mempercayakan jasa Sahabatku Delivery 🙏');
+    
+    // tampilkan ke preview
+    document.getElementById('notaPreview').innerText = lines.join('\n');
+    
     return {
-      kurir,noNota,createdAt,
-      items,tambahans,ongkir,total,custPhone,text
+      kurir, noNota, createdAt,
+      items, tambahans, ongkir, total, custPhone,
+      text: lines.join('\n')
     };
-  }
-  
 
+  }
+  // ... (Kode fungsi-fungsi JavaScript Anda di atas, termasuk updateTotals dan el)
+  
+  // Ambil elemen input ongkir
+  const ongkirInput = el('ongkir'); 
+  
+  // 🎯 KODE BARU DIMULAI DI SINI 🎯
+  
+  // 1. LISTENER 'FOCUS': Membersihkan nilai '0' saat input diklik
+  ongkirInput.addEventListener('focus', (e) => {
+      // Jika nilai input adalah '0', kosongkan.
+      if (e.target.value.trim() === '0') {
+          e.target.value = '';
+      }
+  });
+  
+  // 2. LISTENER 'BLUR': Mengembalikan nilai ke '0' jika input dikosongkan/ditinggalkan
+  ongkirInput.addEventListener('blur', (e) => {
+      // Jika user meninggalkan input (blur) dan nilainya kosong, kembalikan ke "0"
+      if (e.target.value.trim() === '') {
+          e.target.value = '0';
+          updateTotals(); // Panggil updateTotals untuk menghitung ulang total (seharusnya 0)
+      }
+  });
+  
+  // 3. LISTENER 'INPUT' (Kode Anda yang sudah ada): Mengatur format 5.000 saat mengetik
+  ongkirInput.addEventListener('input', (e) => {
+      let value = e.target.value;
+  
+      // 1. hapus semua kecuali angka
+      value = value.replace(/\D/g, '');  
+  
+      if (value === '') {
+          e.target.value = '';
+      } else {
+          // 2. ubah jadi angka murni
+          const numericValue = Number(value);
+  
+          // 3. tampilkan dengan format ribuan di input
+          e.target.value = numericValue.toLocaleString('id-ID');
+      }
+  
+      // Panggil updateTotals untuk menghitung ulang total
+      updateTotals(); 
+  });
+  
+  
   /* ===================
      Counter No Nota per user
      /counters/{username}/lastNoNota : number
