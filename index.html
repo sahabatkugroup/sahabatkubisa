@@ -767,82 +767,102 @@ select, input {
       background-color: #f9f9f9;
       font-weight: bold;
     }
-
+/* === 1. Pratinjau Nota (Tampilan Biasa di Halaman) === */
     #notaPreview {
-        /* --- Perbaikan Utama untuk HP --- */
-        white-space: pre-wrap !important; /* <--- KUNCI! Ganti 'pre' menjadi 'pre-wrap' */
-        overflow-x: hidden !important;    /* <--- KUNCI! Sembunyikan/cegah scroll horizontal */
-        font-family: "Courier New", Courier, monospace !important;
-        background: #00CAFF;
-        color: #111;
-        border: 1px dashed #ccc;
-        border-radius: 8px;
-        padding: 8px 10px;
-        font-size: 11px;
-        line-height: 1.35;
+        /* --- Perbaikan Utama untuk Responsif --- */
+        white-space: pre-wrap !important; 
+        overflow-x: hidden !important;   
+        
+        /* --- Gaya Modern --- */
+        font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif !important; /* Font Modern */
+        background: #fcfcfc; /* Latar yang sangat terang */
+        color: #1a1a1a; /* Teks sangat gelap untuk kontras */
+        
+        /* Menghilangkan border kuno, diganti soft shadow */
+        border: none; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Soft Shadow */
+        border-radius: 12px;
+        
+        /* Padding yang lebih proporsional */
+        padding: 16px; 
+        
+        /* Tipografi yang rapih */
+        font-size: 13px; /* Ukuran yang nyaman dibaca */
+        line-height: 1.5;
         box-sizing: border-box;
         width: 100%;
     }
 
-    /* === Modal Preview (Foto Nota) === */
+    /* === 2. Modal Preview (Foto Nota) === */
     #notaPhotoModal {
       padding-top: 20px;
-      z-index: 1002;
+      z-index: 1050; /* Z-index lebih tinggi */
     }
     
+    /* Konten Modal Foto Nota: Lebih Elegan */
     #notaPhotoModalContent {
-      max-width: 340px;                  /* sedikit kecil dari sebelumnya */
-      padding: 12px;
-      background: #f8fbff;
-      border: 1.5px solid #c9dbf8;
-      border-radius: 14px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 540px; /* Diperbesar sedikit untuk tampilan foto yang lebih mantap */
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #ffffff; /* Putih bersih */
+      border-radius: 20px; /* Lebih membulat */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35); /* Shadow lebih kuat */
     }
     
+    /* Preview Gambar/Kanvas Nota */
     #notaCanvasPreview {
+      display: block;
       width: 100%;
       height: auto;
-      border-radius: 10px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 16px; /* Sesuai dengan modal */
+      background: #f7f7f7; /* Latar abu-abu terang jika gambar belum load */
+      margin: 0 auto;
     }
-    
-    /* === Modal Teks Nota (Popup Teks) === */
+
+    /* === 3. Modal Teks Nota (Popup Teks) === */
     #notaTextModal {
       display: none;
       position: fixed;
-      z-index: 1003;
+      z-index: 1060; /* Z-index paling tinggi */
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0,0,0,0.5);
+      background-color: rgba(0,0,0,0.6); /* Latar belakang lebih gelap */
       animation: fadeIn 0.3s ease;
     }
     
+    /* Konten Modal Teks Nota: Focus pada Informasi */
     #notaTextModalContent {
-      background-color: #00CAFF;
-      margin: 6% auto;
-      padding: 16px;
-      border-radius: 18px;
-      max-width: 360px;                  /* lebih ramping */
-      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      background-color: #FFFFFF; /* Ganti ke putih bersih */
+      margin: 10% auto; /* Margin disesuaikan */
+      padding: 24px; /* Padding lebih besar */
+      border-radius: 16px; 
+      max-width: 400px; /* Sedikit lebih lebar */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
+    /* Teks Nota di dalam Modal: Bersih dan Rapi */
     #notaModalText {
       white-space: pre-wrap;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size: 0.8rem;                 /* lebih kecil */
-      color: #333;
-      line-height: 1.3;
-      padding: 8px;
-      border: 1px dashed #ccc;
-      border-radius: 10px;
-      background: #fafafa;
+      font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; /* Font modern yang sama */
+      font-size: 0.9rem; /* Ukuran yang nyaman dibaca di modal */
+      color: #333333;
+      line-height: 1.4;
+      padding: 12px;
+      
+      /* Menghilangkan border, menggunakan background yang subtle */
+      border: none;
+      border-radius: 8px;
+      background: #eeeeee; 
     }
     
-    /* Animasi */
+    /* Animasi (Sudah Bagus, Cuma Disesuaikan Z-index) */
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -2492,7 +2512,7 @@ loadOngkir();
     lines.push(`Kurir   : ${kurir}`);
     lines.push(`No Nota : ${noNota}`);
     lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
-    lines.push('-------------------------------------');
+    lines.push('----------------------------------------------------');
     
     // format item dua baris
     items.forEach((it, i) => {
@@ -2521,7 +2541,7 @@ loadOngkir();
     lines.push('==========================');
     lines.push(`TOTAL    : Rp${total.toLocaleString('id-ID')}`);
     lines.push('');
-    lines.push('Terima kasih sudah mempercayakan jasa Sahabatku Delivery 🙏');
+    lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
     
     // tampilkan ke preview
     document.getElementById('notaPreview').innerText = lines.join('\n');
@@ -2533,8 +2553,7 @@ loadOngkir();
     };
 
   }
-  // ... (Kode fungsi-fungsi JavaScript Anda di atas, termasuk updateTotals dan el)
-  
+
   // Ambil elemen input ongkir
   const ongkirInput = el('ongkir'); 
   
@@ -2883,101 +2902,130 @@ el('btnLoadRekap').addEventListener('click', async ()=>{
   el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
 });
 
-
 /* ===================
    Export / Share Image (Web)
-   - Save Foto: auto download JPG (nama file: {kurir}_nota_{noNota}.jpg)
-   - Share WA: pakai Web Share API file, fallback download
+   Versi Sinkron dengan Preview (#notaPreview)
 ====================*/
-  function canvasToBlob(canvas, type='image/jpeg', quality=0.9){
-    return new Promise(res=> canvas.toBlob(b=>res(b), type, quality));
-  }
-  async function getNotaBlob(){
-    const node = el('notaPreview');
-    if(!node.innerText.trim()){ buildNotaObject(); }
-    const canvas = await html2canvas(node, {scale:2, backgroundColor:'#fff'});
-    const blob = await canvasToBlob(canvas, 'image/jpeg', 0.9);
-    return blob;
-  }
+
+// Konversi canvas ke Blob
+function canvasToBlob(canvas, type = 'image/jpeg', quality = 0.95) {
+  return new Promise(res => canvas.toBlob(b => res(b), type, quality));
+}
+
+// Tangkap tampilan preview nota sebagai gambar
+async function getNotaBlob() {
+  const node = el('notaPreview');
+  if (!node) throw new Error('Elemen notaPreview tidak ditemukan');
   
-  async function showNotaPhotoModal(notaData) {
-    const notaPreview = el('notaPreview');
-    notaPreview.innerText = notaData.text;
-
-    el('notaPhotoModal').style.display = 'block';
-
-    const canvas = await html2canvas(notaPreview, { scale: 2, backgroundColor: '#fff' });
-    el('notaCanvasPreview').src = canvas.toDataURL('image/jpeg', 0.9);
-    
-    // Simpan data nota untuk tombol save
-    el('savePhotoBtn').onclick = () => saveNotaPhoto(notaData);
-  }
-
-  el('closeNotaPhotoModal').addEventListener('click', () => {
-    el('notaPhotoModal').style.display = 'none';
+  // Tangkap langsung tampilan #notaPreview di layar
+  const canvas = await html2canvas(node, {
+    scale: 3,                // resolusi tinggi
+    backgroundColor: '#ffffff',
+    useCORS: true
   });
-  
-  async function saveNotaPhoto(notaData) {
-    try {
-      const notaPreview = el('notaPreview');
-      notaPreview.innerText = notaData.text; // Pastikan konten sama
-      const canvas = await html2canvas(notaPreview, { scale: 2, backgroundColor: '#fff' });
-      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.9);
-      const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+
+  return await canvasToBlob(canvas, 'image/jpeg', 0.95);
+}
+async function showNotaPhotoModal(notaData) {
+  const notaPreview = el('notaPreview');
+  notaPreview.innerText = notaData.text;
+
+  // Tampilkan modal dengan ukuran panjang
+  const modal = el('notaPhotoModal');
+  modal.style.display = 'block';
+
+  // Ambil tangkapan layar preview nota
+  const canvas = await html2canvas(notaPreview, {
+    scale: 2.5,
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    windowWidth: notaPreview.scrollWidth,
+    windowHeight: notaPreview.scrollHeight
+  });
+
+  // Masukkan ke elemen img preview di modal
+  const imgPreview = el('notaCanvasPreview');
+  imgPreview.src = canvas.toDataURL('image/jpeg', 0.95);
+  imgPreview.style.width = '100%';
+  imgPreview.style.height = 'auto';
+  imgPreview.style.borderRadius = '14px';
+  imgPreview.style.maxHeight = '85vh';
+  imgPreview.style.objectFit = 'contain';
+  imgPreview.style.background = '#fff';
+  imgPreview.style.display = 'block';
+  imgPreview.style.margin = '0 auto';
+
+  // Simpan blob untuk tombol save
+  const blob = await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.95));
+  el('savePhotoBtn').onclick = () => saveNotaPhoto(blob, notaData);
+}
+
+async function saveNotaPhoto(blob, notaData) {
+  try {
+    const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('✅ Foto nota berhasil disimpan. Cek folder Downloads/Galeri Anda.');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal menyimpan foto nota.');
+  }
+}
+
+
+// Tombol: Simpan Preview sebagai Foto
+async function savePreviewAsImage() {
+  try {
+    const blob = await getNotaBlob();
+    const nota = buildNotaObject();
+    const filename = `${nota.kurir || currentUser || 'User'}_nota_${nota.noNota}.jpg`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Foto nota berhasil diunduh.');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal menyimpan foto.');
+  }
+}
+
+// Tombol: Share via WhatsApp
+async function sharePreviewImage() {
+  try {
+    const blob = await getNotaBlob();
+    const nota = buildNotaObject();
+    const filename = `${nota.kurir || currentUser || 'User'}_nota_${nota.noNota}.jpg`;
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Nota Sahabatku Delivery',
+        text: `No Nota ${nota.noNota} — Kurir ${currentUser}`
+      });
+    } else {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      alert('Foto nota diunduh. Cek folder Downloads/Galeri anda.');
-    } catch (e) {
-      console.error(e);
-      alert('Gagal simpan foto nota');
+      alert('⚠️ Browser belum mendukung share langsung. File sudah diunduh untuk dibagikan manual.');
     }
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal membagikan nota.');
   }
-
-  async function savePreviewAsImage(){
-    try{
-      const nota = buildNotaObject(); // refresh text
-      const blob = await getNotaBlob();
-      const filename = `${currentUser||'User'}_nota_${nota.noNota}.jpg`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename; a.click();
-      URL.revokeObjectURL(url);
-      alert('Foto nota diunduh. Cek folder Downloads/Galeri anda.');
-    }catch(e){ console.error(e); alert('Gagal simpan foto nota'); }
-  }
-
-  async function sharePreviewImage(){
-    try{
-      const nota = buildNotaObject(); // refresh text
-      const blob = await getNotaBlob();
-      const filename = `${currentUser||'User'}_nota_${nota.noNota}.jpg`;
-      const file = new File([blob], filename, {type:'image/jpeg'});
-
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({
-          files:[file],
-          title:'Nota Sahabatku Delivery',
-          text:`No Nota ${nota.noNota} — Kurir ${currentUser}`
-        });
-      } else {
-        // Fallback → download agar bisa share manual dari Galeri/Downloads
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; a.click();
-        URL.revokeObjectURL(url);
-        alert('Browser tidak support share langsung. File sudah diunduh, silakan bagikan via WhatsApp dari Galeri/Downloads.');
-      }
-    }catch(e){ console.error(e); alert('Gagal share nota.'); }
-  }
-
-  // Perbarui preview filename saat awal
-  updatePreviewFilename();
+}
 
 </script>
 </body>
