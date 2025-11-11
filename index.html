@@ -769,10 +769,11 @@ select, input {
     }
 
     #notaPreview {
+        /* --- Perbaikan Utama untuk HP --- */
+        white-space: pre-wrap !important; /* <--- KUNCI! Ganti 'pre' menjadi 'pre-wrap' */
+        overflow-x: hidden !important;    /* <--- KUNCI! Sembunyikan/cegah scroll horizontal */
         font-family: "Courier New", Courier, monospace !important;
-        white-space: pre !important;        /* jaga format baris */
-        overflow-x: auto;
-        background: #ffffff;
+        background: #00CAFF;
         color: #111;
         border: 1px dashed #ccc;
         border-radius: 8px;
