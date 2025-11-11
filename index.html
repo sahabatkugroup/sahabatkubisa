@@ -847,20 +847,16 @@ select, input {
       animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
-    /* Teks Nota di dalam Modal: Bersih dan Rapi */
+    /* === FIX: Bungkus teks nota agar tidak over layar === */
     #notaModalText {
-      white-space: pre-wrap;
-      font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; /* Font modern yang sama */
-      font-size: 0.9rem; /* Ukuran yang nyaman dibaca di modal */
-      color: #333333;
-      line-height: 1.4;
-      padding: 12px;
-      
-      /* Menghilangkan border, menggunakan background yang subtle */
-      border: none;
-      border-radius: 8px;
-      background: #eeeeee; 
+      white-space: pre-wrap !important;   /* biar baris baru tetap kebaca */
+      word-wrap: break-word !important;   /* pecah kata panjang */
+      overflow-wrap: break-word !important; /* pastikan pecah di semua browser */
+      max-width: 100% !important;         /* jaga lebar maksimal */
+      overflow-x: hidden !important;      /* sembunyikan scroll horizontal */
+      box-sizing: border-box;
     }
+
     
     /* Animasi (Sudah Bagus, Cuma Disesuaikan Z-index) */
     @keyframes fadeIn {
@@ -870,6 +866,12 @@ select, input {
     @keyframes slideIn {
       from { transform: translateY(-40px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 600px) {
+      #notaModalText {
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+      }
     }
 
     /* Nota Card Style */
@@ -2689,6 +2691,43 @@ function refreshNotaHistory(filterDate = null){
         });
     }
 }
+// Tambahkan di akhir fungsi refreshNotaHistory(), setelah elemen tombol "Lihat" dibuat
+document.querySelectorAll('.btnLihatNota').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const notaId = btn.dataset.id;
+    const notaRef = ref(db, `nota/${currentUser}/${notaId}`);
+    const snap = await get(notaRef);
+
+    if (snap.exists()) {
+      const notaData = snap.val();
+
+      // Gunakan fungsi buildNotaPreviewText() kalau sudah ada,
+      // atau buat sederhana:
+      const notaText = `
+No Nota: ${notaData.noNota}
+Kurir: ${notaData.kurir}
+Tanggal: ${notaData.tanggal}
+Customer: ${notaData.customer || '-'}
+Ongkir: Rp ${notaData.ongkir?.toLocaleString('id-ID') || 0}
+Total: Rp ${notaData.total?.toLocaleString('id-ID') || 0}
+
+Daftar Item:
+${(notaData.items || [])
+  .map(i => `- ${i.nama} (${i.qty}x) @Rp${i.harga.toLocaleString('id-ID')}`)
+  .join('\n')}
+      `.trim();
+
+      // tampilkan modal sama seperti di tab Nota
+      el('notaModalText').innerText = notaText;
+      el('notaTextModal').style.display = 'block';
+    }
+  });
+});
+
+// Tombol tutup modal tetap sama
+el('closeNotaTextModal').addEventListener('click', () => {
+  el('notaTextModal').style.display = 'none';
+});
 
 function displayNotes(notes, listEl, filterDate = null) {
     if (notes.length === 0) {
@@ -2774,7 +2813,97 @@ function displayNotes(notes, listEl, filterDate = null) {
       notaTextModal.style.display = 'none';
     }
   });
-
+  async function viewNote(noteId) {
+    try {
+      const notaRef = ref(db, `nota/${currentUser}/${noteId}`);
+      const snap = await get(notaRef);
+  
+      if (!snap.exists()) {
+        alert('Nota tidak ditemukan!');
+        return;
+      }
+  
+      const nota = snap.val();
+  
+      // 1. Format Teks Nota Utama (Monospasi Style)
+      // Hapus markdown WhatsApp dan gunakan format monospasi rata kanan/kiri yang rapi.
+      
+      // Asumsi: Kita harus mereplikasi format monospasi dari buildNotaObject sebelumnya
+      // karena data yang tersimpan di DB (n.text) tidak mengandung semua detail item yang diformat rapi,
+      // dan format yang tersimpan di DB ternyata adalah format WA, bukan format nota monospasi.
+      // Oleh karena itu, kita harus mereplikasi logika pembuatan nota.
+      
+      const lines = [];
+      lines.push('🧾 NOTA SAHABATKU DELIVERY');
+      lines.push('==========================');
+      lines.push(`Kurir   : ${nota.kurir || '-'}`);
+      lines.push(`No Nota : ${nota.noNota || '-'}`);
+      lines.push(`Tanggal : ${new Date(nota.createdAt).toLocaleString('id-ID')}`); // Gunakan createdAt dari DB jika ada
+      lines.push('----------------------------------------------------');
+      
+      // Format item dua baris (gunakan data item dari nota)
+      (nota.items || []).forEach((it, i) => {
+        const name = (it.name || '').trim();
+        const qtyText = `${it.qty}x`;
+        const priceText = `Rp${(it.harga || 0).toLocaleString('id-ID')}`;
+        const subtotalText = `Rp${((it.qty || 0) * (it.harga || 0)).toLocaleString('id-ID')}`;
+        
+        // baris 1 → nama item
+        lines.push(`${i + 1}. ${name}`);
+        
+        // baris 2 → qty, harga, subtotal sejajar kanan
+        const leftPart = `   (${qtyText} ${priceText})`;
+        const rightPart = `= ${subtotalText}`;
+        const colWidth = 20; // Atur jarak antar kolom
+        const spaces = colWidth - leftPart.length;
+        lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
+      });
+      
+      lines.push('==========================');
+      lines.push(`Ongkir   : Rp${(nota.ongkir || 0).toLocaleString('id-ID')}`);
+      // Asumsi properti "tambahan" di DB adalah array, jika tidak, perlu disesuaikan.
+      // Jika data tambahan lama tersimpan sebagai satu nilai (nota.tambahan), gunakan ini:
+      lines.push(`Tambahan : Rp${(nota.tambahan || 0).toLocaleString('id-ID')}`);
+      
+      lines.push('==========================');
+      lines.push(`TOTAL    : Rp${(nota.total || 0).toLocaleString('id-ID')}`);
+      lines.push('');
+      lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
+  
+  
+      const notaTextContent = lines.join('\n');
+  
+  
+      // 2. Buat Struktur HTML (Identik dengan Tampilan Tab Nota)
+      const htmlOutput = `
+          <pre class="nota-text-area">${notaTextContent}</pre>
+          <div class="nota-footer-sep"></div>
+          <p class="nota-small-print">
+              ❗ Penting: Simpan nota elektronik ini sebagai bukti transaksi/klaim. Pastikan Anda selalu menerimanya.
+          </p>
+      `;
+  
+      // 3. Tampilkan ke Modal (menggunakan innerHTML)
+      el('notaModalText').innerHTML = htmlOutput; // <--- PENTING! Ganti innerText menjadi innerHTML
+      el('notaTextModal').style.display = 'block';
+  
+      // 4. Update tombol simpan foto di modal (jika ada)
+      // Asumsi ada tombol dengan ID 'savePhotoFromModalBtn'
+      const saveBtn = el('savePhotoFromModalBtn');
+      if (saveBtn) {
+          saveBtn.onclick = () => saveNotaPhotoFromModal(nota);
+      }
+      
+    } catch (err) {
+      console.error('Gagal membuka nota:', err);
+      alert('Gagal membuka nota.');
+    }
+  }
+  
+  el('closeNotaTextModal').addEventListener('click', () => {
+    el('notaTextModal').style.display = 'none';
+  }
+);
 window.hapusNote = async (id)=>{
     if(!confirm('Hapus nota ini dari Firebase?')) return;
     const snap = await get(ref(db, `nota/${currentUser}/${id}`));
