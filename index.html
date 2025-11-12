@@ -2509,12 +2509,12 @@ loadOngkir();
 
     // Text nota
     const lines = [];
-    lines.push('🧾 NOTA SAHABATKU DELIVERY');
-    lines.push('==========================');
+    lines.push('📒 NOTA SAHABATKU DELIVERY');
+    lines.push('══════════════════════════');
     lines.push(`Kurir   : ${kurir}`);
     lines.push(`No Nota : ${noNota}`);
     lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
-    lines.push('----------------------------------------------------');
+    lines.push('───────────────────────────────────────────────────────');
     
     // format item dua baris
     items.forEach((it, i) => {
@@ -2534,13 +2534,13 @@ loadOngkir();
       lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
     });
     
-    lines.push('==========================');
+    lines.push('══════════════════════════');
     lines.push(`Ongkir   : Rp${ongkir.toLocaleString('id-ID')}`);
     tambahans.forEach(t => {
       const type = (t.type || 'Tambahan').padEnd(10, ' ');
       lines.push(`${type}: Rp${Number(t.nominal).toLocaleString('id-ID')}`);
     });
-    lines.push('==========================');
+    lines.push('══════════════════════════');
     lines.push(`TOTAL    : Rp${total.toLocaleString('id-ID')}`);
     lines.push('');
     lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
@@ -2824,22 +2824,14 @@ function displayNotes(notes, listEl, filterDate = null) {
       }
   
       const nota = snap.val();
-  
-      // 1. Format Teks Nota Utama (Monospasi Style)
-      // Hapus markdown WhatsApp dan gunakan format monospasi rata kanan/kiri yang rapi.
-      
-      // Asumsi: Kita harus mereplikasi format monospasi dari buildNotaObject sebelumnya
-      // karena data yang tersimpan di DB (n.text) tidak mengandung semua detail item yang diformat rapi,
-      // dan format yang tersimpan di DB ternyata adalah format WA, bukan format nota monospasi.
-      // Oleh karena itu, kita harus mereplikasi logika pembuatan nota.
       
       const lines = [];
-      lines.push('🧾 NOTA SAHABATKU DELIVERY');
-      lines.push('==========================');
+      lines.push('📒 NOTA SAHABATKU DELIVERY');
+      lines.push('══════════════════════════');
       lines.push(`Kurir   : ${nota.kurir || '-'}`);
       lines.push(`No Nota : ${nota.noNota || '-'}`);
       lines.push(`Tanggal : ${new Date(nota.createdAt).toLocaleString('id-ID')}`); // Gunakan createdAt dari DB jika ada
-      lines.push('----------------------------------------------------');
+      lines.push('────────────────────────────');
       
       // Format item dua baris (gunakan data item dari nota)
       (nota.items || []).forEach((it, i) => {
@@ -2859,13 +2851,13 @@ function displayNotes(notes, listEl, filterDate = null) {
         lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
       });
       
-      lines.push('==========================');
+      lines.push('══════════════════════════');
       lines.push(`Ongkir   : Rp${(nota.ongkir || 0).toLocaleString('id-ID')}`);
       // Asumsi properti "tambahan" di DB adalah array, jika tidak, perlu disesuaikan.
       // Jika data tambahan lama tersimpan sebagai satu nilai (nota.tambahan), gunakan ini:
       lines.push(`Tambahan : Rp${(nota.tambahan || 0).toLocaleString('id-ID')}`);
       
-      lines.push('==========================');
+      lines.push('══════════════════════════');
       lines.push(`TOTAL    : Rp${(nota.total || 0).toLocaleString('id-ID')}`);
       lines.push('');
       lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
