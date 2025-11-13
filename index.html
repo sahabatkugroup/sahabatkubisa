@@ -2679,11 +2679,11 @@ loadOngkir();
     // Text nota
     const lines = [];
     lines.push('📒 NOTA SAHABATKU DELIVERY');
-    lines.push('═══════════════════════');
+    lines.push('══════════════════════');
     lines.push(`Kurir   : ${kurir}`);
     lines.push(`No Nota : ${noNota}`);
     lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
-    lines.push('───────────────────────');
+    lines.push('──────────────────────');
     
     // format item dua baris
     items.forEach((it, i) => {
@@ -2703,13 +2703,13 @@ loadOngkir();
       lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
     });
     
-    lines.push('═══════════════════════');
+    lines.push('──────────────────────');
     lines.push(`Ongkir   : Rp${ongkir.toLocaleString('id-ID')}`);
     tambahans.forEach(t => {
       const type = (t.type || 'Tambahan').padEnd(10, ' ');
       lines.push(`${type}: Rp${Number(t.nominal).toLocaleString('id-ID')}`);
     });
-    lines.push('═══════════════════════');
+    lines.push('══════════════════════');
     lines.push(`TOTAL    : Rp${total.toLocaleString('id-ID')}`);
     lines.push('');
     lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
