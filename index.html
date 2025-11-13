@@ -1110,6 +1110,35 @@ select, input {
       50% { box-shadow: 0 6px 16px rgba(46, 204, 113, 0.6); }
       100% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
     }
+    .suggest {
+      display: none;
+      position: absolute;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      margin-top: 2px;
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 99;
+    }
+    
+    .suggest.show {
+      display: block;
+    }
+    
+    .s-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      color: #eee;
+    }
+    
+    .s-item:hover {
+      background: #444;
+    }
+    .input-wrap {
+      position: relative;
+    }
+
   </style>
 </head>
 <body>
@@ -1175,7 +1204,11 @@ select, input {
               </div>
               <div>
                 <label for="ongkir">Ongkir (Rp)</label>
-                <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()">
+                <div style="display: flex; gap: 6px;">
+                  <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()" style="flex:1;">
+                  <button id="btnCekOngkirNota" class="btn secondary" style="padding: 10px 14px;">Cek</button>
+                </div>
+                <div class="small" id="ongkirNotaInfo" style="margin-top:4px;color:#555;">Belum dihitung</div>
               </div>
             </div>
           </div>
@@ -1422,6 +1455,36 @@ select, input {
           </div>
         </div>
     </div>
+    <!-- Modal Cek Ongkir dari Tab Nota -->
+    <div id="cekOngkirNotaModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeCekOngkirNota">&times;</span>
+        <h3>Cek Ongkir Nota</h3>
+        <div class="grid">
+          <div class="input-wrap">
+            <label>Asal (opsional)</label>
+            <select id="asalNotaSelect"></select>
+            <input id="asalNotaInput" type="text" placeholder="Ketik asal… (opsional)">
+            <div class="suggest" id="asalNotaSuggest"></div>
+          </div>
+          <div class="input-wrap">
+            <label>Tujuan</label>
+            <select id="tujuanNotaSelect"></select>
+            <input id="tujuanNotaInput" type="text" placeholder="Ketik tujuan…">
+            <div class="suggest" id="tujuanNotaSuggest"></div>
+          </div>
+        </div>
+    
+        <div class="btnbar">
+          <button id="cekOngkirNotaBtn" class="btn primary">Hitung</button>
+        </div>
+        <div style="margin-top:12px;">
+          <div id="hasilOngkirNota" class="harga">–</div>
+          <div id="keteranganOngkirNota" class="small">—</div>
+        </div>
+      </div>
+    </div>
+
 
 
 <audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
@@ -1783,7 +1846,113 @@ async function checkDailyTransactionStatusAndNotify() {
   let ongkirData = [];
   let todayNotes = [];
   let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
+  // --- CEK ONGKIR DARI TAB NOTA ---
+  const modalOngkirNota = el('cekOngkirNotaModal');
+  const btnOpenOngkirNota = el('btnCekOngkirNota');
+  const btnCloseOngkirNota = el('closeCekOngkirNota');
+  const btnHitungOngkirNota = el('cekOngkirNotaBtn');
   
+  btnOpenOngkirNota.addEventListener('click', () => {
+    // isi dropdown dari data ongkir yang sudah dimuat
+    fillSelect("asalNotaSelect", ongkirData);
+    fillSelect("tujuanNotaSelect", ongkirData);
+    modalOngkirNota.style.display = 'block';
+  });
+  
+  btnCloseOngkirNota.addEventListener('click', () => modalOngkirNota.style.display = 'none');
+  window.addEventListener('click', e => {
+    if (e.target === modalOngkirNota) modalOngkirNota.style.display = 'none';
+  });
+
+  btnHitungOngkirNota.addEventListener('click', () => {
+    const asal = el('asalNotaInput').value.trim() || el('asalNotaSelect').value.trim();
+    const tujuan = el('tujuanNotaInput').value.trim() || el('tujuanNotaSelect').value.trim();
+  
+    const findOngkir = (lok) => ongkirData.find(o => o.lokasi.toLowerCase() === lok.toLowerCase());
+    const asalObj = asal ? findOngkir(asal) : null;
+    const tujuanObj = tujuan ? findOngkir(tujuan) : null;
+  
+    let hasil = 0;
+    let ket = "";
+  
+    if (asalObj && tujuanObj) {
+      hasil = Math.max(0, (asalObj.ongkir + tujuanObj.ongkir) - 6000);
+      ket = `(Asal + Tujuan) - 6000`;
+    } else if (asalObj || tujuanObj) {
+      hasil = (asalObj || tujuanObj).ongkir;
+      ket = `Ongkir normal`;
+    } else {
+      ket = `Lokasi belum dipilih`;
+    }
+  
+    // 🔹 tampilkan hasil ke user (10.000)
+    el('hasilOngkirNota').innerText = hasil > 0 ? hasil.toLocaleString("id-ID") : '–';
+    el('keteranganOngkirNota').innerText = ket;
+  
+    // 🔹 masukkan angka murni ke input ongkir
+    el('ongkir').value = hasil || 0;
+  
+    // 🔹 tampilkan info di bawah input ongkir
+    el('ongkirNotaInfo').innerText = `${ket} → Rp ${hasil.toLocaleString("id-ID")}`;
+  
+    // 🔹 PAKSA trigger event "input" agar calculateTotal() benar-benar jalan
+    const evt = new Event('input', { bubbles: true });
+    el('ongkir').dispatchEvent(evt);
+  
+    // 🔹 Tutup modal
+    modalOngkirNota.style.display = 'none';
+  });
+  // 🔹 Fungsi reusable: buat suggestion dari input
+  function setupSuggestion(inputId, suggestId) {
+    const input = el(inputId);
+    const suggest = el(suggestId);
+  
+    input.addEventListener('input', () => {
+      const keyword = input.value.trim().toLowerCase();
+      suggest.innerHTML = '';
+      if (!keyword) {
+        suggest.classList.remove('show');
+        return;
+      }
+  
+      // filter data ongkir
+      const filtered = ongkirData
+        .filter(o => o.lokasi.toLowerCase().includes(keyword))
+        .slice(0, 10); // tampil maksimal 10
+  
+      if (filtered.length === 0) {
+        suggest.classList.remove('show');
+        return;
+      }
+  
+      // tampilkan hasil
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 's-item';
+        div.textContent = item.lokasi;
+        div.addEventListener('click', () => {
+          input.value = item.lokasi;
+          suggest.classList.remove('show');
+        });
+        suggest.appendChild(div);
+      });
+  
+      suggest.classList.add('show');
+    });
+  
+    // klik di luar -> tutup suggestion
+    document.addEventListener('click', (e) => {
+      if (!suggest.contains(e.target) && e.target !== input) {
+        suggest.classList.remove('show');
+      }
+    });
+  }
+  
+  // 🔹 Aktifkan suggestion untuk asal & tujuan
+  setupSuggestion('asalNotaInput', 'asalNotaSuggest');
+  setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
+
+
   // 🔹 Ambil data ongkir dari Firebase
   async function loadOngkir(){
     const snapshot = await get(child(ref(db), "daftar_ongkir"));
@@ -3147,6 +3316,88 @@ async function sharePreviewImage() {
     alert('❌ Gagal membagikan nota.');
   }
 }
+// === 🔹 CEK ONGKIR NOTA + SUGGESTION ===
+const modalOngkirNota = el('cekOngkirNotaModal');
+const btnOpenOngkirNota = el('btnCekOngkirNota');
+const btnCloseOngkirNota = el('closeCekOngkirNota');
+const btnHitungOngkirNota = el('cekOngkirNotaBtn');
+
+btnOpenOngkirNota.addEventListener('click', () => {
+  fillSelect("asalNotaSelect", ongkirData);
+  fillSelect("tujuanNotaSelect", ongkirData);
+  modalOngkirNota.style.display = 'block';
+});
+btnCloseOngkirNota.addEventListener('click', () => modalOngkirNota.style.display = 'none');
+window.addEventListener('click', e => {
+  if (e.target === modalOngkirNota) modalOngkirNota.style.display = 'none';
+});
+
+// --- Fungsi cari dan hitung ongkir ---
+btnHitungOngkirNota.addEventListener('click', () => {
+  const asal = el('asalNotaInput').value.trim() || el('asalNotaSelect').value.trim();
+  const tujuan = el('tujuanNotaInput').value.trim() || el('tujuanNotaSelect').value.trim();
+
+  const findOngkir = (lok) => ongkirData.find(o => o.lokasi.toLowerCase() === lok.toLowerCase());
+  const asalObj = asal ? findOngkir(asal) : null;
+  const tujuanObj = tujuan ? findOngkir(tujuan) : null;
+
+  let hasil = 0;
+  let ket = "";
+
+  if (asalObj && tujuanObj) {
+    hasil = Math.max(0, (asalObj.ongkir + tujuanObj.ongkir) - 6000);
+    ket = `(Asal + Tujuan) - 6000`;
+  } else if (asalObj || tujuanObj) {
+    hasil = (asalObj || tujuanObj).ongkir;
+    ket = `Ongkir normal`;
+  } else {
+    ket = `Lokasi belum dipilih`;
+  }
+
+  el('hasilOngkirNota').innerText = hasil > 0 ? hasil.toLocaleString("id-ID") : '–';
+  el('keteranganOngkirNota').innerText = ket;
+
+  // masukkan nilai murni (tanpa titik) ke input utama
+  el('ongkir').value = hasil || 0;
+  el('ongkirNotaInfo').innerText = `${ket} → Rp ${hasil}`;
+  calculateTotal();
+  modalOngkirNota.style.display = 'none';
+});
+
+// --- Suggestion function reusable ---
+function setupSuggestion(inputId, suggestId) {
+  const input = el(inputId);
+  const suggest = el(suggestId);
+
+  input.addEventListener('input', () => {
+    const keyword = input.value.trim().toLowerCase();
+    suggest.innerHTML = '';
+    if (!keyword) return suggest.classList.remove('show');
+
+    const filtered = ongkirData.filter(o => o.lokasi.toLowerCase().includes(keyword)).slice(0, 10);
+    if (filtered.length === 0) return suggest.classList.remove('show');
+
+    filtered.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 's-item';
+      div.textContent = item.lokasi;
+      div.onclick = () => {
+        input.value = item.lokasi;
+        suggest.classList.remove('show');
+      };
+      suggest.appendChild(div);
+    });
+    suggest.classList.add('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!suggest.contains(e.target) && e.target !== input) suggest.classList.remove('show');
+  });
+}
+
+// Aktifkan suggestion untuk asal & tujuan
+setupSuggestion('asalNotaInput', 'asalNotaSuggest');
+setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
 
 </script>
 </body>
