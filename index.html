@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sahabatku Delivery — Firebase</title>
+  <title>Aplikasi Kurir Sahabatku Bisa</title>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
@@ -1308,31 +1308,38 @@ select, input {
               </div>
             </div>
           </div>
-          <div class="card">
-            <div class="btnbar">
-              <button id="btnToggleTrxHistory" class="btn full secondary">Lihat Riwayat Transaksi Mitra</button>
-            </div>
-
-            <div id="trxMitraHistoryContainer" class="hidden" style="margin-top: 20px;">
-              <h4>Riwayat Transaksi Mitra (Akun Ini)</h4>
+          <div class="card" style="margin-top: 20px;">
+              <button id="btnToggleTrxHistory" class="btn secondary full">Lihat Riwayat Transaksi Mitra</button>
+          </div>
+          <div id="trxMitraHistoryContainer" class="hidden">
+              <div class="card" style="margin-top: 10px;">
+                  <h3>Riwayat Transaksi Mitra</h3>
+          
+                  <div style="margin-bottom: 15px;">
+                      <label>Pilih Tanggal</label>
+                      <input id="mitraRiwayatDate" type="date" style="width: 100%;">
+                  </div>
+          
+                  <div class="btnbar" style="display: flex; gap: 10px;">
+                      <button id="btnCariMitraRiwayat" class="btn" style="flex-grow: 1;">Cari</button>
+                      <button id="btnResetMitraRiwayat" class="btn secondary" style="flex-grow: 1;">Reset</button>
+                  </div>
+          
+              </div>
+              
+              <h3 style="margin-top: 20px;">Daftar Transaksi Mitra</h3>
               <div class="table-container">
-                <table aria-label="Riwayat Transaksi Mitra">
-                  <thead>
-                    <tr>
-                      <th style="width: 150px;">Tanggal & Waktu</th>
-                      <th>Nama Mitra</th>
-                      <th style="width: 100px;">Jumlah TRX</th>
-                    </tr>
-                  </thead>
-                  <tbody id="trxMitraHistoryBody">
-                    <tr><td colspan="3">Tekan tombol di atas untuk memuat riwayat.</td></tr>
-                  </tbody>
-                </table>
+                  <table aria-label="Riwayat Transaksi Mitra">
+                      <thead><tr><th>Waktu</th><th>Nama Mitra</th><th>TRX</th></tr></thead>
+                      <tbody id="trxMitraHistoryBody">
+                          <tr><td colspan="3">Memuat data...</td></tr>
+                      </tbody>
+                  </table>
               </div>
-              <div class="btnbar" style="margin-top: 10px;">
-                <button id="btnCloseTrxHistory" class="btn secondary">Tutup Riwayat</button>
+              
+              <div class="btnbar" style="justify-content: center; margin-top: 15px;">
+                  <button id="btnCloseTrxHistory" class="btn secondary">Tutup Riwayat</button>
               </div>
-            </div>
           </div>
           <div class="card">
             <div>
@@ -2006,17 +2013,50 @@ function filterMitraTable(){
 if(mitraSearchInput) {
     mitraSearchInput.addEventListener('input', filterMitraTable);
 }
-
 // --- Mitra Section (SYNCHRONIZED) ---
     el('btnCariMitra').addEventListener('click', loadMitraData);
     el('btnAddTrxMitra').addEventListener('click', addMitraTrx);
     el('btnToggleTrxHistory').addEventListener('click', toggleMitraTrxHistory);
     el('btnCloseTrxHistory').addEventListener('click', toggleMitraTrxHistory);
 
+    // --- BARU: Event Listeners untuk Filter Riwayat Transaksi Mitra ---
+    el('btnCariMitraRiwayat').addEventListener('click', () => {
+        const selectedDate = el('mitraRiwayatDate').value;
+        if (selectedDate) {
+            // Memuat data untuk tanggal yang dipilih
+            refreshMitraTrxHistory(selectedDate);
+        } else {
+            // Jika tanggal kosong, muat semua data
+            alert('Mohon pilih tanggal untuk mencari riwayat transaksi.');
+        }
+    });
+
+    // --- Event Listeners untuk Filter Riwayat Transaksi Mitra ---
+    el('btnCariMitraRiwayat').addEventListener('click', () => {
+        const selectedDate = el('mitraRiwayatDate').value;
+        if (selectedDate) {
+            // Muat data untuk tanggal yang dipilih
+            refreshMitraTrxHistory(selectedDate);
+        } else {
+            alert('Mohon pilih tanggal untuk mencari riwayat transaksi.');
+        }
+    });
+    el('btnResetMitraRiwayat').addEventListener('click', () => {
+        // 1. Dapatkan tanggal hari ini dalam format YYYY-MM-DD
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // 2. Set input tanggal ke tanggal hari ini
+        el('mitraRiwayatDate').value = today; 
+        
+        // 3. Muat riwayat transaksi dengan filter tanggal hari ini
+        refreshMitraTrxHistory(today);
+    });
+
     // Otomatis atur bulan ke bulan saat ini saat halaman dimuat
     document.addEventListener('DOMContentLoaded', (event) => {
         const today = new Date();
         const year = today.getFullYear();
+        // ... kode DOMContentLoaded lainnya
         const month = (today.getMonth() + 1).toString().padStart(2, '0');
         el('mitraMonth').value = `${year}-${month}`;
         loadMitraData();
@@ -2142,70 +2182,75 @@ if(mitraSearchInput) {
             alert("Gagal menambahkan transaksi: " + error.message);
         }
     }
-    // index (2).html: di dalam <script type="module">
-    
-    function toggleMitraTrxHistory() {
+    // --- Fungsi untuk Toggle/Tutup Riwayat Transaksi Mitra ---
+    async function toggleMitraTrxHistory() {
         const container = el('trxMitraHistoryContainer');
         const button = el('btnToggleTrxHistory');
-        
-        // Toggle class 'hidden' pada container
-        container.classList.toggle('hidden');
+        const dateInput = el('mitraRiwayatDate');
     
-        if (!container.classList.contains('hidden')) {
-            // Jika container ditampilkan, ubah teks tombol dan muat data
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
             button.textContent = 'Memuat Riwayat...';
             button.disabled = true;
+    
+            // 🎯 LOGIC UNTUK TANGGAL HARI INI:
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today; // Set input ke tanggal hari ini
             
-            // Panggil fungsi data
-            refreshMitraTrxHistory().then(() => {
+            // Panggil fungsi refresh dengan tanggal hari ini
+            refreshMitraTrxHistory(today).then(() => {
                 button.textContent = 'Sembunyikan Riwayat Transaksi Mitra';
                 button.disabled = false;
             });
+    
         } else {
-            // Jika container disembunyikan
+            container.classList.add('hidden');
             button.textContent = 'Lihat Riwayat Transaksi Mitra';
             button.disabled = false;
         }
     }
-    // --- Fungsi untuk Memuat Riwayat Transaksi Mitra (Difilter Kurir) ---
-    async function refreshMitraTrxHistory() {
+    // --- Fungsi untuk Memuat Riwayat Transaksi Mitra (Difilter Tanggal) ---
+    async function refreshMitraTrxHistory(filterDate = null) {
         return new Promise((resolve) => {
-            // Menggunakan currentUser sebagai kunci kurir
             if (!currentUser) {
                 el('trxMitraHistoryBody').innerHTML = '<tr><td colspan="3">Silakan login untuk melihat riwayat.</td></tr>';
                 resolve();
                 return;
             }
-    
             const historyBody = el('trxMitraHistoryBody');
             historyBody.innerHTML = '<tr><td colspan="3">Memuat riwayat...</td></tr>';
     
-            // Ganti node dari trx_mitra_history ke mitra_trx_log
-            const historyRef = ref(db, 'mitra_trx_log'); 
-            
+            const historyRef = ref(db, 'mitra_trx_log');
             get(historyRef).then((snapshot) => {
                 const trxs = [];
                 if (snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
                         const trx = childSnapshot.val();
-                        // FILTERING: Ganti kunci filter dari trx.kurir menjadi trx.kurirId
-                        if (trx.kurirId === currentUser) { 
-                            trxs.push(trx);
+                        
+                        if (trx.kurirId === currentUser) {
+                            // 🎯 LOGIC FILTER TANGGAL:
+                            const trxDate = new Date(trx.timestamp).toISOString().slice(0, 10);
+                            if (!filterDate || trxDate === filterDate) {
+                                 trxs.push(trx);
+                            }
                         }
                     });
                 }
     
-                // Urutkan berdasarkan waktu terbaru (descending)
-                trxs.sort((a, b) => b.timestamp - a.timestamp); 
-    
-                historyBody.innerHTML = ''; 
-    
+                // Urutkan dan tampilkan data
+                trxs.sort((a, b) => b.timestamp - a.timestamp);
+                historyBody.innerHTML = '';
+                
                 if (trxs.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="3">Belum ada riwayat transaksi Mitra untuk akun ini.</td></tr>';
+                    const msg = filterDate 
+                        ? `Tidak ada riwayat transaksi Mitra untuk akun ini pada tanggal ${filterDate}.` 
+                        : 'Belum ada riwayat transaksi Mitra untuk akun ini.';
+                    historyBody.innerHTML = `<tr><td colspan="3">${msg}</td></tr>`;
                     resolve();
                     return;
                 }
     
+                // ... (Loop menampilkan data ke tabel) ...
                 trxs.forEach(trx => {
                     const date = new Date(trx.timestamp).toLocaleString('id-ID', {
                         year: 'numeric',
@@ -2214,7 +2259,6 @@ if(mitraSearchInput) {
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-    
                     const row = `
                         <tr>
                             <td>${date}</td>
@@ -2224,7 +2268,7 @@ if(mitraSearchInput) {
                     `;
                     historyBody.insertAdjacentHTML('beforeend', row);
                 });
-                resolve(); 
+                resolve();
             }).catch((error) => {
                 console.error("Gagal memuat riwayat transaksi mitra:", error);
                 historyBody.innerHTML = '<tr><td colspan="3" style="color:#c0392b;">Gagal memuat data.</td></tr>';
@@ -2232,7 +2276,6 @@ if(mitraSearchInput) {
             });
         });
     }
-    // Fungsi untuk memeriksa dan mengirim notifikasi
 // Fungsi untuk memeriksa dan mengirim notifikasi
     async function checkDailyTransactionStatusAndNotify() {
         // Pastikan currentUser sudah ada
