@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sahabatku Delivery — Firebase</title>
+  <title>Aplikasi Kurir Sahabatku</title>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
@@ -1188,6 +1188,7 @@ select, input {
           <button data-tab="ongkirTab" aria-label="Tab Cek Ongkir">📍 Cek Ongkir</button>
           <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓️ Absensi Kurir</button>
           <button data-tab="mitraTab" aria-label="Tab Data Mitra">🤝 Data Mitra</button>
+          <button data-tab="sopTab" aria-label="Tab SOP">📄 SOP Sahabatku</button>
           <button data-tab="pengaturanTab" aria-label="Tab Pengaturan">⚙️ Pengaturan</button>
         </nav>
         <div id="notaTab" class="tabContent active">
@@ -1404,7 +1405,28 @@ select, input {
             </div>
           </div>
         </div>
-
+        <div id="sopTab" class="tabContent hidden">
+            <h3>Standard Operating Procedure Sahabatku</h3>
+            <div class="card" style="text-align: center; padding: 20px;">
+                <p style="margin-bottom: 20px;">Semua dokumen SOP kini diakses melalui halaman terpusat. Klik tombol di bawah untuk membukanya di jendela baru.</p>
+                
+                <a href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku" target="_blank" 
+                   class="sop-item" 
+                   style="display: flex; margin: 20px auto; max-width: 400px; padding: 25px; align-items: center; justify-content: center; text-decoration: none;">
+                    
+                    <span style="background-color: #f6ffed; color: #52c41a; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; display: flex; justify-content: center; align-items: center;">
+                        <span style="font-size: 20px;">🌐</span>
+                    </span>
+                    
+                    <div style="text-align: left; flex-grow: 0;">
+                        <strong style="font-size: 1.1rem; display: block; color: var(--text-primary);">Akses Pusat Dokumen SOP</strong>
+                        <small style="display: block; color: var(--text-secondary);">Buka Google Sites (14+ Panduan Kerja)</small>
+                    </div>
+                </a>
+        
+                <p style="margin-top: 10px; color: var(--text-secondary);"><small>Ini adalah cara tercepat dan teraman untuk mengakses SOP.</small></p>
+            </div>
+        </div>
         <div id="pengaturanTab" class="tabContent hidden">
           <h3>Pengaturan Akun</h3>
           <p class="small" style="margin-top: -8px; margin-bottom: 12px;">Ubah username dan password Anda. Username baru akan menjadi nama kurir baru Anda di sistem.</p>
