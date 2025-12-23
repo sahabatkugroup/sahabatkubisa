@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Absen Kehadiran Kurir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #00CAFF; --dark: #0f172a; --bg: #f8fafc; --success: #10b981; --error: #ef4444; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; background: var(--dark); 
+            margin: 0; display: flex; justify-content: center; overflow: hidden; height: 100vh;
+        }
+
+        .app-container { 
+            width: 100%; max-width: 480px; height: 100%; 
+            background: var(--bg); display: flex; flex-direction: column; overflow: hidden;
+        }
+        
+        header { 
+            padding: 15px 20px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: white; border-bottom: 4px solid var(--primary); flex-shrink: 0;
+        }
+        .greeting h2 { margin: 0; font-size: 16px; font-weight: 800; }
+        #live-clock { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 2px; display: block; }
+
+        .main-content { padding: 10px 15px; flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+
+        .camera-view { 
+            width: 100%; flex: 1; background: #000; border-radius: 15px; 
+            overflow: hidden; border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        #v, #p { width: 100%; height: 100%; object-fit: cover; }
+        #v { transform: scaleX(-1); }
+
+        .gps-status { 
+            position: absolute; top: 10px; left: 10px; padding: 6px 12px; 
+            border-radius: 8px; font-size: 9px; font-weight: 800; 
+            backdrop-filter: blur(10px); z-index: 10;
+        }
+        .active { background: rgba(16, 185, 129, 0.9); color: white; }
+        .inactive { background: rgba(239, 68, 68, 0.9); color: white; }
+
+        .controls { width: 100%; padding: 5px 0 10px; flex-shrink: 0; }
+        
+        /* DROPDOWN MODERN */
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .select-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            z-index: 10;
+            font-size: 18px;
+        }
+        select { 
+            width: 100%; 
+            padding: 16px 16px 16px 45px; 
+            border-radius: 16px; 
+            border: 2px solid #e2e8f0; 
+            font-size: 15px; 
+            font-weight: 700; 
+            background: white; 
+            color: var(--dark);
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(0, 202, 255, 0.15);
+        }
+        /* Panah kustom */
+        .select-wrapper::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        /* Animasi ikon bergetar ke kiri */
+        @keyframes shake-left {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-3px); }
+        }
+        
+        .btn-back {
+            width: 32px; /* Ukuran mungil & presisi */
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-back:active {
+            background: var(--primary);
+            transform: scale(0.85); /* Efek membal saat ditekan */
+        }
+        
+        .btn-back:active i {
+            animation: shake-left 0.3s ease infinite; /* Ikon bergerak saat ditekan */
+            color: var(--dark);
+        }
+        .btn-snap { 
+            width: 65px; height: 65px; background: white; border-radius: 50%; 
+            border: 6px solid var(--primary); display: flex; 
+            align-items: center; justify-content: center; margin: 0 auto; 
+            box-shadow: 0 5px 15px rgba(0,202,255,0.3);
+        }
+
+        .btn-group { display: flex; gap: 8px; width: 100%; }
+        .btn-send { 
+            flex: 2; padding: 15px; border-radius: 12px; border: none; 
+            background: var(--primary); color: var(--dark); font-size: 14px; 
+            font-weight: 800; text-transform: uppercase;
+        }
+        .btn-retry { 
+            flex: 1; padding: 15px; border-radius: 12px; 
+            border: 2px solid #cbd5e1; background: white; color: var(--error); font-weight: 800; font-size: 12px;
+        }
+
+        #loading-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.95); z-index: 999; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .loader { width: 35px; height: 35px; border: 4px solid #ffffff22; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #success-view { 
+            position: fixed; inset: 0; background: var(--success); z-index: 1000; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            color: white; text-align: center; padding: 20px;
+        }
+        .report-card { 
+            background: rgba(0,0,0,0.1); padding: 20px; border-radius: 15px; 
+            width: 100%; margin: 20px 0; border: 1px dashed rgba(255,255,255,0.5);
+        }
+        .report-card div { margin: 8px 0; font-size: 16px; }
+        .report-card label { display: block; font-size: 10px; opacity: 0.8; font-weight: 800; text-transform: uppercase; }
+        .report-card span { font-weight: 800; font-size: 18px; }
+
+        #time-blocked {
+            position: fixed; inset: 0; background: var(--dark); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            color: white; text-align: center; padding: 30px;
+        }
+        #time-blocked i { font-size: 80px; color: var(--error); margin-bottom: 20px; }
+        #time-blocked h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="time-blocked">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <h1>AKSES DITUTUP</h1>
+    <p>Mohon Maaf, aplikasi absensi hanya dapat diakses pada jam<br>
+    <strong>05:00 - 21:00 WIB</strong></p>
+</div>
+
+<div id="loading-overlay"><div class="loader"></div><p style="margin-top:10px; font-weight:700;">PROSES...</p></div>
+
+<div id="success-view">
+    <i class="fa-solid fa-circle-check" style="font-size: 60px;"></i>
+    <h2 style="font-weight: 800; margin: 10px 0;">ABSENSI BERHASIL</h2>
+    
+    <div class="report-card">
+        <div>
+            <label>NAMA KURIR</label>
+            <span id="res-nama">-</span>
+        </div>
+        <div>
+            <label>WAKTU ABSEN</label>
+            <span id="res-waktu">-</span>
+        </div>
+        <div>
+            <label>STATUS</label>
+            <span>TERVERIFIKASI</span>
+        </div>
+    </div>
+    <button onclick="location.reload()" style="margin-top:20px; padding: 12px 40px; border-radius: 50px; border:none; font-weight:800; color:var(--success); background:white;">KEMBALI</button>
+</div>
+
+<div class="app-container">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;">
+        <div class="greeting">
+            <h2 id="today">Memuat...</h2>
+            <span id="live-clock">00:00:00 WIB</span>
+        </div>
+    
+        <button class="btn-back" onclick="window.location.href='index.html'" aria-label="Kembali ke Menu">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+    </header>
+
+    <div class="main-content">
+        <div class="camera-view">
+            <div id="gps-box" class="gps-status inactive">GPS MENCARI...</div>
+            <video id="v" autoplay playsinline></video>
+            <img id="p" style="display:none;">
+        </div>
+
+        <div class="controls">
+            <div id="ui-1" style="text-align: center;">
+                <button class="btn-snap" id="btnSnap" onclick="takePhoto()" disabled>
+                    <i class="fa-solid fa-camera" style="font-size:24px; color:var(--primary)"></i>
+                </button>
+            </div>
+
+            <div id="ui-2" style="display:none;">
+                <div class="select-wrapper">
+                    <i class="fa-solid fa-user-circle"></i>
+                    <select id="selKurir" onchange="saveName()">
+                        <option value="">Pilih Nama Kurir...</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-retry" onclick="resetCam()">ULANG</button>
+                    <button class="btn-send" onclick="submitData()">KIRIM DATA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+    const URL_APPS = "https://script.google.com/macros/s/AKfycbyy9l5th0v74ZnwD4ZWWQkxXF7KpiQR-w9nht8p2j8m44xFT3HDfzjYOUsNGI1rO7yvmA/exec";
+    const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
+
+    function clock() {
+        const d = new Date();
+        const timeStr = d.toLocaleTimeString('id-ID', {hour12:false}) + " WIB";
+        document.getElementById('live-clock').innerText = timeStr;
+        document.getElementById('today').innerText = d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'short'});
+        return timeStr;
+    }
+    setInterval(clock, 1000);
+
+    function saveName() {
+        localStorage.setItem('user_nama_v13', document.getElementById('selKurir').value);
+    }
+
+    async function init() {
+        const sekarang = new Date();
+        const jam = sekarang.getHours();
+        if (jam < 2 || jam >= 21) {
+            document.getElementById('time-blocked').style.display = 'flex';
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+            document.getElementById('v').srcObject = stream;
+            
+            const res = await fetch(URL_APPS);
+            const data = await res.json();
+            const sel = document.getElementById('selKurir');
+            sel.innerHTML = '<option value="">Pilih Nama Kurir...</option>';
+            data.daftarKurir.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+
+            const saved = localStorage.getItem('user_nama_v13');
+            if(saved) sel.value = saved;
+        } catch(e) { alert("Izinkan Kamera!"); }
+        trackGPS();
+    }
+
+    function trackGPS() {
+        navigator.geolocation.watchPosition(p => {
+            const d = getDist(p.coords.latitude, p.coords.longitude, KANTOR.lat, KANTOR.lng);
+            const box = document.getElementById('gps-box');
+            if(d <= KANTOR.rad) {
+                box.className = "gps-status active"; box.innerText = "LOKASI TERVERIFIKASI";
+                document.getElementById('btnSnap').disabled = false;
+            } else {
+                box.className = "gps-status inactive"; box.innerText = "DILUAR KANTOR ("+Math.round(d)+"m)";
+                document.getElementById('btnSnap').disabled = true;
+            }
+        }, null, {enableHighAccuracy:true});
+    }
+
+    function takePhoto() {
+        const v = document.getElementById('v'), c = document.getElementById('c'), p = document.getElementById('p');
+        c.width = 600; c.height = 800;
+        const ctx = c.getContext('2d');
+        const vW = v.videoWidth, vH = v.videoHeight;
+        const ratio = 3/4;
+        let sW = vW, sH = vH, sX = 0, sY = 0;
+        if (vW / vH > ratio) { sW = vH * ratio; sX = (vW - sW) / 2; } 
+        else { sH = vW / ratio; sY = (vH - sH) / 2; }
+        ctx.translate(c.width, 0); ctx.scale(-1, 1);
+        ctx.drawImage(v, sX, sY, sW, sH, 0, 0, c.width, c.height);
+        p.src = c.toDataURL('image/jpeg', 0.5);
+        p.style.display = 'block'; v.style.display = 'none';
+        document.getElementById('ui-1').style.display = 'none';
+        document.getElementById('ui-2').style.display = 'block';
+    }
+
+    function resetCam() {
+        document.getElementById('v').style.display = 'block';
+        document.getElementById('p').style.display = 'none';
+        document.getElementById('ui-1').style.display = 'block';
+        document.getElementById('ui-2').style.display = 'none';
+    }
+
+    async function submitData() {
+        const n = document.getElementById('selKurir').value;
+        if(!n) return alert("Pilih Nama!");
+        document.getElementById('loading-overlay').style.display = 'flex';
+        const waktuSekarang = clock();
+        try {
+            await fetch(URL_APPS, {
+                method:'POST', 
+                mode:'no-cors', 
+                body: JSON.stringify({nama:n, foto:document.getElementById('p').src})
+            });
+            document.getElementById('res-nama').innerText = n;
+            document.getElementById('res-waktu').innerText = waktuSekarang;
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('success-view').style.display = 'flex';
+        } catch(e) { 
+            alert("Error Koneksi!"); 
+            document.getElementById('loading-overlay').style.display = 'none'; 
+        }
+    }
+
+    function getDist(lat1, lon1, lat2, lon2) {
+        const R = 6371000, p = Math.PI/180;
+        const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
+        return R * 2 * Math.asin(Math.sqrt(a));
+    }
+
+    init();
+    clock();
+</script>
+</body>
+</html>
