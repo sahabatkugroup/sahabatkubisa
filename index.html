@@ -6,6 +6,7 @@
   <title>Aplikasi Kurir Sahabatku</title>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
   --sky-light: #00CAFF;
@@ -410,7 +411,43 @@ nav.tab button.active {
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease;
 }
+/* Tombol Absen Modern Floating */
+#btnAbsenFloating {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #00CAFF 0%, #0077c8 100%);
+  color: white;
+  border-radius: 18px; /* Sudut agak kotak melengkung modern (Squircle) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 119, 200, 0.4);
+  z-index: 9999;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: pulse-animation 2s infinite;
+}
 
+/* Animasi Berdenyut Soft */
+@keyframes pulse-animation {
+  0% { box-shadow: 0 0 0 0px rgba(0, 202, 255, 0.6); }
+  70% { box-shadow: 0 0 0 15px rgba(0, 202, 255, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(0, 202, 255, 0); }
+}
+
+#btnAbsenFloating:hover {
+  transform: translateY(-5px) scale(1.05);
+  background: linear-gradient(135deg, #0077c8 0%, #00CAFF 100%);
+}
+
+#btnAbsenFloating i {
+  width: 28px;
+  height: 28px;
+}
 .bottom-row .mini-btn:hover {
   background: #e04e4e;
   transform: translateY(-1px);
@@ -1165,6 +1202,9 @@ select, input {
 
     <div id="app" class="hidden">
       <button id="notificationBtn" aria-label="Buka notifikasi">🔔<span id="notificationBadge" class="badge hidden"></span></button>
+      <button id="btnAbsenFloating" onclick="window.location.href='kehadiran.html'" title="Absen Kehadiran">
+        <i data-lucide="calendar-check"></i>
+      </button>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
@@ -1186,7 +1226,7 @@ select, input {
           <button data-tab="riwayatTab" aria-label="Tab Riwayat">📋 Riwayat</button>
           <button data-tab="laporanRekapTab" aria-label="Tab Rekap">📊 Rekap</button>
           <button data-tab="ongkirTab" aria-label="Tab Cek Ongkir">📍 Cek Ongkir</button>
-          <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓️ Absensi Kurir</button>
+          <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓 Jadwal OFF</button>
           <button data-tab="mitraTab" aria-label="Tab Data Mitra">🤝 Data Mitra</button>
           <button data-tab="sopTab" aria-label="Tab SOP">📄 SOP </button>
           <button data-tab="pengaturanTab" aria-label="Tab Pengaturan">⚙️ Pengaturan</button>
@@ -3462,7 +3502,7 @@ function setupSuggestion(inputId, suggestId) {
 // Aktifkan suggestion untuk asal & tujuan
 setupSuggestion('asalNotaInput', 'asalNotaSuggest');
 setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
-
+lucide.createIcons();
 </script>
 </body>
 </html>
