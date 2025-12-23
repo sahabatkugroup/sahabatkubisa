@@ -6,6 +6,7 @@
     <title>Elite Attendance v13 - Premium UI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
         :root { --primary: #00CAFF; --dark: #0f172a; --bg: #f8fafc; --success: #10b981; --error: #ef4444; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -55,7 +56,35 @@
             gap: 15px;
             min-height: min-content; /* Memastikan isi tidak terpotong */
         }
-
+        /* Animasi Lingkaran Berputar */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: var(--primary); /* Warna biru cerah Anda */
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Memperbaiki tampilan overlay loading */
+        #loading-overlay {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.9); /* Gelap transparan */
+            color: white;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+        }
         .camera-view { 
             width: 100%; 
             aspect-ratio: 3/4; /* Menjaga bentuk kamera tetap kotak panjang */
@@ -83,7 +112,9 @@
             padding: 10px 0 20px; 
             flex-shrink: 0; 
         }
-        
+        .btn-snap.ready { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,202,255,0.3); color: var(--primary); }
+        #instruction { font-size: 11px; font-weight: 700; margin-top: 10px; transition: 0.3s; 
+        }
         /* DROPDOWN MODERN */
         .select-wrapper { position: relative; margin-bottom: 12px; }
         .select-wrapper i {
@@ -153,7 +184,10 @@
     <p>Mohon Maaf, aplikasi absensi hanya dapat diakses pada jam<br><strong>05:00 - 21:00 WIB</strong></p>
 </div>
 
-<div id="loading-overlay"><div class="loader" style="width:40px; height:40px; border:4px solid #fff2; border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s infinite linear;"></div><p style="margin-top:15px; font-weight:700;">PROSES...</p></div>
+<div id="loading-overlay">
+    <span class="loader"></span>
+    <p id="load-text" style="margin-top: 20px; font-weight: 800; letter-spacing: 1px;">PROSES...</p>
+</div>
 
 <div id="success-view">
     <i class="fa-solid fa-circle-check" style="font-size: 70px;"></i>
@@ -183,14 +217,14 @@
             <img id="p" style="display:none;">
         </div>
 
-        <div class="controls">
-            <div id="ui-1" style="text-align: center;">
-                <button class="btn-snap" id="btnSnap" onclick="takePhoto()" disabled>
-                    <i class="fa-solid fa-camera" style="font-size:28px; color:var(--primary)"></i>
-                </button>
-                <p style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 10px;">AMBIL FOTO UNTUK ABSEN</p>
-            </div>
-
+        <div id="ui-1" style="text-align: center;">
+            <button class="btn-snap" id="btnSnap" onclick="takePhoto()" disabled>
+                <i class="fa-solid fa-camera" style="font-size:28px; color:var(--primary)"></i>
+            </button>
+            <p id="instruction" style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 10px;">
+                MENGHUBUNGKAN GPS & AI...
+            </p>
+        </div>
             <div id="ui-2" style="display:none;">
                 <div class="select-wrapper">
                     <i class="fa-solid fa-user-circle"></i>
@@ -210,10 +244,35 @@
 <canvas id="c"></canvas>
 
 <script>
-    // Logic JS Anda tetap sama seperti sebelumnya, tidak ada perubahan pada fungsi
     const URL_APPS = "https://script.google.com/macros/s/AKfycbyy9l5th0v74ZnwD4ZWWQkxXF7KpiQR-w9nht8p2j8m44xFT3HDfzjYOUsNGI1rO7yvmA/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
-
+    
+    let isGpsValid = false;
+    let isFaceValid = false;
+    let modelsLoaded = false;
+    let faceInterval;
+    
+    // 1. Load Model AI
+    async function loadModels() {
+        const loader = document.getElementById('loading-overlay');
+        const loadText = document.getElementById('load-text');
+        
+        loader.style.display = 'flex'; // Tampilkan loading berputar
+        loadText.innerText = "MENGUNDUH SENSOR WAJAH...";
+    
+        try {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            
+            loader.style.display = 'none'; // Sembunyikan jika sudah selesai
+            modelsLoaded = true;
+            startFaceDetection();
+        } catch (e) {
+            loadText.innerText = "GAGAL MEMUAT SENSOR!";
+            console.error(e);
+        }
+    }
+    
     function clock() {
         const d = new Date();
         const timeStr = d.toLocaleTimeString('id-ID', {hour12:false}) + " WIB";
@@ -222,50 +281,99 @@
         return timeStr;
     }
     setInterval(clock, 1000);
-
-    function saveName() { localStorage.setItem('user_nama_v13', document.getElementById('selKurir').value); }
-
+    
     async function init() {
-        const sekarang = new Date();
-        const jam = sekarang.getHours();
+        const jam = new Date().getHours();
         if (jam < 2 || jam >= 21) {
             document.getElementById('time-blocked').style.display = 'flex';
             return;
         }
+        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
             });
             document.getElementById('v').srcObject = stream;
+            
             const res = await fetch(URL_APPS);
             const data = await res.json();
             const sel = document.getElementById('selKurir');
             sel.innerHTML = '<option value="">Pilih Nama Kurir...</option>';
             data.daftarKurir.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+            
             const saved = localStorage.getItem('user_nama_v13');
             if(saved) sel.value = saved;
-        } catch(e) { alert("Izinkan Kamera!"); }
-        trackGPS();
+    
+            trackGPS();
+            loadModels(); 
+        } catch(e) { 
+            alert("Mohon izinkan kamera dan lokasi untuk absen!"); 
+        }
     }
-
+    
+    // 2. Loop Deteksi Wajah
+    async function startFaceDetection() {
+        const video = document.getElementById('v');
+        modelsLoaded = true;
+    
+        // Simpan ke variabel faceInterval
+        faceInterval = setInterval(async () => {
+            if (video.paused || video.ended || !modelsLoaded) return;
+    
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+            isFaceValid = detections.length > 0;
+            
+            syncButtonAndStatus(); 
+        }, 500);
+    }
+    
     function trackGPS() {
         navigator.geolocation.watchPosition(p => {
             const d = getDist(p.coords.latitude, p.coords.longitude, KANTOR.lat, KANTOR.lng);
+            isGpsValid = (d <= KANTOR.rad);
+            
             const box = document.getElementById('gps-box');
-            if(d <= KANTOR.rad) {
-                box.className = "gps-status active"; box.innerText = "LOKASI TERVERIFIKASI";
-                document.getElementById('btnSnap').disabled = false;
-            } else {
-                box.className = "gps-status inactive"; box.innerText = "DILUAR KANTOR ("+Math.round(d)+"m)";
-                document.getElementById('btnSnap').disabled = true;
+            if(!isGpsValid) {
+                box.className = "gps-status inactive"; 
+                box.innerText = "DILUAR KANTOR ("+Math.round(d)+"m)";
             }
+            syncButtonAndStatus();
         }, null, {enableHighAccuracy:true});
     }
-
+    
+    function syncButtonAndStatus() {
+        const btn = document.getElementById('btnSnap');
+        const box = document.getElementById('gps-box');
+        
+        if (!isGpsValid) {
+            btn.disabled = true;
+            btn.classList.remove('ready');
+            return; // Jika lokasi salah, stop di sini
+        }
+    
+        if (isFaceValid) {
+            box.className = "gps-status active";
+            box.innerText = "SIAP ABSEN (WAJAH TERDETEKSI)";
+            btn.disabled = false;
+            btn.classList.add('ready');
+        } else {
+            box.className = "gps-status inactive";
+            box.innerText = "HADAPKAN WAJAH KE KAMERA";
+            btn.disabled = true;
+            btn.classList.remove('ready');
+        }
+    }
+    
     function takePhoto() {
+        // BERHENTIKAN DETEKSI WAJAH DI SINI
+        clearInterval(faceInterval);
+        console.log("Deteksi wajah dihentikan karena foto sudah diambil");
+    
         const v = document.getElementById('v'), c = document.getElementById('c'), p = document.getElementById('p');
         c.width = 600; c.height = 800;
         const ctx = c.getContext('2d');
+        
+        // ... sisa kode takePhoto Anda (sama seperti sebelumnya) ...
         const vW = v.videoWidth, vH = v.videoHeight;
         const ratio = 3/4;
         let sW = vW, sH = vH, sX = 0, sY = 0;
@@ -273,42 +381,72 @@
         else { sH = vW / ratio; sY = (vH - sH) / 2; }
         ctx.translate(c.width, 0); ctx.scale(-1, 1);
         ctx.drawImage(v, sX, sY, sW, sH, 0, 0, c.width, c.height);
+        
         p.src = c.toDataURL('image/jpeg', 0.5);
         p.style.display = 'block'; v.style.display = 'none';
         document.getElementById('ui-1').style.display = 'none';
         document.getElementById('ui-2').style.display = 'block';
     }
-
+    
     function resetCam() {
         document.getElementById('v').style.display = 'block';
         document.getElementById('p').style.display = 'none';
         document.getElementById('ui-1').style.display = 'block';
         document.getElementById('ui-2').style.display = 'none';
+        document.getElementById('gps-box').style.display = 'block';
+    
+        // JALANKAN LAGI DETEKSI WAJAH
+        startFaceDetection(); 
     }
-
     async function submitData() {
         const n = document.getElementById('selKurir').value;
-        if(!n) return alert("Pilih Nama!");
-        document.getElementById('loading-overlay').style.display = 'flex';
-        const waktuSekarang = clock();
+        if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
+    
+        // 1. Tampilkan Loading Berputar
+        const loader = document.getElementById('loading-overlay');
+        const loadText = document.getElementById('load-text');
+        loadText.innerText = "SEDANG MENGIRIM...";
+        loader.style.display = 'flex';
+    
+        const waktuAbsen = clock(); // Ambil waktu saat ini
+    
         try {
+            // 2. Kirim data ke Google Sheets
             await fetch(URL_APPS, {
-                method:'POST', mode:'no-cors', 
-                body: JSON.stringify({nama:n, foto:document.getElementById('p').src})
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({
+                    nama: n, 
+                    foto: document.getElementById('p').src
+                })
             });
+    
+            // 3. Sembunyikan Loading
+            loader.style.display = 'none';
+    
+            // 4. Isi data ke layar Sukses
             document.getElementById('res-nama').innerText = n;
-            document.getElementById('res-waktu').innerText = waktuSekarang;
-            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('res-waktu').innerText = waktuAbsen;
+    
+            // 5. Tampilkan Layar Berhasil (Success View)
             document.getElementById('success-view').style.display = 'flex';
-        } catch(e) { alert("Error Koneksi!"); document.getElementById('loading-overlay').style.display = 'none'; }
+            
+            console.log("Absensi Berhasil Terkirim!");
+    
+        } catch(e) {
+            loader.style.display = 'none';
+            alert("Gagal mengirim data. Cek koneksi internet Anda!");
+        }
     }
-
+    
     function getDist(lat1, lon1, lat2, lon2) {
         const R = 6371000, p = Math.PI/180;
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
-
+    
+    function saveName() { localStorage.setItem('user_nama_v13', document.getElementById('selKurir').value); }
+    
     init();
     clock();
 </script>
