@@ -597,52 +597,43 @@
                 tableRekapBody.appendChild(tr);
             });
         };
-
-        // Pengajuan Tukar Off Logic
         const renderPengajuanForm = () => {
             const selectTanggalOffAsal = document.getElementById('tanggalOffAsal');
             const selectKurirPengganti = document.getElementById('namaKurirPengganti');
             const selectTanggalOffPengganti = document.getElementById('tanggalOffPengganti');
             const ym = document.getElementById('monthPick').value;
-
-            // Bersihkan dropdowns
+        
             selectTanggalOffAsal.innerHTML = '<option value="">-- Pilih Tanggal Off Asal --</option>';
             selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
             selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
-
+        
             if(!jadwalData[ym]) return;
-
-            // Isi dropdown Tanggal Off Asal
+        
+            // 1. Dropdown Tanggal Off Asal: Pisahkan jika ada 2 kurir di tanggal yang sama
             jadwalData[ym].forEach(day => {
                 if(day.off && day.off !== '') {
-                    const option = document.createElement('option');
-                    option.value = day.tanggal;
-                    option.textContent = `${formatDate(day.tanggal)} (${day.off})`;
-                    selectTanggalOffAsal.appendChild(option);
-                } else {
-                    // Handle "Semua On" case
-                    const option = document.createElement('option');
-                    option.value = day.tanggal;
-                    option.textContent = `${formatDate(day.tanggal)} (Semua On)`;
-                    selectTanggalOffAsal.appendChild(option);
+                    // Memisahkan nama kurir jika menggunakan koma atau pemisah lain
+                    const listKurirOff = day.off.split(',').map(s => s.trim());
+                    
+                    listKurirOff.forEach(namaKurir => {
+                        const option = document.createElement('option');
+                        // Simpan format "tanggal|namaKurir" agar mudah diambil saat onchange
+                        option.value = `${day.tanggal}|${namaKurir}`;
+                        option.textContent = `${formatDate(day.tanggal)} - Off: ${namaKurir}`;
+                        selectTanggalOffAsal.appendChild(option);
+                    });
                 }
             });
-
-            // Isi dropdown Nama Kurir Pengganti
-            kurirList.forEach(kurir => {
-                const option = document.createElement('option');
-                option.value = kurir;
-                option.textContent = kurir;
-                selectKurirPengganti.appendChild(option);
-            });
-
-            // Listener untuk Tanggal Off Asal dan Nama Kurir Pengganti
+        
+            // 2. Listener saat Tanggal & Kurir Asal dipilih
             selectTanggalOffAsal.onchange = (e) => {
-                const selectedDate = e.target.value;
-                const kurirOnThisDate = jadwalData[ym].find(day => day.tanggal === selectedDate).off;
+                const val = e.target.value; // format: "YYYY-MM-DD|Nama"
+                if(!val) return;
                 
-                // Filter kurir list to exclude the one who is already off on that date
-                const filteredKurirList = kurirList.filter(kurir => kurir !== kurirOnThisDate);
+                const [selectedDate, kurirAsal] = val.split('|');
+                
+                // Filter Kurir Pengganti: Tampilkan semua KECUALI kurir yang sedang dipilih di atas
+                const filteredKurirList = kurirList.filter(k => k !== kurirAsal);
                 
                 selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
                 filteredKurirList.forEach(kurir => {
@@ -653,24 +644,28 @@
                 });
                 selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
             };
-
+        
+            // 3. Listener saat Kurir Pengganti dipilih
             selectKurirPengganti.onchange = (e) => {
                 const selectedCourier = e.target.value;
-                const tanggalOffAsal = document.getElementById('tanggalOffAsal').value;
                 selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
-
+        
                 if (selectedCourier) {
-                    const courierOffDates = jadwalData[ym].filter(day => day.off === selectedCourier);
+                    // Cari semua tanggal dimana 'selectedCourier' terjadwal OFF
+                    const courierOffDates = jadwalData[ym].filter(day => {
+                        if(!day.off) return false;
+                        const listOff = day.off.split(',').map(s => s.trim());
+                        return listOff.includes(selectedCourier);
+                    });
                     
                     if(courierOffDates.length > 0) {
                         courierOffDates.forEach(day => {
                             const option = document.createElement('option');
                             option.value = day.tanggal;
-                            option.textContent = formatDate(day.tanggal);
+                            option.textContent = `${formatDate(day.tanggal)} (Jadwal Off ${selectedCourier})`;
                             selectTanggalOffPengganti.appendChild(option);
                         });
                     } else {
-                        // Jika kurir pengganti tidak ada hari off, maka dia bisa mengambil hari off dari kurir asal
                         const option = document.createElement('option');
                         option.value = 'Tidak Ada';
                         option.textContent = 'Tidak Ada (Ambil Hari Off)';
@@ -679,44 +674,49 @@
                 }
             };
         };
-
-
-        // Event handler for submission
+        // Event handler untuk tombol Ajukan
         document.getElementById('btn-ajukan').onclick = async () => {
-            const tanggalOffAsal = document.getElementById('tanggalOffAsal').value;
+            const rawTanggalAsal = document.getElementById('tanggalOffAsal').value; // Mengambil "YYYY-MM-DD|Nama"
             const namaKurirPengganti = document.getElementById('namaKurirPengganti').value;
             const tanggalOffPengganti = document.getElementById('tanggalOffPengganti').value;
-
-            if (!tanggalOffAsal || !namaKurirPengganti || !tanggalOffPengganti) {
+        
+            // Validasi input
+            if (!rawTanggalAsal || !namaKurirPengganti || !tanggalOffPengganti) {
                 popupShow(false, 'Gagal', 'Semua field harus diisi.');
                 return;
             }
-
-            const confirmTukar = confirm("Apakah Anda yakin ingin mengajukan pertukaran jadwal ini?");
+        
+            // Memisahkan tanggal dan nama kurir asal dari value dropdown
+            const [tanggalOffAsal, kurirAsal] = rawTanggalAsal.split('|');
+        
+            const confirmTukar = confirm(`Apakah Anda yakin ingin menukar jadwal ${kurirAsal} (Tgl ${tanggalOffAsal.slice(8,10)}) dengan ${namaKurirPengganti}?`);
             if (!confirmTukar) return;
-
+        
             try {
-                const kurirAsal = jadwalData[tanggalOffAsal.slice(0, 7)].find(day => day.tanggal === tanggalOffAsal).off;
-
+                // Menyiapkan objek data untuk disimpan ke Firebase
                 const newRequest = {
                     tanggal: tanggalOffAsal,
                     asal: kurirAsal,
                     pengganti: namaKurirPengganti,
                     tukarTanggal: (tanggalOffPengganti === 'Tidak Ada') ? null : tanggalOffPengganti,
                     status: 'Pending',
-                    created: firebase.firestore.FieldValue.serverTimestamp()
+                    created: firebase.firestore.FieldValue.serverTimestamp() // Timestamp otomatis dari server
                 };
-
+        
+                // Menyimpan ke koleksi 'pengajuan_off'
                 await db.collection('pengajuan_off').add(newRequest);
-                popupShow(null, 'Sedang Pending', 'Pengajuan tukar off berhasil diajukan dan menunggu persetujuan.');
-
-                // Reset form
+                
+                // Notifikasi berhasil
+                popupShow(null, 'Berhasil Terkirim', 'Pengajuan tukar off telah disimpan dan menunggu persetujuan admin.');
+        
+                // Reset Form ke posisi semula
                 document.getElementById('tanggalOffAsal').value = '';
-                document.getElementById('namaKurirPengganti').value = '';
+                document.getElementById('namaKurirPengganti').innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
                 document.getElementById('tanggalOffPengganti').innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+                
             } catch (e) {
-                popupShow(false, 'Gagal', 'Terjadi kesalahan: ' + e.message);
-                console.error("Error submitting request: ", e);
+                popupShow(false, 'Gagal Simpan', 'Terjadi kesalahan sistem: ' + e.message);
+                console.error("Error saving to Firestore: ", e);
             }
         };
 
