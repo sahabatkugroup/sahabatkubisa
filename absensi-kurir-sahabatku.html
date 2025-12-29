@@ -580,20 +580,35 @@
                 tableJadwalBody.appendChild(tr);
             });
         };
-
-        // Render Rekap & Keaktifan
         const renderRekap = () => {
             const tableRekapBody = document.querySelector('#tableRekap tbody');
             tableRekapBody.innerHTML = '';
             const ym = document.getElementById('monthPick').value;
             if(!jadwalData[ym]) return;
-            const arr=jadwalData[ym];
-            const sum=Object.fromEntries(kurirList.map(k=>[k,{on:0,off:0}]));
-            arr.forEach(it=>{ kurirList.forEach(k=>{ if(k===it.off) sum[k].off++; else sum[k].on++; }); });
-            kurirList.forEach(k=>{
-                const {on,off}=sum[k]; const total=on+off||1; const skor=Math.round((on/total)*100);
-                const tr=document.createElement('tr');
-                tr.innerHTML=`<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`;
+        
+            const arr = jadwalData[ym];
+            const sum = Object.fromEntries(kurirList.map(k => [k, {on: 0, off: 0}]));
+        
+            arr.forEach(it => { 
+                // Pecah string 'off' menjadi array nama, bersihkan spasi, dan hilangkan string kosong
+                const namesOff = it.off ? it.off.split(',').map(n => n.trim()).filter(n => n !== "") : [];
+                
+                kurirList.forEach(k => { 
+                    // Periksa apakah nama kurir ada di dalam daftar yang sedang OFF
+                    if(namesOff.includes(k)) {
+                        sum[k].off++; 
+                    } else {
+                        sum[k].on++; 
+                    }
+                }); 
+            });
+        
+            kurirList.forEach(k => {
+                const {on, off} = sum[k]; 
+                const total = on + off || 1; 
+                const skor = Math.round((on / total) * 100);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`;
                 tableRekapBody.appendChild(tr);
             });
         };
