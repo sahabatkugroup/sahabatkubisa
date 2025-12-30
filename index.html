@@ -1808,6 +1808,3511 @@ select, input {
       notificationModal.style.display = 'none';
     }
   });
+  async function loadAllNotifications() {
+      notificationListEl.innerHTML = ''; // Kosongkan layar
+      noNotifMsgEl.classList.add('hidden');
+      
+      if (!currentUser) return;
+  
+      try {
+          const notificationRef = ref(db, `messages/${currentUser}`);
+          const snapshot = await get(notificationRef);
+  
+          if (snapshot.exists()) {
+              const allNotifications = snapshot.val();
+              
+              // Urutkan key dari yang terbaru berdasarkan timestamp
+              const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
+                  return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
+              });
+              
+              if (sortedKeys.length > 0) {
+                  // AMBIL HANYA SATU (Data paling baru / Index 0)
+                  const latestKey = sortedKeys[0]; 
+                  const notif = allNotifications[latestKey];
+                  
+                  const li = document.createElement('li');
+                  li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+                  // Tampilan satu pesan saja
+                  li.innerHTML = `<strong>Pesan Terakhir:</strong><br>${notif.message || 'Tidak ada konten'}`;
+                  
+                  notificationListEl.appendChild(li);
+              } else {
+                  noNotifMsgEl.classList.remove('hidden');
+              }
+          } else {
+              noNotifMsgEl.classList.remove('hidden');
+          }
+      } catch (error) {
+          console.error("Failed to load notifications:", error);
+      }
+  }
+// Fungsi wrapper untuk menjalankan pengecekan saat login dan setiap 3 jam
+function startMitraReminder() {
+    // Jalankan saat pertama kali login
+    checkDailyTransactionStatusAndNotify();
+    
+    // Hapus interval lama jika ada (untuk menghindari duplikasi saat login ulang)
+    if (mitraReminderInterval) clearInterval(mitraReminderInterval);
+    
+    // Set interval untuk menjalankan pengecekan setiap 3 jam (3 jam * 60 menit * 60 detik * 1000 ms)
+    mitraReminderInterval = setInterval(checkDailyTransactionStatusAndNotify, 3 * 60 * 60 * 1000); 
+}
+
+
+// Fungsi untuk memeriksa dan mengirim notifikasi
+async function checkDailyTransactionStatusAndNotify() {
+    // Pastikan currentUser sudah ada, jika belum, hentikan
+    if (!currentUser) return; 
+
+    const today = new Date().toISOString().slice(0, 10);
+    const notificationKey = `dailyTrxReminder-${today}`;
+
+    // 1. Cek apakah notifikasi untuk hari ini sudah dikirim (via localStorage)
+    if (localStorage.getItem(notificationKey) === 'sent') {
+        return;
+    }
+
+    // 2. Ambil semua ID Mitra
+    const mitraSnap = await get(ref(db, 'mitra'));
+    if (!mitraSnap.exists()) return;
+    const allMitraIds = Object.keys(mitraSnap.val());
+    
+    // 3. Cek apakah ada satupun transaksi hari ini di path mitra_trx_daily/{id}/{today}
+    const hasTransactionToday = await Promise.all(
+        allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
+    ).then(snapshots => snapshots.some(snap => snap.exists()));
+
+    if (!hasTransactionToday) {
+        // 4. Kirim notifikasi jika belum ada transaksi hari ini
+        const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
+        
+        // Panggil fungsi sendNotification yang sudah Anda definisikan di atas!
+        await sendNotification(message); 
+
+        // 5. Tandai notifikasi sudah dikirim untuk hari ini (agar tidak berulang)
+        localStorage.setItem(notificationKey, 'sent');
+    }
+}
+  if (localStorage.getItem('currentUser')) {
+    loginSuccess(localStorage.getItem('currentUser'));
+  }
+
+  window.addEventListener('load', async ()=>{
+    const savedUser = localStorage.getItem('currentUser');
+    if(savedUser){
+      try {
+        // Cek di Firebase Realtime DB
+        const snap = await get(ref(db, 'kurir/' + savedUser));
+        if(snap.exists() && snap.val().enabled){
+          loginSuccess(savedUser);
+        } else {
+          localStorage.removeItem('currentUser');
+        }
+      } catch(err){
+        console.error("Firebase error:", err);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
+  let ongkirData = [];
+  let todayNotes = [];
+  let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
+  // --- CEK ONGKIR DARI TAB NOTA ---
+  const modalOngkirNota = el('cekOngkirNotaModal');
+  const btnOpenOngkirNota = el('btnCekOngkirNota');
+  const btnCloseOngkirNota = el('closeCekOngkirNota');
+  const btnHitungOngkirNota = el('cekOngkirNotaBtn');
+  
+  btnOpenOngkirNota.addEventListener('click', () => {
+    alert("⚠️ Fitur Cek Ongkir sedang dalam perbaikan server. Mohon masukkan ongkir secara manual sementara waktu.");
+    // Modal sengaja tidak dibuka agar tidak terjadi error server
+  });
+  
+  btnCloseOngkirNota.addEventListener('click', () => modalOngkirNota.style.display = 'none');
+  window.addEventListener('click', e => {
+    if (e.target === modalOngkirNota) modalOngkirNota.style.display = 'none';
+  });
+
+  btnHitungOngkirNota.addEventListener('click', () => {
+    const asal = el('asalNotaInput').value.trim() || el('asalNotaSelect').value.trim();
+    const tujuan = el('tujuanNotaInput').value.trim() || el('tujuanNotaSelect').value.trim();
+  
+    const findOngkir = (lok) => ongkirData.find(o => o.lokasi.toLowerCase() === lok.toLowerCase());
+    const asalObj = asal ? findOngkir(asal) : null;
+    const tujuanObj = tujuan ? findOngkir(tujuan) : null;
+  
+    let hasil = 0;
+    let ket = "";
+  
+    if (asalObj && tujuanObj) {
+      hasil = Math.max(0, (asalObj.ongkir + tujuanObj.ongkir) - 6000);
+      ket = `(Asal + Tujuan) - 6000`;
+    } else if (asalObj || tujuanObj) {
+      hasil = (asalObj || tujuanObj).ongkir;
+      ket = `Ongkir normal`;
+    } else {
+      ket = `Lokasi belum dipilih`;
+    }
+  
+    // 🔹 tampilkan hasil ke user (10.000)
+    el('hasilOngkirNota').innerText = hasil > 0 ? hasil.toLocaleString("id-ID") : '–';
+    el('keteranganOngkirNota').innerText = ket;
+  
+    // 🔹 masukkan angka murni ke input ongkir
+    el('ongkir').value = hasil || 0;
+  
+    // 🔹 tampilkan info di bawah input ongkir
+    el('ongkirNotaInfo').innerText = `${ket} → Rp ${hasil.toLocaleString("id-ID")}`;
+  
+    // 🔹 PAKSA trigger event "input" agar calculateTotal() benar-benar jalan
+    const evt = new Event('input', { bubbles: true });
+    el('ongkir').dispatchEvent(evt);
+  
+    // 🔹 Tutup modal
+    modalOngkirNota.style.display = 'none';
+  });
+  // 🔹 Fungsi reusable: buat suggestion dari input
+  function setupSuggestion(inputId, suggestId) {
+    const input = el(inputId);
+    const suggest = el(suggestId);
+  
+    input.addEventListener('input', () => {
+      const keyword = input.value.trim().toLowerCase();
+      suggest.innerHTML = '';
+      if (!keyword) {
+        suggest.classList.remove('show');
+        return;
+      }
+  
+      // filter data ongkir
+      const filtered = ongkirData
+        .filter(o => o.lokasi.toLowerCase().includes(keyword))
+        .slice(0, 10); // tampil maksimal 10
+  
+      if (filtered.length === 0) {
+        suggest.classList.remove('show');
+        return;
+      }
+  
+      // tampilkan hasil
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 's-item';
+        div.textContent = item.lokasi;
+        div.addEventListener('click', () => {
+          input.value = item.lokasi;
+          suggest.classList.remove('show');
+        });
+        suggest.appendChild(div);
+      });
+  
+      suggest.classList.add('show');
+    });
+  
+    // klik di luar -> tutup suggestion
+    document.addEventListener('click', (e) => {
+      if (!suggest.contains(e.target) && e.target !== input) {
+        suggest.classList.remove('show');
+      }
+    });
+  }
+  
+  // 🔹 Aktifkan suggestion untuk asal & tujuan
+  setupSuggestion('asalNotaInput', 'asalNotaSuggest');
+  setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
+
+
+  // 🔹 Ambil data ongkir dari Firebase
+  async function loadOngkir(){
+    const snapshot = await get(child(ref(db), "daftar_ongkir"));
+    if(snapshot.exists()){
+      const val = snapshot.val();
+      ongkirData = Object.keys(val).map(key => ({
+        lokasi: String(val[key].wilayah).trim(),
+        ongkir: Number(val[key].ongkir) || 0
+      }));
+      console.log("✅ Data Firebase:", ongkirData);
+      fillSelect("asalSelect", ongkirData);
+      fillSelect("tujuanSelect", ongkirData
+    );
+  }
+}
+
+// Deklarasi Elemen Baru
+const mitraSearchInput = el('mitraSearchInput'); 
+
+// --- Fungsi Pencarian Mitra Real-time ---
+function filterMitraTable(){
+    const mitraListBody = el('mitraListBody');
+    // Periksa jika elemen tidak ada (misalnya, jika berada di tab lain)
+    if (!mitraSearchInput || !mitraListBody) return; 
+
+    const searchTerm = mitraSearchInput.value.toLowerCase().trim();
+    const rows = mitraListBody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        
+        // Dapatkan nama mitra dari atribut data-nama
+        const mitraName = row.getAttribute('data-nama');
+        
+        // Skip baris loading atau baris kosong
+        if (!mitraName) {
+            row.style.display = "";
+            continue;
+        }
+        
+        // Tampilkan jika nama mitra mengandung teks pencarian (case-insensitive)
+        if (mitraName.includes(searchTerm)) {
+            row.style.display = ""; // Tampilkan baris
+        } else {
+            row.style.display = "none"; // Sembunyikan baris
+        }
+    }
+}
+
+// Tambahkan event listener untuk memicu pencarian saat pengguna mengetik
+if(mitraSearchInput) {
+    mitraSearchInput.addEventListener('input', filterMitraTable);
+}
+// --- Mitra Section (SYNCHRONIZED) ---
+    el('btnCariMitra').addEventListener('click', loadMitraData);
+    el('btnAddTrxMitra').addEventListener('click', addMitraTrx);
+    el('btnToggleTrxHistory').addEventListener('click', toggleMitraTrxHistory);
+    el('btnCloseTrxHistory').addEventListener('click', toggleMitraTrxHistory);
+
+    // --- BARU: Event Listeners untuk Filter Riwayat Transaksi Mitra ---
+    el('btnCariMitraRiwayat').addEventListener('click', () => {
+        const selectedDate = el('mitraRiwayatDate').value;
+        if (selectedDate) {
+            // Memuat data untuk tanggal yang dipilih
+            refreshMitraTrxHistory(selectedDate);
+        } else {
+            // Jika tanggal kosong, muat semua data
+            alert('Mohon pilih tanggal untuk mencari riwayat transaksi.');
+        }
+    });
+
+    // --- Event Listeners untuk Filter Riwayat Transaksi Mitra ---
+    el('btnCariMitraRiwayat').addEventListener('click', () => {
+        const selectedDate = el('mitraRiwayatDate').value;
+        if (selectedDate) {
+            // Muat data untuk tanggal yang dipilih
+            refreshMitraTrxHistory(selectedDate);
+        } else {
+            alert('Mohon pilih tanggal untuk mencari riwayat transaksi.');
+        }
+    });
+    el('btnResetMitraRiwayat').addEventListener('click', () => {
+        // 1. Dapatkan tanggal hari ini dalam format YYYY-MM-DD
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // 2. Set input tanggal ke tanggal hari ini
+        el('mitraRiwayatDate').value = today; 
+        
+        // 3. Muat riwayat transaksi dengan filter tanggal hari ini
+        refreshMitraTrxHistory(today);
+    });
+
+    // Otomatis atur bulan ke bulan saat ini saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        // ... kode DOMContentLoaded lainnya
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        el('mitraMonth').value = `${year}-${month}`;
+        loadMitraData();
+        // Memulai pengingat harian
+        checkDailyTransactionStatusAndNotify();
+        setInterval(checkDailyTransactionStatusAndNotify, 3 * 60 * 60 * 1000); // Cek setiap 3 jam
+    });
+
+    // GANTI SELURUH FUNGSI loadMitraData() ANDA DENGAN INI
+    async function loadMitraData() {
+        const mitraListBody = el('mitraListBody');
+        const mitraSelect = el('mitraSelect');
+        mitraListBody.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
+        const selectedMonth = el('mitraMonth').value;
+        if (!selectedMonth) return;
+    
+        try {
+            const [mitraSnap, trxSnap, statusSnap] = await Promise.all([
+                get(ref(db, 'mitra')), get(ref(db, 'mitra_trx_monthly')), get(ref(db, 'mitra_status_monthly'))
+            ]);
+    
+            if (!mitraSnap.exists()) {
+                mitraListBody.innerHTML = '<tr><td colspan="5">Belum ada data mitra.</td></tr>';
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+            }
+    
+            const activeMitra = Object.keys(mitraSnap.val())
+                .map(id => ({ id, ...mitraSnap.val()[id] }))
+                .filter(mitra => (statusSnap.val()?.[mitra.id]?.[selectedMonth]) !== 'inactive')
+                .sort((a, b) => a.nama.localeCompare(b.nama));
+            
+            if (activeMitra.length === 0) {
+                mitraListBody.innerHTML = '<tr><td colspan="5">Tidak ada mitra aktif bulan ini.</td></tr>';
+                return mitraSelect.innerHTML = '<option value="">-- Tidak ada mitra --</option>';
+            }
+    
+            mitraSelect.innerHTML = '<option value="">-- Pilih Mitra --</option>' + activeMitra.map(m => `<option value="${m.id}">${m.nama}</option>`).join('');
+            
+            // --- PENAMBAHAN UNTUK PENCARIAN ---
+            // 1. Reset input pencarian saat data baru dimuat
+            if (mitraSearchInput) mitraSearchInput.value = '';
+    
+            // 2. Tambahkan atribut data-nama pada setiap <tr>
+            mitraListBody.innerHTML = activeMitra.map(m => {
+                const currentTrx = trxSnap.val()?.[m.id]?.[selectedMonth]?.trx || 0;
+                const cleanNoHp = m.noHp ? m.noHp.replace(/\D/g, '') : '';
+                const whatsappLink = cleanNoHp ? `https://wa.me/${cleanNoHp.startsWith('62') ? cleanNoHp : '62' + cleanNoHp}` : '#';
+                
+                const alamatText = m.alamat || '-';
+                const isGoogleMapsLink = alamatText.startsWith('http://') || alamatText.startsWith('https://');
+                // PERBAIKAN LINK GOOGLE MAPS: Pastikan format URL benar
+                const googleMapsLink = isGoogleMapsLink ? alamatText : `http://maps.google.com/?q=${encodeURIComponent(alamatText)}`;
+    
+                // BARIS PENTING: data-nama ditambahkan
+                return `<tr data-nama="${m.nama.toLowerCase()}">
+                            <td>${m.nama}</td>
+                            <td>${m.alamat ? `<a href="${googleMapsLink}" target="_blank">${m.alamat}</a>` : '-'}</td>
+                            <td>${m.noHp ? `<a href="${whatsappLink}" target="_blank">${m.noHp}</a>` : '-'}</td>
+                            <td>${currentTrx}</td>
+                            <td>${m.targetTransaksi}</td>
+                        </tr>`;
+            }).join('');
+    
+            // 3. Panggil filterTable setelah data dimuat untuk memastikan semua baris terlihat
+            filterMitraTable();
+            // --- AKHIR PENAMBAHAN ---
+    
+        } catch (error) {
+            mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
+        }
+    }
+    // index (1).html: di dalam <script type="module">
+    
+    async function addMitraTrx() {
+        const mitraSelectEl = el('mitraSelect');
+        const mitraId = mitraSelectEl.value;
+        const trxToAdd = parseInt(el('trxMitraInput').value);
+        // Asumsi Anda sudah menambahkan input 'mitraMonth' di HTML dan mengisinya
+        const selectedMonth = el('mitraMonth').value; 
+        
+        // Menggunakan currentUser sebagai ID Kurir
+        const kurirId = currentUser; 
+    
+        if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0 || !kurirId) {
+            if (!kurirId) return alert('Error: ID Kurir tidak ditemukan. Mohon Login ulang.');
+            return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
+        }
+        
+        // Ambil nama mitra dari teks option yang dipilih (Tambahkan ini agar bisa ditampilkan di riwayat)
+        const mitraName = mitraSelectEl.options[mitraSelectEl.selectedIndex].text;
+    
+        const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
+        const today = new Date().toISOString().slice(0, 10);
+        const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
+    
+        try {
+            const snap = await get(trxRef);
+            const currentTrx = snap.exists() ? snap.val().trx : 0;
+            
+            // 1. Update total TRX bulanan (Menggunakan transaction untuk keandalan)
+            await set(trxRef, { trx: currentTrx + trxToAdd });
+    
+            // 2. SIMPAN LOG DETAIL TRANSAKSI (Untuk riwayat Kurir & Admin)
+            const logRef = push(ref(db, 'mitra_trx_log')); 
+            
+            await set(logRef, {
+                kurirId: kurirId, 
+                mitraId: mitraId, 
+                mitraName: mitraName, // Tambahkan ini agar nama mitra bisa ditampilkan
+                trxCount: trxToAdd, 
+                timestamp: Date.now(),
+                bulanTujuan: selectedMonth
+            });
+    
+            // 3. Tambahkan transaksi harian
+            await set(trxDailyRef, { trx: true }); 
+    
+            alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
+            el('trxMitraInput').value = '1';
+            el('mitraSelect').value = '';
+        } catch (error) {
+            console.error("Gagal menambahkan transaksi:", error);
+            alert("Gagal menambahkan transaksi: " + error.message);
+        }
+    }
+    // --- Fungsi untuk Toggle/Tutup Riwayat Transaksi Mitra ---
+    async function toggleMitraTrxHistory() {
+        const container = el('trxMitraHistoryContainer');
+        const button = el('btnToggleTrxHistory');
+        const dateInput = el('mitraRiwayatDate');
+    
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            button.textContent = 'Memuat Riwayat...';
+            button.disabled = true;
+    
+            // 🎯 LOGIC UNTUK TANGGAL HARI INI:
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today; // Set input ke tanggal hari ini
+            
+            // Panggil fungsi refresh dengan tanggal hari ini
+            refreshMitraTrxHistory(today).then(() => {
+                button.textContent = 'Sembunyikan Riwayat Transaksi Mitra';
+                button.disabled = false;
+            });
+    
+        } else {
+            container.classList.add('hidden');
+            button.textContent = 'Lihat Riwayat Transaksi Mitra';
+            button.disabled = false;
+        }
+    }
+    // --- Fungsi untuk Memuat Riwayat Transaksi Mitra (Difilter Tanggal) ---
+    async function refreshMitraTrxHistory(filterDate = null) {
+        return new Promise((resolve) => {
+            if (!currentUser) {
+                el('trxMitraHistoryBody').innerHTML = '<tr><td colspan="3">Silakan login untuk melihat riwayat.</td></tr>';
+                resolve();
+                return;
+            }
+            const historyBody = el('trxMitraHistoryBody');
+            historyBody.innerHTML = '<tr><td colspan="3">Memuat riwayat...</td></tr>';
+    
+            const historyRef = ref(db, 'mitra_trx_log');
+            get(historyRef).then((snapshot) => {
+                const trxs = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const trx = childSnapshot.val();
+                        
+                        if (trx.kurirId === currentUser) {
+                            // 🎯 LOGIC FILTER TANGGAL:
+                            const trxDate = new Date(trx.timestamp).toISOString().slice(0, 10);
+                            if (!filterDate || trxDate === filterDate) {
+                                 trxs.push(trx);
+                            }
+                        }
+                    });
+                }
+    
+                // Urutkan dan tampilkan data
+                trxs.sort((a, b) => b.timestamp - a.timestamp);
+                historyBody.innerHTML = '';
+                
+                if (trxs.length === 0) {
+                    const msg = filterDate 
+                        ? `Tidak ada riwayat transaksi Mitra untuk akun ini pada tanggal ${filterDate}.` 
+                        : 'Belum ada riwayat transaksi Mitra untuk akun ini.';
+                    historyBody.innerHTML = `<tr><td colspan="3">${msg}</td></tr>`;
+                    resolve();
+                    return;
+                }
+    
+                // ... (Loop menampilkan data ke tabel) ...
+                trxs.forEach(trx => {
+                    const date = new Date(trx.timestamp).toLocaleString('id-ID', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const row = `
+                        <tr>
+                            <td>${date}</td>
+                            <td style="text-align:left;">${trx.mitraName || trx.mitraId || '-'}</td>
+                            <td>${trx.trxCount}</td>
+                        </tr>
+                    `;
+                    historyBody.insertAdjacentHTML('beforeend', row);
+                });
+                resolve();
+            }).catch((error) => {
+                console.error("Gagal memuat riwayat transaksi mitra:", error);
+                historyBody.innerHTML = '<tr><td colspan="3" style="color:#c0392b;">Gagal memuat data.</td></tr>';
+                resolve();
+            });
+        });
+    }
+// Fungsi untuk memeriksa dan mengirim notifikasi
+    async function checkDailyTransactionStatusAndNotify() {
+        // Pastikan currentUser sudah ada
+        if (!currentUser) return;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const notificationKey = `dailyTrxReminder-${today}`;
+
+        // 1. Cek apakah notifikasi untuk hari ini sudah dikirim
+        if (localStorage.getItem(notificationKey) === 'sent') {
+            return;
+        }
+
+        const mitraSnap = await get(ref(db, 'mitra'));
+        if (!mitraSnap.exists()) return;
+        const allMitraIds = Object.keys(mitraSnap.val());
+        
+        // Cek apakah ada satupun transaksi hari ini
+        const hasTransactionToday = await Promise.all(
+            allMitraIds.map(id => get(ref(db, `mitra_trx_daily/${id}/${today}`)))
+        ).then(snapshots => snapshots.some(snap => snap.exists()));
+
+        if (!hasTransactionToday) {
+            // Kirim notifikasi jika belum ada transaksi hari ini
+            const message = "Pengingat: Belum ada transaksi mitra yang diinputkan hari ini. Segera input untuk menghindari keterlambatan.";
+            
+            // >>> KOREKSI DI SINI: Ganti push(...) dengan await sendNotification(message) <<<
+            await sendNotification(message); 
+
+            // Tandai notifikasi sudah dikirim untuk hari ini
+            localStorage.setItem(notificationKey, 'sent');
+        }
+    }
+function fillSelect(selectId, data){
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = `<option value="">-- Pilih --</option>`;
+  data.forEach(o=>{
+    const opt = document.createElement("option");
+    opt.value = o.lokasi;
+    opt.textContent = `${o.lokasi} (Rp ${o.ongkir.toLocaleString("id-ID")})`;
+    sel.appendChild(opt);
+  });
+}
+
+function showSuggestions(input, suggestBox) {
+  const val = input.value.toLowerCase();
+  suggestBox.innerHTML = "";
+  suggestBox.classList.remove("show"); // sembunyikan dulu
+
+  if (!val) return;
+
+  const filtered = ongkirData.filter(o => o.lokasi.toLowerCase().includes(val));
+  if(filtered.length === 0){
+    suggestBox.innerHTML = "<div class='s-item' style='color:#888'>Tidak ditemukan</div>";
+    suggestBox.classList.add("show");
+    return;
+  }
+
+  filtered.forEach(o=>{
+    const div=document.createElement("div");
+    div.className="s-item";
+    div.textContent = `${o.lokasi} (Rp ${o.ongkir})`;
+    div.onclick=()=>{
+      input.value = o.lokasi;
+      suggestBox.innerHTML="";
+      suggestBox.classList.remove("show");
+    };
+    suggestBox.appendChild(div);
+  });
+
+  suggestBox.classList.add("show"); // tampil dengan animasi
+}
+
+function findByName(name){
+  if(!name) return null;
+  const clean = name.trim().toLowerCase();
+  return ongkirData.find(o => o.lokasi.trim().toLowerCase() === clean) || null;
+}
+
+function hitung(){
+  const asalVal   = document.getElementById("asalInput").value.trim();
+  const asalSel   = document.getElementById("asalSelect").value;
+  const tujuanVal = document.getElementById("tujuanInput").value.trim();
+  const tujuanSel = document.getElementById("tujuanSelect").value;
+
+  const asal   = asalVal ? findByName(asalVal) : findByName(asalSel);
+  const tujuan = tujuanVal ? findByName(tujuanVal) : findByName(tujuanSel);
+
+  const normalHarga = document.getElementById("normalHarga");
+  const normalKet   = document.getElementById("normalKeterangan");
+  const ruteHarga   = document.getElementById("ruteHarga");
+  const ruteKet     = document.getElementById("ruteKeterangan");
+  const ruteFormula = document.getElementById("ruteFormula");
+
+  if(tujuan){
+    normalHarga.innerText = formatRp(tujuan.ongkir);
+    normalKet.innerText = "Tujuan: " + tujuan.lokasi;
+  } else if(asal){
+    normalHarga.innerText = formatRp(asal.ongkir);
+    normalKet.innerText = "Asal: " + asal.lokasi;
+  } else {
+    normalHarga.innerText = "–";
+    normalKet.innerText = "Lokasi tidak ditemukan";
+  }
+
+  if(asal && tujuan){
+    if(asal.lokasi === tujuan.lokasi){
+      ruteHarga.innerText = "–";
+      ruteKet.innerText = "Asal & tujuan sama → ongkir normal saja";
+      ruteFormula.style.display="none";
+      return;
+    }
+    const total = (asal.ongkir + tujuan.ongkir) - 6000;
+    ruteHarga.innerText = formatRp(total);
+    ruteKet.innerText = `${asal.lokasi} + ${tujuan.lokasi} - Rp6.000`;
+    ruteFormula.style.display="block";
+    ruteFormula.innerText = `(${asal.ongkir} + ${tujuan.ongkir}) - 6000 = ${total}`;
+  } else {
+    ruteHarga.innerText = "–";
+    ruteKet.innerText = "Isi asal & tujuan untuk ongkir rute";
+    ruteFormula.style.display="none";
+  }
+}
+
+// 🔹 Event
+document.getElementById("asalInput").addEventListener("input", ()=> showSuggestions(
+  document.getElementById("asalInput"), document.getElementById("asalSuggest")
+));
+document.getElementById("tujuanInput").addEventListener("input", ()=> showSuggestions(
+  document.getElementById("tujuanInput"), document.getElementById("tujuanSuggest")
+));
+
+document.getElementById("asalSelect").addEventListener("change", ()=> document.getElementById("asalInput").value = document.getElementById("asalSelect").value);
+document.getElementById("tujuanSelect").addEventListener("change", ()=> document.getElementById("tujuanInput").value = document.getElementById("tujuanSelect").value);
+
+document.getElementById("cekBtn").addEventListener("click", hitung);
+
+document.getElementById("bersihkanBtn").addEventListener("click", ()=>{
+  document.getElementById("asalInput").value="";
+  document.getElementById("asalSelect").value="";
+  document.getElementById("tujuanInput").value="";
+  document.getElementById("tujuanSelect").value="";
+  document.getElementById("asalSuggest").innerHTML="";
+  document.getElementById("tujuanSuggest").innerHTML="";
+  document.getElementById("normalHarga").innerText="–";
+  document.getElementById("normalKeterangan").innerText="—";
+  document.getElementById("ruteHarga").innerText="–";
+  document.getElementById("ruteKeterangan").innerText="—";
+  document.getElementById("ruteFormula").style.display="none";
+});
+
+document.addEventListener("click",(e)=>{
+  if(!e.target.closest(".suggest") && !e.target.closest("input")){
+    document.getElementById("asalSuggest").innerHTML="";
+    document.getElementById("tujuanSuggest").innerHTML="";
+  }
+});
+
+// 🔹 Load data saat awal
+loadOngkir();
+  });
+
+  /* ===================
+     Nota: UI Items & Tambahan
+  ====================*/
+  const itemsArea = el('itemsArea');
+  const tambahanArea = el('tambahanArea');
+
+  el('btnAddItem').addEventListener('click', ()=>addItemUI());
+  el('btnAddTambahan').addEventListener('click', ()=> addTambahanUI());
+  el('btnClearAll').addEventListener('click', () => {
+  if(!confirm('Bersihkan semua form nota?')) return;
+  // Hapus semua item & tambahan
+  itemsArea.innerHTML = '';
+  tambahanArea.innerHTML = '';
+
+  // Tambah satu baris default masing-masing
+  addItemUI();
+  addTambahanUI();
+
+  // Reset input lain
+  el('ongkir').value = 0;
+  el('custPhone').value = '';
+
+  // Reset total & preview
+  updateTotals();
+  el('notaPreview').innerText = 'Belum ada nota.';
+  });
+
+  el('ongkir').addEventListener('input', updateTotals);
+
+  el('btnSaveForm').addEventListener('click', saveNoteToFirebase);
+  el('btnExportPreview').addEventListener('click', savePreviewAsImage);
+  el('btnSharePreview').addEventListener('click', sharePreviewImage);
+
+  // Default satu baris item + satu baris tambahan di awal
+  addItemUI();
+  addTambahanUI();
+  function addItemUI(pref = {}) {
+    const wrap = document.createElement('div');
+    wrap.className = 'line-card';
+    wrap.innerHTML = `
+      <div class="top-row">
+        <div class="col-name">
+          <label class="small">Nama Item</label>
+          <input class="iname" type="text" value="${pref.name || ''}" placeholder="Nama menu / barang">
+        </div>
+        <div class="col-qty">
+          <label class="small">Qty</label>
+          <input class="iqty" type="number" min="1" value="${pref.qty || 1}">
+        </div>
+        <div class="col-price">
+          <label class="small">Harga (Rp)</label>
+          <input class="iprice" type="text" inputmode="numeric" 
+            value="${pref.price ? pref.price.toLocaleString('id-ID') : ''}" 
+            placeholder="0">
+        </div>
+      </div>
+  
+      <div class="bottom-row">
+        <button class="btn danger mini-btn removeBtn">🗑 Hapus</button>
+        <div class="sub isub">Rp 0</div>
+      </div>
+    `;
+  
+    itemsArea.appendChild(wrap);
+  
+    const qtyInput = wrap.querySelector('.iqty');
+    const priceInput = wrap.querySelector('.iprice');
+    priceInput.addEventListener('input', (e) => {
+      let value = e.target.value;
+    
+      // hapus semua kecuali angka
+      value = value.replace(/\D/g, '');  
+    
+      if (value === '') {
+        e.target.value = '';
+      } else {
+        // ubah jadi angka murni
+        const numericValue = Number(value);
+    
+        // tampilkan dengan format ribuan di input
+        e.target.value = numericValue.toLocaleString('id-ID');
+      }
+    
+      updateTotals(); // update subtotal / total
+    });
+
+  
+    qtyInput.addEventListener('input', updateTotals);
+    wrap.querySelector('.iname').addEventListener('input', updateTotals);
+    wrap.querySelector('.removeBtn').addEventListener('click', () => {
+      wrap.remove();
+      updateTotals();
+    });
+  
+    updateTotals();
+  }
+
+  function addTambahanUI(pref = {}) {
+      const row = document.createElement("div");
+      row.className = "line-card line-card-tambahan";
+      
+      // Perhatikan bahwa di sini saya sudah memastikan input nominal bertipe text
+      // dan sudah diformat di awal: value="${(pref.nominal || 0).toLocaleString('id-ID')}"
+      row.innerHTML = `
+        <div class="top-row" style="
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 14px;
+            align-items: end;
+        ">
+          <div>
+            <label class="small">Jenis Tambahan</label>
+            <select class="t-type" style="width: 100%;">
+              <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
+              <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
+              <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
+              <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
+              <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
+              <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
+              <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
+              <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
+              <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Nominal (Rp)</label>
+            <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" style="width: 100%;">
+          </div>
+        </div>
+        
+        <div class="bottom-row" style="margin-top: 14px;">
+          <button class="mini-btn t-remove" style="width: 100%;">Hapus Tambahan</button>
+        </div>
+      `;
+      
+      tambahanArea.appendChild(row);
+      
+      // Ambil referensi elemen setelah mereka dimasukkan ke dalam DOM
+      const typeSelect = row.querySelector(".t-type");
+      const nominalInput = row.querySelector(".t-nom");
+  
+      // 🎯 KODE BARU DIMULAI DI SINI 🎯
+      
+      // 1. Event Listener INPUT pada Nominal (Untuk Formatting 2.000, 5.000, dll.)
+      nominalInput.addEventListener("input", (e) => {
+          let value = e.target.value;
+          value = value.replace(/\D/g, ''); // Hapus semua non-digit (termasuk titik/koma)
+  
+          if (value === '') {
+              e.target.value = '';
+          } else {
+              const numericValue = Number(value);
+              e.target.value = numericValue.toLocaleString('id-ID');
+          }
+          updateTotals(); // Hitung ulang total
+      });
+  
+      // 2. Event Listener CHANGE pada Tipe Tambahan (Untuk Harga Otomatis)
+      typeSelect.addEventListener("change", () => {
+          const selectedType = typeSelect.value;
+          let autoNominal = 0;
+  
+          switch(selectedType) {
+              case "Tambahan Ojeg":
+              case "Tambahan Malam":
+              case "Tambahan Hujan":
+              case "Tambahan Parkir":
+              case "Tambahan Tempat":
+                  autoNominal = 2000;
+                  break;
+              case "Tambahan Cash Minuman":
+                  autoNominal = 5000;
+                  break;
+              // Tambahan Kapasitas & Lainnya akan tetap 0 (input manual)
+              default:
+                  autoNominal = 0; 
+                  break;
+          }
+  
+          // Set nilai nominal input. Gunakan toLocaleString agar tampil 2.000 atau 5.000
+          nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
+          
+          // Setelah nilai berubah, panggil updateTotals
+          updateTotals();
+      });
+      
+      // 3. Event Listener Hapus (Kode lama Anda)
+      row.querySelector(".t-remove").addEventListener("click", () => {
+        row.remove();
+        updateTotals();
+      });
+      
+      updateTotals();
+   }
+  function updateTotals() {
+    let total = 0;
+  
+    // Loop semua item
+    itemsArea.querySelectorAll('.line-card').forEach(c => {
+      const qty = parseInt(c.querySelector('.iqty').value) || 0;
+  
+      // 🔹 Ambil harga dan bersihkan titik pemisah
+      const priceRaw = c.querySelector('.iprice').value.replace(/\./g, '') || '0';
+      const price = parseInt(priceRaw);
+  
+      const sub = qty * price;
+  
+      // 🔹 Tampilkan subtotal dengan format "Rp 10.000"
+      c.querySelector('.isub').innerText = 'Rp ' + sub.toLocaleString('id-ID');
+  
+      total += sub;
+    });
+  
+    // 🔹 Tambahkan ongkir (hapus titik dulu)
+    const ong = parseInt((el('ongkir')?.value || '0').replace(/\./g, '')) || 0;
+    total += ong;
+  
+    // 🔹 Tambahan biaya (hapus titik juga)
+    let tambahan = 0;
+    tambahanArea.querySelectorAll('.t-nom').forEach(n => {
+      tambahan += parseInt((n.value || '0').replace(/\./g, '')) || 0;
+    });
+    total += tambahan;
+  
+    // 🔹 Tampilkan total keseluruhan dengan format ribuan
+    el('totalPesanan').innerText = 'Rp ' + total.toLocaleString('id-ID');
+  
+    updatePreviewFilename();
+    return total;
+  }
+
+
+  function leftPad(num, len=5){
+    return String(num).padStart(len,'0');
+  }
+
+  function updatePreviewFilename(){
+    const noNota = leftPad((lastNoNota||0)+1);
+    const filename = `${currentUser||'User'}_nota_${noNota}.jpg`;
+    el('previewFilename').innerText = filename;
+    return filename;
+  }
+  function getNumericValueFromInput(inputElement) {
+      // Membaca nilai dari elemen input
+      const value = inputElement.value || '0'; 
+      // Menghapus semua karakter non-digit (titik, koma, dsb.)
+      const cleanedString = value.replace(/\D/g, '');
+      // Mengubah string bersih menjadi angka (misal: "10000" → 10000)
+      return Number(cleanedString) || 0;
+  }
+  function buildNotaObject(){
+    // Items
+    const items = []; let subtotal=0;
+    itemsArea.querySelectorAll('.line-card').forEach((c,i)=>{
+      const name = (c.querySelector('.iname').value||'').trim();
+      // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+      const qty = getNumericValueFromInput(c.querySelector('.iqty'))||0;
+      const price = getNumericValueFromInput(c.querySelector('.iprice'))||0;
+      
+      const sub = qty*price; subtotal += sub;
+      items.push({name, qty, price, subtotal: sub});
+    });
+    // Tambahan
+    const tambahans=[]; let tambahTotal=0;
+    tambahanArea.querySelectorAll('.t-nom').forEach(r=>{
+      const type=(r.closest('.line-card-tambahan').querySelector('.t-type').value||'').trim();
+      // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+      const nominal=getNumericValueFromInput(r)||0;
+      if(type || nominal) tambahans.push({type, nominal});
+      tambahTotal += nominal;
+    });
+
+    // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
+    const ongkir = getNumericValueFromInput(el('ongkir'))||0;
+    const custPhone=(el('custPhone').value||'').replace(/\D/g,'');
+    const kurir = currentUser || '';
+
+    const total = subtotal + ongkir + tambahTotal;
+    const noNota = leftPad((lastNoNota||0)+1);
+    const createdAt = new Date().toISOString();
+
+    // Text nota
+    const lines = [];
+    lines.push('📒 NOTA SAHABATKU DELIVERY');
+    lines.push('══════════════════════');
+    lines.push(`Kurir   : ${kurir}`);
+    lines.push(`No Nota : ${noNota}`);
+    lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
+    lines.push('──────────────────────');
+    
+    // format item dua baris
+    items.forEach((it, i) => {
+      const name = (it.name || '').trim();
+      const qtyText = `${it.qty}x`;
+      const priceText = `Rp${it.price.toLocaleString('id-ID')}`;
+      const subtotalText = `Rp${it.subtotal.toLocaleString('id-ID')}`;
+    
+      // baris 1 → nama item
+      lines.push(`${i + 1}. ${name}`);
+    
+      // baris 2 → qty, harga, subtotal sejajar kanan
+      const leftPart = `   (${qtyText} ${priceText})`;
+      const rightPart = `= ${subtotalText}`;
+      const colWidth = 20; // atur jarak antar kolom
+      const spaces = colWidth - leftPart.length;
+      lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
+    });
+    
+    lines.push('──────────────────────');
+    lines.push(`Ongkir   : Rp${ongkir.toLocaleString('id-ID')}`);
+    tambahans.forEach(t => {
+      const type = (t.type || 'Tambahan').padEnd(10, ' ');
+      lines.push(`${type}: Rp${Number(t.nominal).toLocaleString('id-ID')}`);
+    });
+    lines.push('══════════════════════');
+    lines.push(`TOTAL    : Rp${total.toLocaleString('id-ID')}`);
+    lines.push('');
+    lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
+    
+    // tampilkan ke preview
+    document.getElementById('notaPreview').innerText = lines.join('\n');
+    
+    return {
+      kurir, noNota, createdAt,
+      items, tambahans, ongkir, total, custPhone,
+      text: lines.join('\n')
+    };
+
+  }
+
+  // Ambil elemen input ongkir
+  const ongkirInput = el('ongkir'); 
+  
+  // 🎯 KODE BARU DIMULAI DI SINI 🎯
+  
+  // 1. LISTENER 'FOCUS': Membersihkan nilai '0' saat input diklik
+  ongkirInput.addEventListener('focus', (e) => {
+      // Jika nilai input adalah '0', kosongkan.
+      if (e.target.value.trim() === '0') {
+          e.target.value = '';
+      }
+  });
+  
+  // 2. LISTENER 'BLUR': Mengembalikan nilai ke '0' jika input dikosongkan/ditinggalkan
+  ongkirInput.addEventListener('blur', (e) => {
+      // Jika user meninggalkan input (blur) dan nilainya kosong, kembalikan ke "0"
+      if (e.target.value.trim() === '') {
+          e.target.value = '0';
+          updateTotals(); // Panggil updateTotals untuk menghitung ulang total (seharusnya 0)
+      }
+  });
+  
+  // 3. LISTENER 'INPUT' (Kode Anda yang sudah ada): Mengatur format 5.000 saat mengetik
+  ongkirInput.addEventListener('input', (e) => {
+      let value = e.target.value;
+  
+      // 1. hapus semua kecuali angka
+      value = value.replace(/\D/g, '');  
+  
+      if (value === '') {
+          e.target.value = '';
+      } else {
+          // 2. ubah jadi angka murni
+          const numericValue = Number(value);
+  
+          // 3. tampilkan dengan format ribuan di input
+          e.target.value = numericValue.toLocaleString('id-ID');
+      }
+  
+      // Panggil updateTotals untuk menghitung ulang total
+      updateTotals(); 
+  });
+  
+  
+  /* ===================
+     Counter No Nota per user
+     /counters/{username}/lastNoNota : number
+  ====================*/
+  async function ensureCounter(){
+    if(!currentUser) return;
+    if(notaCounterLoaded) return;
+    const cRef = ref(db, `counters/${currentUser}`);
+    const snap = await get(cRef);
+    if(!snap.exists()){
+      await set(cRef, { lastNoNota: 0 });
+      lastNoNota = 0;
+    } else {
+      lastNoNota = Number(snap.val().lastNoNota)||0;
+    }
+    notaCounterLoaded = true;
+  }
+  async function increaseCounter(){
+    await ensureCounter();
+    lastNoNota = (Number(lastNoNota)||0) + 1;
+    await update(ref(db, `counters/${currentUser}`), { lastNoNota });
+    updateNextNotaLabel();
+    return lastNoNota;
+  }
+  function updateNextNotaLabel(){
+    el('nextNota').innerText = leftPad((lastNoNota||0)+1);
+  }
+
+  /* ===================
+     SIMPAN KE FIREBASE
+     Struktur:
+     - /nota/{username}/{noteId} : {
+         kurir,noNota,createdAt,
+         items:[{name,qty,price,subtotal}],
+         tambahans:[{type,nominal}],
+         ongkir,total,custPhone,text
+       }
+     - /transaksi_mitra/{mitraId}/{YYYY-MM-DD}/{kurirId} : count
+  ====================*/
+  async function saveNoteToFirebase(){
+    if(!currentUser){ alert('Login dulu.'); return; }
+    const data = buildNotaObject();
+    // finalize number
+    const curNo = await increaseCounter(); // persist
+    data.noNota = leftPad(curNo);
+
+    const noteId = 'nota_' + Date.now();
+    const noteObj = { id: noteId, ...data };
+
+    // tulis ke /nota/{user}/{noteId}
+    await set(ref(db, `nota/${currentUser}/${noteId}`), noteObj);
+    alert(`Nota Tersimpan ✅ (No Nota ${data.noNota})`);
+    refreshNotaHistory();
+    updatePreviewFilename();
+  }
+
+  /* ===================
+     RIWAYAT & PELACAK (Realtime)
+  ====================*/
+function refreshNotaHistory(filterDate = null){
+    if(!currentUser) return;
+    const listEl = el('notaHistory'); 
+    listEl.innerHTML = 'Memuat...';
+
+    const notesRef = ref(db, `nota/${currentUser}`);
+    
+    // Gunakan get() untuk sekali ambil data saat ada filter tanggal
+    if (filterDate) {
+        get(notesRef).then(snap => {
+            const val = snap.val() || {};
+            const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            const filteredNotes = allNotes.filter(n => n.createdAt.startsWith(filterDate));
+            displayNotes(filteredNotes, listEl, filterDate);
+        }).catch(error => {
+            console.error("Error fetching filtered notes:", error);
+            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
+        });
+    } else {
+        // Gunakan onValue() untuk load awal dan update realtime
+        onValue(notesRef, (snap) => {
+            const val = snap.val() || {};
+            allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            displayNotes(allNotes, listEl);
+            todayNotes = allNotes.filter(n => n.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10));
+            updateDailyReport();
+        }, (error) => {
+            console.error("Error fetching all notes:", error);
+            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
+        });
+    }
+}
+// Tambahkan di akhir fungsi refreshNotaHistory(), setelah elemen tombol "Lihat" dibuat
+document.querySelectorAll('.btnLihatNota').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const notaId = btn.dataset.id;
+    const notaRef = ref(db, `nota/${currentUser}/${notaId}`);
+    const snap = await get(notaRef);
+
+    if (snap.exists()) {
+      const notaData = snap.val();
+
+      // Gunakan fungsi buildNotaPreviewText() kalau sudah ada,
+      // atau buat sederhana:
+      const notaText = `
+No Nota: ${notaData.noNota}
+Kurir: ${notaData.kurir}
+Tanggal: ${notaData.tanggal}
+Customer: ${notaData.customer || '-'}
+Ongkir: Rp ${notaData.ongkir?.toLocaleString('id-ID') || 0}
+Total: Rp ${notaData.total?.toLocaleString('id-ID') || 0}
+
+Daftar Item:
+${(notaData.items || [])
+  .map(i => `- ${i.nama} (${i.qty}x) @Rp${i.harga.toLocaleString('id-ID')}`)
+  .join('\n')}
+      `.trim();
+
+      // tampilkan modal sama seperti di tab Nota
+      el('notaModalText').innerText = notaText;
+      el('notaTextModal').style.display = 'block';
+    }
+  });
+});
+
+// Tombol tutup modal tetap sama
+el('closeNotaTextModal').addEventListener('click', () => {
+  el('notaTextModal').style.display = 'none';
+});
+
+function displayNotes(notes, listEl, filterDate = null) {
+    if (notes.length === 0) {
+        if (filterDate) {
+            listEl.innerHTML = `<p class="small">Tidak ada nota pada tanggal ini.</p>`;
+        } else {
+            listEl.innerHTML = '<p class="small">Belum ada nota.</p>';
+        }
+        return;
+    }
+    
+    let html = '<div class="list-v">';
+    notes.forEach(n => {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
+            <div style="flex:1">
+                <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
+                <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}</div>
+                <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
+            </div>
+            <div class="btnbar">
+                <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
+                <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    listEl.innerHTML = html;
+}
+  
+  const notaTextModal = el('notaTextModal');
+  const notaModalText = el('notaModalText');
+  const closeNotaTextModalBtn = el('closeNotaTextModal');
+
+  window.viewNote = async (id)=>{
+    const snap = await get(ref(db, `nota/${currentUser}/${id}`));
+    if(!snap.exists()){ alert('Nota tidak ditemukan'); return; }
+    const n = snap.val();
+    notaModalText.innerText = n.text;
+    notaTextModal.style.display = 'block';
+    
+    el('savePhotoFromModalBtn').onclick = () => saveNotaPhotoFromModal(n);
+  };
+  
+  async function saveNotaPhotoFromModal(notaData) {
+      try {
+          const notaText = notaData.text;
+          const tempDiv = document.createElement('div');
+          tempDiv.style.width = '350px';
+          tempDiv.style.whiteSpace = 'pre-wrap';
+          tempDiv.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
+          tempDiv.style.padding = '20px 24px';
+          tempDiv.style.backgroundColor = '#fff';
+          tempDiv.style.color = '#333';
+          tempDiv.style.borderRadius = '16px';
+          tempDiv.innerText = notaText;
+          
+          document.body.appendChild(tempDiv);
+          const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: '#fff' });
+          document.body.removeChild(tempDiv);
+          
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
+          const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          alert('Foto nota berhasil disimpan.');
+      } catch (e) {
+          console.error("Gagal menyimpan foto:", e);
+          alert('Gagal menyimpan foto nota.');
+      }
+  }
+
+
+  closeNotaTextModalBtn.addEventListener('click', () => {
+    notaTextModal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target == notaTextModal) {
+      notaTextModal.style.display = 'none';
+    }
+  });
+  async function viewNote(noteId) {
+    try {
+      const notaRef = ref(db, `nota/${currentUser}/${noteId}`);
+      const snap = await get(notaRef);
+  
+      if (!snap.exists()) {
+        alert('Nota tidak ditemukan!');
+        return;
+      }
+  
+      const nota = snap.val();
+      
+      const lines = [];
+      lines.push('📒 NOTA SAHABATKU DELIVERY');
+      lines.push('══════════════════════════');
+      lines.push(`Kurir   : ${nota.kurir || '-'}`);
+      lines.push(`No Nota : ${nota.noNota || '-'}`);
+      lines.push(`Tanggal : ${new Date(nota.createdAt).toLocaleString('id-ID')}`); // Gunakan createdAt dari DB jika ada
+      lines.push('────────────────────────────');
+      
+      // Format item dua baris (gunakan data item dari nota)
+      (nota.items || []).forEach((it, i) => {
+        const name = (it.name || '').trim();
+        const qtyText = `${it.qty}x`;
+        const priceText = `Rp${(it.harga || 0).toLocaleString('id-ID')}`;
+        const subtotalText = `Rp${((it.qty || 0) * (it.harga || 0)).toLocaleString('id-ID')}`;
+        
+        // baris 1 → nama item
+        lines.push(`${i + 1}. ${name}`);
+        
+        // baris 2 → qty, harga, subtotal sejajar kanan
+        const leftPart = `   (${qtyText} ${priceText})`;
+        const rightPart = `= ${subtotalText}`;
+        const colWidth = 20; // Atur jarak antar kolom
+        const spaces = colWidth - leftPart.length;
+        lines.push(leftPart + ' '.repeat(spaces > 0 ? spaces : 1) + rightPart);
+      });
+      
+      lines.push('══════════════════════════');
+      lines.push(`Ongkir   : Rp${(nota.ongkir || 0).toLocaleString('id-ID')}`);
+      // Asumsi properti "tambahan" di DB adalah array, jika tidak, perlu disesuaikan.
+      // Jika data tambahan lama tersimpan sebagai satu nilai (nota.tambahan), gunakan ini:
+      lines.push(`Tambahan : Rp${(nota.tambahan || 0).toLocaleString('id-ID')}`);
+      
+      lines.push('══════════════════════════');
+      lines.push(`TOTAL    : Rp${(nota.total || 0).toLocaleString('id-ID')}`);
+      lines.push('');
+      lines.push('Terima kasih telah menggunakan layanan Sahabatku Delivery 😊🙏');
+  
+  
+      const notaTextContent = lines.join('\n');
+  
+  
+      // 2. Buat Struktur HTML (Identik dengan Tampilan Tab Nota)
+      const htmlOutput = `
+          <pre class="nota-text-area">${notaTextContent}</pre>
+          <div class="nota-footer-sep"></div>
+          <p class="nota-small-print">
+              ❗ Penting: Simpan nota elektronik ini sebagai bukti transaksi/klaim. Pastikan Anda selalu menerimanya.
+          </p>
+      `;
+  
+      // 3. Tampilkan ke Modal (menggunakan innerHTML)
+      el('notaModalText').innerHTML = htmlOutput; // <--- PENTING! Ganti innerText menjadi innerHTML
+      el('notaTextModal').style.display = 'block';
+  
+      // 4. Update tombol simpan foto di modal (jika ada)
+      // Asumsi ada tombol dengan ID 'savePhotoFromModalBtn'
+      const saveBtn = el('savePhotoFromModalBtn');
+      if (saveBtn) {
+          saveBtn.onclick = () => saveNotaPhotoFromModal(nota);
+      }
+      
+    } catch (err) {
+      console.error('Gagal membuka nota:', err);
+      alert('Gagal membuka nota.');
+    }
+  }
+  
+  el('closeNotaTextModal').addEventListener('click', () => {
+    el('notaTextModal').style.display = 'none';
+  }
+);
+window.hapusNote = async (id)=>{
+    if(!confirm('Hapus nota ini dari Firebase?')) return;
+    const snap = await get(ref(db, `nota/${currentUser}/${id}`));
+    if(!snap.exists()){ alert('Nota tidak ditemukan'); return; }
+    const n = snap.val();
+
+    // 1️⃣ Hapus nota utama
+    await remove(ref(db, `nota/${currentUser}/${id}`));
+
+    // 2️⃣ Update counter lastNoNota
+    const allSnap = await get(ref(db, `nota/${currentUser}`));
+    let maxNo = 0;
+    if(allSnap.exists()){
+        Object.values(allSnap.val()).forEach(nota=>{
+            const no = Number(nota.noNota) || 0;
+            if(no > maxNo) maxNo = no;
+        });
+    }
+    lastNoNota = maxNo;
+    await update(ref(db, `counters/${currentUser}`), { lastNoNota });
+    updateNextNotaLabel();
+
+    // 3️⃣ Jika nota yang dihapus sedang dibuka di preview, bersihkan preview
+    if(window.currentPreviewId === id){
+        clearPreviewNota();
+        totalPesanan = 0;
+        updateTotalPesananLabel();
+    }
+
+    alert('Nota berhasil dihapus. Nomor nota berikutnya telah diperbarui.');
+    refreshNotaHistory();
+};
+
+// Fungsi bantu
+function clearPreviewNota(){
+    const preview = document.getElementById('previewNota');
+    if(preview) preview.innerHTML = '';
+    window.currentPreviewId = null;
+}
+
+function updateTotalPesananLabel(){
+    const label = document.getElementById('totalPesananLabel');
+    if(label) label.textContent = totalPesanan;
+}
+
+el('btnCariRiwayat').addEventListener('click', () => {
+    const date = el('riwayatDate').value;
+    if (date) {
+        refreshNotaHistory(date);
+    } else {
+        alert('Pilih tanggal untuk mencari.');
+    }
+});
+
+el('btnResetRiwayat').addEventListener('click', () => {
+    el('riwayatDate').value = '';
+    refreshNotaHistory();
+});
+
+
+  /* ===================
+     REKAP & LAPORAN
+  ====================*/
+function updateDailyReport() {
+    let ongkirHarian = 0;
+    let tambahanHarian = 0;
+    if(todayNotes.length > 0) {
+        todayNotes.forEach(note => {
+            ongkirHarian += Number(note.ongkir) || 0;
+            const t = Array.isArray(note.tambahans) ? note.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
+            tambahanHarian += t;
+        });
+    }
+    el('laporanNotaHarian').innerText = todayNotes.length;
+    el('laporanOngkirHarian').innerText = formatRp(ongkirHarian + tambahanHarian);
+}
+
+el('btnLoadRekap').addEventListener('click', async ()=>{
+  if(!currentUser){ alert('Login dulu'); return; }
+  const ym = el('rekapMonth').value;
+  if(!ym){ alert('Pilih bulan'); return; }
+  const [year, month] = ym.split('-').map(Number);
+
+  const snap = await get(ref(db, `nota/${currentUser}`));
+  const val = snap.val()||{};
+  const arr = Object.values(val);
+  const byDate = {};
+
+  arr.forEach(n=>{
+    const d = new Date(n.createdAt);
+    if(d.getFullYear()===year && (d.getMonth()+1)===month){
+      const key = n.createdAt.slice(0,10);
+      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0, ids:[]};
+      byDate[key].count++;
+      byDate[key].ongkir += Number(n.ongkir)||0;
+      const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
+      byDate[key].tambahan += t;
+      byDate[key].total += (Number(n.ongkir)||0) + t;
+      byDate[key].ids.push(n.id || n._id || n.key); // simpan id nota
+    }
+  });
+
+  const tbody = el('rekapBody'); 
+  tbody.innerHTML='';
+  let sumNota=0,sumO=0,sumT=0,sumTot=0;
+
+  Object.keys(byDate).sort().forEach(k=>{
+      const v = byDate[k];
+      const totalHarian = v.ongkir + v.tambahan;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+          <td>${new Date(k).toLocaleDateString('id-ID')}</td>
+          <td>${v.count}</td>
+          <td>${v.ongkir.toLocaleString('id-ID')}</td>
+          <td>${v.tambahan.toLocaleString('id-ID')}</td>
+          <td>${totalHarian.toLocaleString('id-ID')}</td>
+      `;
+      tbody.appendChild(tr);
+      sumNota += v.count; sumO += v.ongkir; sumT += v.tambahan; sumTot += totalHarian;
+  });
+
+  el('sumNota').innerText = sumNota;
+  el('sumOngkir').innerText = sumO.toLocaleString('id-ID');
+  el('sumTambahan').innerText = sumT.toLocaleString('id-ID');
+  el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
+});
+
+/* ===================
+   Export / Share Image (Web)
+   Versi Sinkron dengan Preview (#notaPreview)
+====================*/
+
+// Konversi canvas ke Blob
+function canvasToBlob(canvas, type = 'image/jpeg', quality = 0.95) {
+  return new Promise(res => canvas.toBlob(b => res(b), type, quality));
+}
+
+// Tangkap tampilan preview nota sebagai gambar
+async function getNotaBlob() {
+  const node = el('notaPreview');
+  if (!node) throw new Error('Elemen notaPreview tidak ditemukan');
+  
+  // Tangkap langsung tampilan #notaPreview di layar
+  const canvas = await html2canvas(node, {
+    scale: 3,                // resolusi tinggi
+    backgroundColor: '#ffffff',
+    useCORS: true
+  });
+
+  return await canvasToBlob(canvas, 'image/jpeg', 0.95);
+}
+async function showNotaPhotoModal(notaData) {
+  const notaPreview = el('notaPreview');
+  notaPreview.innerText = notaData.text;
+
+  // Tampilkan modal dengan ukuran panjang
+  const modal = el('notaPhotoModal');
+  modal.style.display = 'block';
+
+  // Ambil tangkapan layar preview nota
+  const canvas = await html2canvas(notaPreview, {
+    scale: 2.5,
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    windowWidth: notaPreview.scrollWidth,
+    windowHeight: notaPreview.scrollHeight
+  });
+
+  // Masukkan ke elemen img preview di modal
+  const imgPreview = el('notaCanvasPreview');
+  imgPreview.src = canvas.toDataURL('image/jpeg', 0.95);
+  imgPreview.style.width = '100%';
+  imgPreview.style.height = 'auto';
+  imgPreview.style.borderRadius = '14px';
+  imgPreview.style.maxHeight = '85vh';
+  imgPreview.style.objectFit = 'contain';
+  imgPreview.style.background = '#fff';
+  imgPreview.style.display = 'block';
+  imgPreview.style.margin = '0 auto';
+
+  // Simpan blob untuk tombol save
+  const blob = await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.95));
+  el('savePhotoBtn').onclick = () => saveNotaPhoto(blob, notaData);
+}
+
+async function saveNotaPhoto(blob, notaData) {
+  try {
+    const filename = `${notaData.kurir}_nota_${notaData.noNota}.jpg`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('✅ Foto nota berhasil disimpan. Cek folder Downloads/Galeri Anda.');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal menyimpan foto nota.');
+  }
+}
+
+
+// Tombol: Simpan Preview sebagai Foto
+async function savePreviewAsImage() {
+  try {
+    const blob = await getNotaBlob();
+    const nota = buildNotaObject();
+    const filename = `${nota.kurir || currentUser || 'User'}_nota_${nota.noNota}.jpg`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Foto nota berhasil diunduh.');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal menyimpan foto.');
+  }
+}
+
+// Tombol: Share via WhatsApp
+async function sharePreviewImage() {
+  try {
+    const blob = await getNotaBlob();
+    const nota = buildNotaObject();
+    const filename = `${nota.kurir || currentUser || 'User'}_nota_${nota.noNota}.jpg`;
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Nota Sahabatku Delivery',
+        text: `No Nota ${nota.noNota} — Kurir ${currentUser}`
+      });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert('⚠️ Browser belum mendukung share langsung. File sudah diunduh untuk dibagikan manual.');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('❌ Gagal membagikan nota.');
+  }
+}
+// === 🔹 CEK ONGKIR NOTA + SUGGESTION ===
+const modalOngkirNota = el('cekOngkirNotaModal');
+const btnOpenOngkirNota = el('btnCekOngkirNota');
+const btnCloseOngkirNota = el('closeCekOngkirNota');
+const btnHitungOngkirNota = el('cekOngkirNotaBtn');
+
+btnOpenOngkirNota.addEventListener('click', () => {
+  alert("⚠️ Fitur Cek Ongkir sedang dalam perbaikan server. Mohon masukkan ongkir secara manual sementara waktu.");
+  // Modal sengaja tidak dibuka agar tidak terjadi error server
+});
+btnCloseOngkirNota.addEventListener('click', () => modalOngkirNota.style.display = 'none');
+window.addEventListener('click', e => {
+  if (e.target === modalOngkirNota) modalOngkirNota.style.display = 'none';
+});
+
+// --- Fungsi cari dan hitung ongkir ---
+btnHitungOngkirNota.addEventListener('click', () => {
+  const asal = el('asalNotaInput').value.trim() || el('asalNotaSelect').value.trim();
+  const tujuan = el('tujuanNotaInput').value.trim() || el('tujuanNotaSelect').value.trim();
+
+  const findOngkir = (lok) => ongkirData.find(o => o.lokasi.toLowerCase() === lok.toLowerCase());
+  const asalObj = asal ? findOngkir(asal) : null;
+  const tujuanObj = tujuan ? findOngkir(tujuan) : null;
+
+  let hasil = 0;
+  let ket = "";
+
+  if (asalObj && tujuanObj) {
+    hasil = Math.max(0, (asalObj.ongkir + tujuanObj.ongkir) - 6000);
+    ket = `(Asal + Tujuan) - 6000`;
+  } else if (asalObj || tujuanObj) {
+    hasil = (asalObj || tujuanObj).ongkir;
+    ket = `Ongkir normal`;
+  } else {
+    ket = `Lokasi belum dipilih`;
+  }
+
+  el('hasilOngkirNota').innerText = hasil > 0 ? hasil.toLocaleString("id-ID") : '–';
+  el('keteranganOngkirNota').innerText = ket;
+
+  // masukkan nilai murni (tanpa titik) ke input utama
+  el('ongkir').value = hasil || 0;
+  el('ongkirNotaInfo').innerText = `${ket} → Rp ${hasil}`;
+  calculateTotal();
+  modalOngkirNota.style.display = 'none';
+});
+
+// --- Suggestion function reusable ---
+function setupSuggestion(inputId, suggestId) {
+  const input = el(inputId);
+  const suggest = el(suggestId);
+
+  input.addEventListener('input', () => {
+    const keyword = input.value.trim().toLowerCase();
+    suggest.innerHTML = '';
+    if (!keyword) return suggest.classList.remove('show');
+
+    const filtered = ongkirData.filter(o => o.lokasi.toLowerCase().includes(keyword)).slice(0, 10);
+    if (filtered.length === 0) return suggest.classList.remove('show');
+
+    filtered.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 's-item';
+      div.textContent = item.lokasi;
+      div.onclick = () => {
+        input.value = item.lokasi;
+        suggest.classList.remove('show');
+      };
+      suggest.appendChild(div);
+    });
+    suggest.classList.add('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!suggest.contains(e.target) && e.target !== input) suggest.classList.remove('show');
+  });
+}
+
+// Aktifkan suggestion untuk asal & tujuan
+setupSuggestion('asalNotaInput', 'asalNotaSuggest');
+setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Aplikasi Kurir Sahabatku</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+  --sky-light: #00CAFF;
+  --sky: #00CAFF;
+  --sky-strong: #00CAFF;
+  --accent: #0077c8;
+  --muted: #4a6fa5;
+  --card-bg: #ffffff;
+  --glass: rgba(255, 255, 255, 0.85);
+  --border: #c9dbf8;
+  --shadow-light: rgba(74, 144, 226, 0.15);
+  --shadow-strong: rgba(74, 144, 226, 0.3);
+  --text-primary: #0b3b5a;
+  --text-secondary: #506273;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', system-ui, Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, var(--sky-light) 0%, var(--sky) 70%);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+}
+
+.container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 16px 20px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 12px 30px var(--shadow-light);
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 16px 40px var(--shadow-strong);
+}
+
+h2, h3 {
+  margin: 8px 0 16px 0;
+  color: var(--sky-strong);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="month"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+  background: var(--glass);
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="month"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--sky-strong);
+  box-shadow: 0 0 8px var(--sky-strong);
+  background: #f0f8ff;
+}
+/* Posisi pojok kanan atas */
+#btnLogout {
+  position: fixed;       /* selalu di atas */
+  top: 20px;
+  right: 20px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(45deg, #ff4b2b, #ff416c);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+/* Hover efek animasi keren */
+#btnLogout:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 6px 25px rgba(255,65,108,0.6);
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  text-shadow: 0 0 5px #fff;
+}
+
+/* Saat ditekan */
+#btnLogout:active {
+  transform: scale(0.95) rotate(0deg);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+/* --- Notifikasi Style --- */
+#notificationBtn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px var(--shadow-light);
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+#notificationBtn:hover {
+  background: #f0f8ff;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px var(--shadow-strong);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  background: #e74c3c;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.btn {
+  background: var(--sky-strong);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--shadow-light);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.btnbar {
+  display: flex;
+  justify-content: flex-end; /* rata kanan */
+  gap: 10px; /* jarak antar tombol */
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background: #3a6fc1;
+  box-shadow: 0 10px 30px var(--shadow-strong);
+}
+
+.btn.secondary {
+  background: #f5f7fa;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.btn.secondary:hover {
+  background: #e1e9f8;
+  border-color: var(--sky-strong);
+  color: var(--sky-strong);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px dashed var(--border);
+  font-weight: 600;
+}
+
+.btn.ghost:hover {
+  border-color: var(--sky-strong);
+  color: var(--sky-strong);
+}
+
+.btn.danger {
+  background: #ff6b6b;
+  box-shadow: none;
+  font-weight: 700;
+  transition: background 0.3s ease;
+}
+
+.btn.danger:hover {
+  background: #e04e4e;
+}
+
+.btn.full {
+  width: 100%;
+}
+
+.btnbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+nav.tab {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+
+nav.tab button {
+  padding: 14px 0;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+}
+
+nav.tab button.active {
+  background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 24px var(--shadow-light);
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.col {
+  flex: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-weight: 700;
+  color: var(--sky-strong);
+  font-size: 1.1rem;
+}
+.section-title .small {
+  color: #00CAFF !important;
+  font-size: 1.1rem;     /* ukuran sedikit lebih besar dari default */
+  font-weight: 700;
+  letter-spacing: 0.3px; /* biar lebih rapi */
+}
+
+
+.list-v {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* === Kartu Item Dua Baris === */
+.line-card {
+  background: #00CAFF;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.line-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 128, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* === Baris Atas === */
+.top-row {
+  display: grid;
+  grid-template-columns: 2fr 0.6fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.top-row label.small {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.top-row input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  text-align: center;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.top-row input:focus {
+  border-color: var(--sky-strong);
+  box-shadow: 0 0 5px var(--sky-strong);
+  background: #f0f8ff;
+}
+
+/* === Baris Bawah (Proporsional) === */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 2fr 1.6fr; /* kiri = Nama Item, kanan = Qty+Harga */
+  gap: 12px;
+  align-items: end;
+  margin-top: 10px;
+}
+
+/* Kolom kiri bawah (Hapus) */
+.bottom-row .mini-btn {
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+/* Tombol Absen Modern Floating */
+#btnAbsenFloating {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #00CAFF 0%, #0077c8 100%);
+  color: white;
+  border-radius: 18px; /* Sudut agak kotak melengkung modern (Squircle) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 119, 200, 0.4);
+  z-index: 9999;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: pulse-animation 2s infinite;
+}
+
+/* Animasi Berdenyut Soft */
+@keyframes pulse-animation {
+  0% { box-shadow: 0 0 0 0px rgba(0, 202, 255, 0.6); }
+  70% { box-shadow: 0 0 0 15px rgba(0, 202, 255, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(0, 202, 255, 0); }
+}
+
+#btnAbsenFloating:hover {
+  transform: translateY(-5px) scale(1.05);
+  background: linear-gradient(135deg, #0077c8 0%, #00CAFF 100%);
+}
+
+#btnAbsenFloating i {
+  width: 28px;
+  height: 28px;
+}
+.bottom-row .mini-btn:hover {
+  background: #e04e4e;
+  transform: translateY(-1px);
+}
+
+/* Kolom kanan bawah (Subtotal) */
+.bottom-row .col-right {
+  text-align: right;
+}
+
+.bottom-row .col-right label.small {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.bottom-row .sub {
+  background: #f5faff;
+  border: 1.5px solid #c9dbf8;
+  border-radius: 10px;
+  padding: 10px 20px;             /* sedikit lebih tinggi */
+  font-weight: 800;  
+  color: var(--sky-strong);
+  font-size: 1.25rem;   
+  display: inline-block;
+  min-width: 130px;
+  text-align: right;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* === Responsif HP === */
+@media (max-width: 700px) {
+  .top-row {
+    grid-template-columns: 1.6fr 0.6fr 1fr;
+    gap: 8px;
+  }
+
+  .bottom-row {
+    grid-template-columns: 1.6fr 1.6fr;
+    gap: 8px;
+  }
+
+  .bottom-row .mini-btn {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  .bottom-row .sub {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+  .bottom-row .sub {
+  font-size: 1.1rem;   /* sedikit kecil saat di layar kecil */
+  padding: 8px 14px;
+
+}
+
+/* Nota Preview */
+.nota-box {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  background: #f5faff;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1.5px solid #c9dbf8;
+  min-height: 160px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  box-shadow: inset 0 0 10px #dbeeff;
+}
+
+/* Table */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-top: 10px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  min-width: 600px;
+}
+
+th, td {
+  padding: 14px 12px;
+  border: 1.5px solid var(--border);
+  text-align: center;
+  font-weight: 600;
+}
+
+th {
+  background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+  color: white;
+  letter-spacing: 0.03em;
+}
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.input-wrap { position:relative; margin-bottom:20px; }
+select, input {
+  width:100%; padding:8px; margin-top:4px;
+  border:1px solid #ccc; border-radius:6px;
+}
+.suggest {
+  position:absolute;
+  top:100%; left:0; right:0;
+  background:#fff;
+  border:1px solid #ccc;
+  max-height:200px;
+  overflow-y:auto;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  z-index:1000;
+
+  /* animasi */
+  opacity:0;
+  transform:scale(0.95);
+  height:0;
+  transition: all 0.25s ease;
+  pointer-events:none;
+}
+
+.suggest.show {
+  opacity:1;
+  transform:scale(1);
+  height:auto;
+  pointer-events:auto;
+}
+
+.s-item {
+  padding:5px 8px;
+  cursor:pointer;
+  font-size:14px;
+}
+.s-item:hover {
+  background:#f5f5f5;
+}
+
+}
+.s-item { padding:6px 10px; cursor:pointer; }
+.s-item:hover { background:#f0f0f0; }
+.harga { font-size:20px; font-weight:bold; margin-top:4px; }
+
+
+/* Mobile tweaks */
+@media (max-width: 900px) {
+  nav.tab {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .line-card {
+    grid-template-columns: 1fr 90px 140px 120px 90px;
+  }
+
+}
+.input-wrap { position: relative; }
+.suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.s-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.s-item:hover {
+  background: #f0f0f0;
+}
+
+@media (max-width: 600px) {
+  .line-card {
+    grid-template-columns: 4fr 70px 90px 100px;
+  }
+
+/* Penyesuaian khusus untuk layar kecil (HP) */
+@media (max-width: 600px) {
+  /* Container lebih sempit dan padding lebih kecil */
+  .container {
+    padding: 12px 16px;
+    margin: 16px auto;
+  }
+
+  /* Header font lebih kecil dan padding lebih ringkas */
+  header {
+    padding: 14px 16px;
+    font-size: 1.1rem;
+  }
+
+  /* Judul header lebih ringkas */
+  header .title {
+    font-size: 1.3rem;
+  }
+
+  /* Grid dan layout line-card disesuaikan agar lebih simpel */
+  .line-card {
+    grid-template-columns: 3fr 60px 70px 80px;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+
+  /* Font dan padding lebih kecil untuk teks dan tombol mini */
+  .line-card .sub {
+    font-size: 0.85rem;
+  }
+
+  .line-card .mini-btn {
+    font-size: 0.8rem;
+    padding: 6px 0;
+    border-radius: 12px;
+  }
+
+  /* Nota box padding dan font lebih kecil */
+  .nota-box {
+    padding: 16px 18px;
+    font-size: 0.85rem;
+    min-height: 120px;
+  }
+
+  /* Table font lebih kecil dan padding ringkas */
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 10px 8px;
+  }
+
+  /* Nav tab jadi 2 kolom */
+  nav.tab {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  nav.tab button {
+    padding: 10px 0;
+    font-size: 0.9rem;
+    border-radius: 14px;
+  }
+
+  /* Tombol utama dan sekunder melebar penuh */
+  .btn.full {
+    width: 100%;
+  }
+
+  /* Input, select, textarea padding lebih kecil */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="month"],
+  input[type="date"],
+  textarea,
+  select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  /* Stack dan grid gap lebih kecil */
+  .stack {
+    gap: 8px;
+  }
+
+  /* Row jadi kolom vertikal */
+  .row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Tombol bar jadi kolom vertikal */
+  .btnbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Section title font lebih kecil */
+  .section-title {
+    font-size: 11px;
+    margin-top: 8px;
+  }
+
+  /* Small text lebih kecil dan rapat */
+  .small {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+}
+    /* Modal Notifikasi */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .notification-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .notification-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-item.unread {
+      background-color: #f9f9f9;
+      font-weight: bold;
+    }
+/* === 1. Pratinjau Nota (Tampilan Biasa di Halaman) === */
+    #notaPreview {
+        /* --- Perbaikan Utama untuk Responsif --- */
+        white-space: pre-wrap !important; 
+        overflow-x: hidden !important;   
+        
+        /* --- Gaya Modern --- */
+        font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif !important; /* Font Modern */
+        background: #fcfcfc; /* Latar yang sangat terang */
+        color: #1a1a1a; /* Teks sangat gelap untuk kontras */
+        
+        /* Menghilangkan border kuno, diganti soft shadow */
+        border: none; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Soft Shadow */
+        border-radius: 12px;
+        
+        /* Padding yang lebih proporsional */
+        padding: 16px; 
+        
+        /* Tipografi yang rapih */
+        font-size: 13px; /* Ukuran yang nyaman dibaca */
+        line-height: 1.5;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    /* === 2. Modal Preview (Foto Nota) === */
+    #notaPhotoModal {
+      padding-top: 20px;
+      z-index: 1050; /* Z-index lebih tinggi */
+    }
+    
+    /* Konten Modal Foto Nota: Lebih Elegan */
+    #notaPhotoModalContent {
+      width: 90%;
+      max-width: 540px; /* Diperbesar sedikit untuk tampilan foto yang lebih mantap */
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #ffffff; /* Putih bersih */
+      border-radius: 20px; /* Lebih membulat */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35); /* Shadow lebih kuat */
+    }
+    
+    /* Preview Gambar/Kanvas Nota */
+    #notaCanvasPreview {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 16px; /* Sesuai dengan modal */
+      background: #f7f7f7; /* Latar abu-abu terang jika gambar belum load */
+      margin: 0 auto;
+    }
+
+    /* === 3. Modal Teks Nota (Popup Teks) === */
+    #notaTextModal {
+      display: none;
+      position: fixed;
+      z-index: 1060; /* Z-index paling tinggi */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6); /* Latar belakang lebih gelap */
+      animation: fadeIn 0.3s ease;
+    }
+    
+    /* Konten Modal Teks Nota: Focus pada Informasi */
+    #notaTextModalContent {
+      background-color: #FFFFFF; /* Ganti ke putih bersih */
+      margin: 10% auto; /* Margin disesuaikan */
+      padding: 24px; /* Padding lebih besar */
+      border-radius: 16px; 
+      max-width: 400px; /* Sedikit lebih lebar */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    /* === FIX: Bungkus teks nota agar tidak over layar === */
+    #notaModalText {
+      white-space: pre-wrap !important;   /* biar baris baru tetap kebaca */
+      word-wrap: break-word !important;   /* pecah kata panjang */
+      overflow-wrap: break-word !important; /* pastikan pecah di semua browser */
+      max-width: 100% !important;         /* jaga lebar maksimal */
+      overflow-x: hidden !important;      /* sembunyikan scroll horizontal */
+      box-sizing: border-box;
+    }
+
+    
+    /* Animasi (Sudah Bagus, Cuma Disesuaikan Z-index) */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 600px) {
+      #notaModalText {
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+      }
+    }
+
+    /* Nota Card Style */
+    .nota-card {
+      background: linear-gradient(180deg, #00CAFF 50%, #00CAFF 100%);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 8px 24px rgba(0, 128, 255, 0.1);
+      margin-top: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .nota-card:hover {
+      box-shadow: 0 10px 30px rgba(0, 128, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* --- Daftar Item Rapi --- */
+    .item-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px var(--shadow-light);
+    }
+    
+    .item-table th, .item-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    
+    .item-table th {
+      background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    
+    .item-table td input[type="text"],
+    .item-table td input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .item-table td button {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .item-table td .btn-edit {
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 2.2fr 0.6fr 1fr; /* sama kayak baris atas */
+      align-items: end;
+      margin-top: 10px;
+    }
+    
+    .bottom-row .col-left {
+      grid-column: 1 / 2;
+    }
+    
+    .bottom-row .col-right {
+      grid-column: 3 / 4;
+      justify-self: end;
+      text-align: right;
+    }
+    
+    .bottom-row .col-right label.small {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+    
+    .bottom-row .mini-btn {
+      width: 100%;
+      padding: 8px 0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    
+    .bottom-row .mini-btn:hover {
+      background: #e04e4e;
+      transform: translateY(-1px);
+    }
+    
+    .bottom-row .sub {
+      background: #f5faff;
+      border: 1.5px solid #c9dbf8;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-weight: 700;
+      color: var(--sky-strong);
+      font-size: 1rem;
+      min-width: 130px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .iprice::placeholder {
+      color: #b0c6e0;
+      font-style: italic;
+    }
+    /* Tombol kecil modern di pojok kanan atas */
+    .btn-fab {
+      position: absolute;
+      top: -4px;
+      right: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: var(--sky-strong);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+    }
+    .btn-fab.secondary {
+      background: #2ecc71 !important; 
+      color: #ffffff !important;      /* Teks putih */
+      border: 2px solid #2ecc71 !important;
+    }
+    .btn-fab.secondary:hover {
+      /* Override hover shadow dengan warna hijau agar serasi */
+      box-shadow: 0 6px 18px rgba(46, 204, 113, 0.6); 
+      transform: scale(1.15); /* Biar tombolnya membesar juga */
+    }
+    .line-card-tambahan {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    .line-card-tambahan:hover {
+      box-shadow: 0 8px 20px rgba(0,128,255,0.1);
+      transform: translateY(-2px);
+    }
+    
+    /* baris atas sejajar seperti daftar item */
+    .line-card-tambahan .top-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr; /* kiri panjang, kanan sempit */
+      gap: 12px;
+      align-items: end;
+    }
+    
+    /* tombol hapus full panjang di bawah */
+    .line-card-tambahan .bottom-row {
+      margin-top: 12px;
+    }
+    .line-card-tambahan .bottom-row .mini-btn {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .line-card-tambahan .bottom-row .mini-btn:hover {
+      background: #e04e4e;
+      transform: translateY(-1px);
+    }
+    
+    /* Responsif di HP */
+    @media (max-width: 700px) {
+      .line-card-tambahan .top-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    #previewFilename {
+      font-size: 0.7rem !important;   /* kecilin ukuran teks */
+      color: #aaa !important;         /* warna abu lembut */
+      font-weight: 400;               /* jangan tebal */
+      letter-spacing: 0.2px;
+    }
+    .preview-subtext {
+      font-size: 0.7rem !important;
+      color: #aaa !important;
+    }
+    /* Tambahkan ini di akhir tag <style> */
+    .btn-fab.secondary {
+      background: #2ecc71 !important; 
+      color: #ffffff !important;
+      border: 2px solid #2ecc71 !important;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3) !important;
+      animation: pulse 2s infinite; /* Animasi pulse berulang */
+      transition: all 0.3s ease !important; /* Transisi halus */
+    }
+    
+    .btn-fab.secondary:hover {
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.8) !important; /* Glow lebih kuat */
+      transform: scale(1.2) !important; /* Membesar saat hover */
+      animation: none; /* Hentikan pulse saat hover */
+    }
+    
+    .btn-fab.secondary:active {
+      transform: scale(0.95) !important; /* Bounce kecil saat klik */
+      box-shadow: 0 2px 8px rgba(46, 204, 113, 0.5) !important;
+    }
+    
+    /* Definisi animasi pulse */
+    @keyframes pulse {
+      0% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
+      50% { box-shadow: 0 6px 16px rgba(46, 204, 113, 0.6); }
+      100% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
+    }
+    .suggest {
+      display: none;
+      position: absolute;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      margin-top: 2px;
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 99;
+    }
+    
+    .suggest.show {
+      display: block;
+    }
+    
+    .s-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      color: #eee;
+    }
+    
+    .s-item:hover {
+      background: #444;
+    }
+    .input-wrap {
+      position: relative;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loginCard" class="card">
+      <h2>Login Kurir</h2>
+      <div class="grid grid-3">
+        <div>
+          <label for="loginUser">Username</label>
+          <input id="loginUser" type="text" placeholder="Nama kurir (contoh: Tom Haye)" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="loginPass">Password</label>
+          <input id="loginPass" type="password" placeholder="ID Card (contoh: A1234)" autocomplete="current-password" required>
+        </div>
+        <div style="align-self: end;">
+          <div class="btnbar">
+            <button id="btnLogin" class="btn primary" aria-label="Masuk ke aplikasi">Masuk</button>
+          </div>
+        </div>
+      </div>
+      <p id="loginMsg" class="small" style="color: var(--danger-color); margin-top: 8px;"></p>
+    </div>
+
+    <div id="app" class="hidden">
+      <button id="notificationBtn" aria-label="Buka notifikasi">🔔<span id="notificationBadge" class="badge hidden"></span></button>
+      <button id="btnAbsenFloating" onclick="window.location.href='kehadiran.html'" title="Absen Kehadiran">
+        <i data-lucide="calendar-check"></i>
+      </button>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <h2>Halo, <span id="curUser" style="color:#0b4870;font-weight:800"></span></h2>
+          <div class="small">Buat nota • Simpan Nota • Rekap bulanan • Cek Ongkir</div>
+        </div>
+        <div>
+          <div class="small">No Nota berikutnya:</div>
+          <div id="nextNota" style="font-weight:800;font-size:18px;color:#0b4870">-</div>
+        </div>
+          <button id="btnLogout" class="btn danger hidden">Logout</button>
+
+      </div>
+    </div>
+
+      <div class="card">
+        <nav class="tab" id="tabNav">
+          <button data-tab="notaTab" class="active" aria-label="Tab Nota">📝 Nota</button>
+          <button data-tab="riwayatTab" aria-label="Tab Riwayat">📋 Riwayat</button>
+          <button data-tab="laporanRekapTab" aria-label="Tab Rekap">📊 Rekap</button>
+          <button data-tab="ongkirTab" aria-label="Tab Cek Ongkir">📍 Cek Ongkir</button>
+          <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓 Jadwal OFF</button>
+          <button data-tab="mitraTab" aria-label="Tab Data Mitra">🤝 Data Mitra</button>
+          <button data-tab="sopTab" aria-label="Tab SOP">📄 SOP </button>
+          <button data-tab="pengaturanTab" aria-label="Tab Pengaturan">⚙️ Pengaturan</button>
+        </nav>
+        <div id="notaTab" class="tabContent active">
+          <h3>Buat / Edit Nota</h3>
+          <div class="nota-card">
+            <div class="grid grid-3">
+              <div>
+                <label for="kurirName">Nama Kurir</label>
+                <input id="kurirName" type="text" readonly>
+              </div>
+              <div>
+                <label for="custPhone">Nomor WhatsApp Customer</label>
+                <input id="custPhone" type="text" placeholder="6281234... (opsional)">
+              </div>
+              <div>
+                <label for="ongkir">Ongkir (Rp)</label>
+                <div style="display: flex; gap: 6px;">
+                  <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()" style="flex:1;">
+                  <button id="btnCekOngkirNota" class="btn secondary" style="padding: 10px 14px;">Cek</button>
+                </div>
+                <div class="small" id="ongkirNotaInfo" style="margin-top:4px;color:#555;">Belum dihitung</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Daftar Item</div>
+            <button id="btnAddItem" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah item">+</button>
+          </div>
+          <div id="itemsArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Tambahan Biaya</div>
+            <button id="btnAddTambahan" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah biaya tambahan">+</button>
+          </div>
+          <div id="tambahanArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="grid grid-3" style="margin-top: 8px; align-items: end;">
+            <div class="nota-card">
+              <div>
+                <label>Total</label>
+                <div id="totalPesanan" style="font-weight: 800; font-size: 22px; color: var(--danger-color);">Rp 0</div>
+                <div class="small">Subtotal item + ongkir + tambahan</div>
+              </div>
+              <div></div>
+              <div class="btnbar" style="justify-content: flex-end;">
+                <button id="btnSaveForm" class="btn secondary" aria-label="Simpan nota">Simpan Nota</button>
+                <button id="btnExportPreview" class="btn secondary" aria-label="Simpan foto">Simpan Foto</button>
+                <button id="btnSharePreview" class="btn secondary" aria-label="Bagikan WhatsApp">Bagikan WhatsApp</button>
+                <button id="btnClearAll" class="btn danger" aria-label="Bersihkan semua">Bersihkan Semua</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card preview-card" style="margin-top: 10px;">
+            <div class="section-title">
+              <h3 style="margin: 0;">Preview Nota</h3>
+              <div class="small"><span id="previewFilename">-</span></div>
+            </div>
+            <div id="notaPreview" class="nota-box">Belum ada nota.</div>
+          </div>
+        </div>
+
+        <div id="riwayatTab" class="tabContent hidden">
+            <h3>Riwayat Nota</h3>
+            <div class="card">
+                
+                <div style="margin-bottom: 15px;">
+                    <label>Cari Tanggal</label>
+                    <input id="riwayatDate" type="date" style="width: 100%;"> 
+                </div>
+        
+                <div class="btnbar" style="display: flex; gap: 10px;">
+                    <button id="btnCariRiwayat" class="btn" style="flex-grow: 1;">Cari</button>
+                    <button id="btnResetRiwayat" class="btn secondary" style="flex-grow: 1;">Reset</button>
+                </div>
+        
+            </div>
+            <h3 style="margin-top: 20px;">Semua Riwayat Nota (Akun Ini)</h3>
+            <div id="notaHistory"></div>
+        </div>
+
+        <div id="laporanRekapTab" class="tabContent hidden">
+          <h3>Rekap</h3>
+          <div class="card" style="margin-top: 10px;">
+            <h4>Rekap Bulanan</h4>
+            <div class="grid grid-3">
+              <div>
+                <label>Bulan</label>
+                <input id="rekapMonth" type="month">
+              </div>
+              <div style="align-self: end;">
+                <button id="btnLoadRekap" class="btn">Muat Rekap</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table aria-label="Rekap Bulanan">
+                <thead><tr><th>Tanggal</th><th>Jumlah Nota</th><th>Ongkir</th><th>Tambahan</th><th>Total</th></tr></thead>
+                <tbody id="rekapBody"></tbody>
+                <tfoot><tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="mitraTab" class="tabContent hidden">
+          <h3>Data Mitra</h3>
+          <div class="card">
+            <label>Input Transaksi Mitra Hari Ini</label>
+            <div class="grid grid-2" style="align-items: end;">
+              <select id="mitraSelect">
+                <option value="">-- Pilih Mitra --</option>
+              </select>
+              <input id="trxMitraInput" type="number" min="1" value="1" placeholder="Jumlah TRX">
+              <div class="btnbar">
+                <button id="btnAddTrxMitra" class="btn secondary">Tambah Transaksi</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top: 20px;">
+              <button id="btnToggleTrxHistory" class="btn secondary full">Lihat Riwayat Transaksi Mitra</button>
+          </div>
+          <div id="trxMitraHistoryContainer" class="hidden">
+              <div class="card" style="margin-top: 10px;">
+                  <h3>Riwayat Transaksi Mitra</h3>
+          
+                  <div style="margin-bottom: 15px;">
+                      <label>Pilih Tanggal</label>
+                      <input id="mitraRiwayatDate" type="date" style="width: 100%;">
+                  </div>
+          
+                  <div class="btnbar" style="display: flex; gap: 10px;">
+                      <button id="btnCariMitraRiwayat" class="btn" style="flex-grow: 1;">Cari</button>
+                      <button id="btnResetMitraRiwayat" class="btn secondary" style="flex-grow: 1;">Reset</button>
+                  </div>
+          
+              </div>
+              
+              <h3 style="margin-top: 20px;">Daftar Transaksi Mitra</h3>
+              <div class="table-container">
+                  <table aria-label="Riwayat Transaksi Mitra">
+                      <thead><tr><th>Waktu</th><th>Nama Mitra</th><th>TRX</th></tr></thead>
+                      <tbody id="trxMitraHistoryBody">
+                          <tr><td colspan="3">Memuat data...</td></tr>
+                      </tbody>
+                  </table>
+              </div>
+              
+              <div class="btnbar" style="justify-content: center; margin-top: 15px;">
+                  <button id="btnCloseTrxHistory" class="btn secondary">Tutup Riwayat</button>
+              </div>
+          </div>
+          <div class="card">
+            <div>
+              <label>Lihat Data Bulan</label>
+              <input id="mitraMonth" type="month" class="full-input">
+            </div>
+            <div style="margin-top: 10px;">
+              <button id="btnCariMitra" class="btn full">Tampilkan</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>Daftar Mitra & Transaksi Bulan Ini</h4>
+            <label>Cari Mitra</label>
+            <input id="mitraSearchInput" type="text" placeholder="Ketik nama mitra">
+            <div class="table-container">
+              <table>
+                <thead><tr><th>Nama</th><th>Alamat</th><th>No HP</th><th>TRX</th><th>Target</th></tr></thead>
+                <tbody id="mitraListBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="ongkirTab" class="tabContent hidden">
+          <h3>Cek Ongkir</h3>
+          <div class="grid">
+            <div>
+              <label>Asal (opsional)</label>
+              <select id="asalSelect"></select>
+              <input id="asalInput" type="text" placeholder="Ketik lokasi asal… (opsional)">
+              <div class="suggest" id="asalSuggest"></div>
+            </div>
+            <div>
+              <label>Tujuan</label>
+              <select id="tujuanSelect"></select>
+              <input id="tujuanInput" type="text" placeholder="Ketik lokasi tujuan…">
+              <div class="suggest" id="tujuanSuggest"></div>
+            </div>
+          </div>
+
+          <div class="btnbar">
+            <button id="cekBtn" class="btn primary">Cek Ongkir</button>
+            <button id="bersihkanBtn" class="btn secondary">Bersihkan</button>
+          </div>
+
+          <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="small">Isi salah satu = ongkir normal</span>
+            <span class="small">Isi dua-duanya = (Asal + Tujuan) − 6.000</span>
+          </div>
+
+          <div class="results" id="results">
+            <div class="card">
+              <h4>Ongkir Normal</h4>
+              <div class="harga" id="normalHarga">–</div>
+              <div class="small" id="normalKeterangan">—</div>
+            </div>
+            <div class="card">
+              <h4>Ongkir Rute</h4>
+              <div class="harga" id="ruteHarga">–</div>
+              <div class="small" id="ruteKeterangan">—</div>
+              <div class="small" id="ruteFormula" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+        <div id="sopTab" class="tabContent hidden">
+            <h3>Standard Operating Procedure Sahabatku</h3>
+            <div class="card" style="text-align: center; padding: 20px;">
+                <p style="margin-bottom: 20px;">Semua dokumen SOP kini diakses melalui halaman terpusat. Klik tombol di bawah untuk membukanya di jendela baru.</p>
+                
+                <a href="https://sites.google.com/view/websitekhususkurir/dokumen-sahabatku" target="_blank" 
+                   class="sop-item" 
+                   style="display: flex; margin: 20px auto; max-width: 400px; padding: 25px; align-items: center; justify-content: center; text-decoration: none;">
+                    
+                    <span style="background-color: #f6ffed; color: #52c41a; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; display: flex; justify-content: center; align-items: center;">
+                        <span style="font-size: 20px;">🌐</span>
+                    </span>
+                    
+                    <div style="text-align: left; flex-grow: 0;">
+                        <strong style="font-size: 1.1rem; display: block; color: var(--text-primary);">Akses Pusat Dokumen SOP</strong>
+                        <small style="display: block; color: var(--text-secondary);">Buka Google Sites (14+ Panduan Kerja)</small>
+                    </div>
+                </a>
+        
+                <p style="margin-top: 10px; color: var(--text-secondary);"><small>Ini adalah cara tercepat dan teraman untuk mengakses SOP.</small></p>
+            </div>
+        </div>
+        <div id="pengaturanTab" class="tabContent hidden">
+          <h3>Pengaturan Akun</h3>
+          <p class="small" style="margin-top: -8px; margin-bottom: 12px;">Ubah username dan password Anda. Username baru akan menjadi nama kurir baru Anda di sistem.</p>
+          <div class="card">
+            <div class="stack">
+              <div>
+                <label>Username Baru</label>
+                <input id="newUsername" type="text" placeholder="Masukkan username baru">
+              </div>
+              <div>
+                <label>Password Baru</label>
+                <input id="newPassword" type="password" placeholder="Masukkan password baru">
+              </div>
+              <div>
+                <label>Konfirmasi Password Baru</label>
+                <input id="confirmPassword" type="password" placeholder="Ketik ulang password baru">
+              </div>
+              <div class="btnbar">
+                <button id="btnUpdateProfile" class="btn full">Simpan Perubahan</button>
+              </div>
+            </div>
+          </div>
+          <p id="profileUpdateMsg" class="small" style="color: #2ecc71; margin-top: 8px;"></p>
+        </div>
+      </div>
+      <div id="notificationModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h3>Notifikasi</h3>
+          <ul id="notificationList" class="notification-list"></ul>
+          <p id="noNotifMsg" class="small hidden" style="text-align: center;">Tidak ada notifikasi.</p>
+        </div>
+      </div>
+      <div id="notaPhotoModal" class="modal">
+        <div class="modal-content" id="notaPhotoModalContent">
+          <span class="close" id="closeNotaPhotoModal">&times;</span>
+          <h3 style="margin-bottom:10px;">Preview Nota</h3>
+          <div id="notaPhotoPreviewContainer">
+            <img id="notaCanvasPreview" alt="Nota Preview">
+          </div>
+          <div class="btnbar" style="justify-content:center;margin-top:15px">
+            <button id="savePhotoBtn" class="btn full secondary">Simpan Foto</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="notaTextModal" class="modal">
+        <div class="modal-content" id="notaTextModalContent">
+          <span class="close" id="closeNotaTextModal">&times;</span>
+          <h3 style="margin-bottom: 10px;">Preview Nota</h3>
+          <div id="notaModalText" class="nota-box"></div>
+          <div class="btnbar" style="justify-content:center;margin-top:15px">
+              <button id="savePhotoFromModalBtn" class="btn full secondary">Simpan Foto</button>
+          </div>
+        </div>
+    </div>
+    <!-- Modal Cek Ongkir dari Tab Nota -->
+    <div id="cekOngkirNotaModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeCekOngkirNota">&times;</span>
+        <h3>Cek Ongkir Nota</h3>
+        <div class="grid">
+          <div class="input-wrap">
+            <label>Asal (opsional)</label>
+            <select id="asalNotaSelect"></select>
+            <input id="asalNotaInput" type="text" placeholder="Ketik asal… (opsional)">
+            <div class="suggest" id="asalNotaSuggest"></div>
+          </div>
+          <div class="input-wrap">
+            <label>Tujuan</label>
+            <select id="tujuanNotaSelect"></select>
+            <input id="tujuanNotaInput" type="text" placeholder="Ketik tujuan…">
+            <div class="suggest" id="tujuanNotaSuggest"></div>
+          </div>
+        </div>
+    
+        <div class="btnbar">
+          <button id="cekOngkirNotaBtn" class="btn primary">Hitung</button>
+        </div>
+        <div style="margin-top:12px;">
+          <div id="hasilOngkirNota" class="harga">–</div>
+          <div id="keteranganOngkirNota" class="small">—</div>
+        </div>
+      </div>
+    </div>
+
+
+
+<audio id="notificationSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+  import { getDatabase, ref, set, get, onValue, update, remove, child, push } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
+    authDomain: "sahabatkuu-bisa.firebaseapp.com",
+    databaseURL: "https://sahabatkuu-bisa-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sahabatkuu-bisa",
+    storageBucket: "sahabatkuu-bisa.firebasestorage.app",
+    messagingSenderId: "315555564115",
+    appId: "1:315555564115:web:56f46dbceb8c154589d4a6",
+    measurementId: "G-PFGYL96VPS"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try {
+    getAnalytics(app);
+  } catch(e) {}
+
+  const db = getDatabase(app);
+  const sampleUsers = {};
+  let currentUser = null;
+  let lastNoNota = 0;
+  let selectedMitraId = ''; 
+  let notaCounterLoaded = false;
+  let mitraReminderInterval;
+  
+  const el = (id)=>document.getElementById(id);
+  const qs = (sel)=>document.querySelector(sel);
+  const qsa = (sel)=>Array.from(document.querySelectorAll(sel));
+
+  function setActiveTab(id){
+    qsa('nav#tabNav button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.tab===id);
+    });
+    qsa('.tabContent').forEach(t=> t.classList.add('hidden'));
+    el(id).classList.remove('hidden');
+    if(id==='riwayatTab') refreshNotaHistory();
+    if(id==='pengaturanTab') el('newUsername').value = currentUser;
+    if(id==='laporanRekapTab') updateDailyReport();
+    if(id==='mitraTab') loadMitraData();
+  }
+  
+  el('btnLogin').addEventListener('click', doLogin);
+  el('btnLogout').addEventListener('click', ()=>{
+    localStorage.removeItem('currentUser');
+    location.reload();
+  });
+  qsa('nav#tabNav button').forEach(b=> b.addEventListener('click', ()=> setActiveTab(b.dataset.tab)));
+
+  el('btnUpdateProfile').addEventListener('click', async () => {
+    const newPassword = el('newPassword').value.trim();
+    const confirmPassword = el('confirmPassword').value.trim();
+    const msg = el('profileUpdateMsg');
+    msg.innerText = '';
+    msg.style.color = '#2ecc71';
+    
+    if (!newPassword || !confirmPassword) {
+      msg.innerText = 'Semua field harus diisi.';
+      msg.style.color = '#c0392b';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      msg.innerText = 'Password baru tidak cocok.';
+      msg.style.color = '#c0392b';
+      return;
+    }
+
+    try {
+      const updates = {};
+      updates['/kurir/' + currentUser + '/password'] = newPassword;
+      await update(ref(db), updates);
+
+      alert('Password berhasil diperbarui!');
+      el('newPassword').value = '';
+      el('confirmPassword').value = '';
+      msg.innerText = '';
+    } catch (error) {
+      console.error("Error updating password:", error);
+      alert('Gagal memperbarui password: ' + error.message);
+      msg.innerText = '';
+    }
+  });
+
+  async function doLogin(){
+    const u = el('loginUser').value.trim();
+    const p = el('loginPass').value.trim();
+    
+    if(u && sampleUsers[u]===p){
+      return loginSuccess(u);
+    }
+
+    try {
+      const snap = await get(ref(db, 'kurir/' + u));
+      if(snap.exists()){
+        const data = snap.val();
+        if(!data.enabled){
+          el('loginMsg').innerText = 'Akun ini dinonaktifkan!';
+          return;
+        }
+        if(data.password !== p){
+          el('loginMsg').innerText = 'Password salah!';
+          return;
+        }
+        return loginSuccess(data.username);
+      } else {
+        el('loginMsg').innerText = 'User tidak ditemukan di Firebase!';
+      }
+    } catch(err){
+      console.error("Firebase error:", err);
+      el('loginMsg').innerText = 'Gagal konek Firebase!';
+    }
+  }
+
+  async function loginSuccess(username){
+    currentUser = username;
+    localStorage.setItem('currentUser', username);
+    el('loginCard').classList.add('hidden');
+    el('app').classList.remove('hidden');
+    el('btnLogout').classList.remove('hidden');
+    el('curUser').innerText = currentUser;
+    el('kurirName').value = currentUser;
+    const currentMonth = getCurrentMonthString();
+    el('rekapMonth').value = currentMonth;
+    el('mitraMonth').value = currentMonth; 
+    const currentDate = getCurrentDateString();
+    el('riwayatDate').value = currentDate;
+    setActiveTab('notaTab');
+    await ensureCounter();
+    updateNextNotaLabel();
+    refreshNotaHistory();
+    checkAndDisplayNotifications();
+    startNotificationListener();
+    startMitraReminder();
+  }
+
+  function getCurrentMonthString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    // getMonth() adalah 0-indexed (Januari=0), jadi kita tambahkan 1
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+  // Fungsi untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  function getCurrentDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    // getMonth() adalah 0-indexed, jadi kita tambahkan 1
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // Format YYYY-MM-DD
+  }
+
+  // ============== Notifikasi Section =================
+  const notificationSound = el('notificationSound');
+  const notificationModal = el('notificationModal');
+  const notificationListEl = el('notificationList');
+  const noNotifMsgEl = el('noNotifMsg');
+  const modalCloseBtn = qs('.modal .close');
+
+  async function sendNotification(message) {
+    if (!currentUser) return;
+    try {
+        const newNotifKey = push(ref(db, `messages/${currentUser}`)).key;
+        await set(ref(db, `messages/${currentUser}/${newNotifKey}`), {
+            message: message,
+            read: false,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Failed to send notification:", error);
+    }
+  }
+  
+  function startNotificationListener() {
+    const notificationRef = ref(db, `messages/${currentUser}`);
+    onValue(notificationRef, (snapshot) => {
+      let hasNewNotification = false;
+      if (snapshot.exists()) {
+        const notifications = snapshot.val();
+        for (const key in notifications) {
+          if (notifications[key] && !notifications[key].read) {
+            hasNewNotification = true;
+            break;
+          }
+        }
+      }
+      if (hasNewNotification) {
+        el('notificationBadge').classList.remove('hidden');
+        notificationSound.play().catch(e => console.warn("Audio play failed:", e));
+      } else {
+        el('notificationBadge').classList.add('hidden');
+      }
+    });
+  }
+
+  async function checkAndDisplayNotifications() {
+    if (!currentUser) return;
+    try {
+      const notificationRef = ref(db, `messages/${currentUser}`);
+      const snapshot = await get(notificationRef);
+      if (snapshot.exists()) {
+        const allNotifications = snapshot.val();
+        const unreadNotifications = Object.keys(allNotifications)
+            .filter(key => !allNotifications[key].read)
+            .map(key => ({ key, ...allNotifications[key] }));
+        if (unreadNotifications.length > 0) {
+          displayModalNotifications(unreadNotifications);
+          const updates = {};
+          unreadNotifications.forEach(notif => {
+            updates[`/messages/${currentUser}/${notif.key}/read`] = true;
+          });
+          await update(ref(db), updates);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to check notifications:", error);
+    }
+  }
+
+  function displayModalNotifications(notifications) {
+    notificationListEl.innerHTML = '';
+    if (notifications.length > 0) {
+      notifications.forEach(notif => {
+        const li = document.createElement('li');
+        li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+        li.innerHTML = `<strong>Pesan Baru:</strong><br>${notif.message || 'Tidak ada konten'}`;
+        notificationListEl.appendChild(li);
+      });
+      noNotifMsgEl.classList.add('hidden');
+    } else {
+      noNotifMsgEl.classList.remove('hidden');
+    }
+    notificationModal.style.display = 'block';
+  }
+
+  el('notificationBtn').addEventListener('click', () => {
+    notificationListEl.innerHTML = '';
+    notificationModal.style.display = 'block';
+    loadAllNotifications();
+  });
+  modalCloseBtn.addEventListener('click', () => {
+    notificationModal.style.display = 'none';
+  });
+  window.addEventListener('click', (event) => {
+    if (event.target == notificationModal) {
+      notificationModal.style.display = 'none';
+    }
+  });
 
   async function loadAllNotifications() {
       notificationListEl.innerHTML = '';
@@ -3522,6 +7027,10 @@ if (tabOngkirMenu) {
   }, true); // 'true' memastikan ini dijalankan sebelum fungsi asli
   tabOngkirMenu.style.filter = "grayscale(1)";
 }
+lucide.createIcons();
+</script>
+</body>
+</html>
 lucide.createIcons();
 </script>
 </body>
