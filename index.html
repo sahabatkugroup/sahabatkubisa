@@ -3502,46 +3502,6 @@ function setupSuggestion(inputId, suggestId) {
 // Aktifkan suggestion untuk asal & tujuan
 setupSuggestion('asalNotaInput', 'asalNotaSuggest');
 setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
-
-// --- KODE LOCK MAINTENANCE (TARUH DI PALING BAWAH) ---
-
-// 1. Mengunci tombol di dalam nota
-
-const btnCekNota = document.getElementById('btnCekOngkirNota');
-
-if (btnCekNota) {
-
-  btnCekNota.onclick = (e) => {
-
-    e.stopImmediatePropagation();
-
-    alert("Maaf, fitur Cek Ongkir sedang dalam perbaikan server.");
-
-  };
-
-  btnCekNota.style.opacity = "0.5";
-
-}
-
-
-
-// 2. Mengunci Tab menu utama "Cek Ongkir"
-
-const tabOngkirMenu = document.querySelector('[data-tab="ongkirTab"]');
-
-if (tabOngkirMenu) {
-
-  tabOngkirMenu.addEventListener('click', (e) => {
-
-    e.stopImmediatePropagation(); // Menghentikan fungsi pindah tab asli
-
-    alert("Fitur ini sedang tidak dapat diakses sementara karena perbaikan server.");
-
-  }, true); // 'true' memastikan ini dijalankan sebelum fungsi asli
-
-  tabOngkirMenu.style.filter = "grayscale(1)";
-
-}
 lucide.createIcons();
 </script>
 </body>
