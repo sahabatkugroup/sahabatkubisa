@@ -408,14 +408,32 @@
     }
     async function submitData() {
         const n = document.getElementById('selKurir').value;
-        const s = document.getElementById('selStatus').value; // Ambil nilai MASUK/PULANG
+        const s = document.getElementById('selStatus').value;
         
         if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
     
+        // --- LOGIKA JEDA 1 JAM (MULAI) ---
+        const SEKARANG = new Date().getTime();
+        const JEDA_MS = 60 * 60 * 1000; // 1 Jam dalam milidetik
+    
+        if (s === "PULANG") {
+            const waktuMasukTerakhir = localStorage.getItem('last_absen_masuk_' + n);
+            
+            if (waktuMasukTerakhir) {
+                const selisih = SEKARANG - parseInt(waktuMasukTerakhir);
+                if (selisih < JEDA_MS) {
+                    const sisaMenit = Math.ceil((JEDA_MS - selisih) / (60 * 1000));
+                    return alert("Gagal! Anda baru bisa absen PULANG " + sisaMenit + " menit lagi (Jeda minimal 1 jam dari absen masuk).");
+                }
+            } else {
+                // Opsional: Jika Anda ingin mewajibkan absen masuk dulu sebelum boleh pulang
+                return alert("Anda belum melakukan absen MASUK hari ini melalui perangkat ini.");
+            }
+        }
+        // --- LOGIKA JEDA 1 JAM (SELESAI) ---
+    
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
-        
-        // Update teks loading agar dinamis
         loadText.innerText = "MENGIRIM " + s + "...";
         loader.style.display = 'flex';
     
@@ -427,14 +445,17 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({
                     nama: n, 
-                    status: s, // TAMBAHKAN INI agar terkirim ke Google Sheets
+                    status: s,
                     foto: document.getElementById('p').src
                 })
             });
     
-            loader.style.display = 'none';
+            // SIMPAN WAKTU MASUK jika statusnya MASUK
+            if (s === "MASUK") {
+                localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
+            }
     
-            // Tampilkan status di layar sukses
+            loader.style.display = 'none';
             document.getElementById('res-nama').innerText = n + " (" + s + ")";
             document.getElementById('res-waktu').innerText = waktuAbsen;
             document.getElementById('success-view').style.display = 'flex';
