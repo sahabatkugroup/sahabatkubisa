@@ -227,6 +227,14 @@
         </div>
             <div id="ui-2" style="display:none;">
                 <div class="select-wrapper">
+                    <i class="fa-solid fa-clock"></i>
+                    <select id="selStatus">
+                        <option value="MASUK">ABSEN MASUK</option>
+                        <option value="PULANG">ABSEN PULANG</option>
+                    </select>
+                </div>
+            
+                <div class="select-wrapper">
                     <i class="fa-solid fa-user-circle"></i>
                     <select id="selKurir" onchange="saveName()">
                         <option value="">Pilih Nama Kurir...</option>
@@ -244,7 +252,7 @@
 <canvas id="c"></canvas>
 
 <script>
-    const URL_APPS = "https://script.google.com/macros/s/AKfycbyy9l5th0v74ZnwD4ZWWQkxXF7KpiQR-w9nht8p2j8m44xFT3HDfzjYOUsNGI1rO7yvmA/exec";
+    const URL_APPS = "https://script.google.com/macros/s/AKfycbwntZzvURlu7mxm0UyE_HDKyBTyLruRCO2YzzNr_A3kr7vkUpMLp_7O60o1ElTRMfI4ZQ/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
     
     let isGpsValid = false;
@@ -400,42 +408,40 @@
     }
     async function submitData() {
         const n = document.getElementById('selKurir').value;
+        const s = document.getElementById('selStatus').value; // Ambil nilai MASUK/PULANG
+        
         if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
     
-        // 1. Tampilkan Loading Berputar
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
-        loadText.innerText = "SEDANG MENGIRIM...";
+        
+        // Update teks loading agar dinamis
+        loadText.innerText = "MENGIRIM " + s + "...";
         loader.style.display = 'flex';
     
-        const waktuAbsen = clock(); // Ambil waktu saat ini
+        const waktuAbsen = clock();
     
         try {
-            // 2. Kirim data ke Google Sheets
             await fetch(URL_APPS, {
                 method: 'POST', 
                 mode: 'no-cors', 
                 body: JSON.stringify({
                     nama: n, 
+                    status: s, // TAMBAHKAN INI agar terkirim ke Google Sheets
                     foto: document.getElementById('p').src
                 })
             });
     
-            // 3. Sembunyikan Loading
             loader.style.display = 'none';
     
-            // 4. Isi data ke layar Sukses
-            document.getElementById('res-nama').innerText = n;
+            // Tampilkan status di layar sukses
+            document.getElementById('res-nama').innerText = n + " (" + s + ")";
             document.getElementById('res-waktu').innerText = waktuAbsen;
-    
-            // 5. Tampilkan Layar Berhasil (Success View)
             document.getElementById('success-view').style.display = 'flex';
-            
-            console.log("Absensi Berhasil Terkirim!");
     
         } catch(e) {
             loader.style.display = 'none';
-            alert("Gagal mengirim data. Cek koneksi internet Anda!");
+            alert("Gagal mengirim data!");
         }
     }
     
