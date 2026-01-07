@@ -43,19 +43,27 @@ html, body {
   margin: 24px auto;
   padding: 16px 20px;
 }
-
 .card {
   background: var(--card-bg);
-  border-radius: 20px;
-  padding: 24px 28px;
-  box-shadow: 0 12px 30px var(--shadow-light);
-  margin-bottom: 20px;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 10px 30px var(--shadow-light);
   border: 1px solid var(--border);
-  transition: box-shadow 0.3s ease;
+  
+  /* TAMBAHKAN INI */
+  margin-bottom: 20px; /* Jarak antar card sebesar 20px */
+  display: block;      /* Memastikan card mengambil ruang baris baru */
+}
+
+/* Opsional: Menghilangkan jarak pada card terakhir agar tidak ada ruang kosong berlebih di bawah */
+.card:last-child {
+  margin-bottom: 0;
 }
 
 .card:hover {
   box-shadow: 0 16px 40px var(--shadow-strong);
+  transform: translateY(-2px); /* Tambahan sedikit efek angkat saat hover agar lebih premium */
+  transition: all 0.3s ease;    /* Agar pergerakan smooth */
 }
 
 h2, h3 {
@@ -105,36 +113,35 @@ select:focus {
   box-shadow: 0 0 8px var(--sky-strong);
   background: #f0f8ff;
 }
-/* Posisi pojok kanan atas */
 #btnLogout {
-  position: fixed;       /* selalu di atas */
-  top: 20px;
-  right: 20px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
-  border-radius: 20px;
+  position: fixed;   /* Mengunci posisi terhadap layar (bukan terhadap card) */
+  top: 15px;         /* Jarak dari atas layar */
+  right: 15px;       /* Jarak dari kanan layar */
+  z-index: 9999;     /* Lapisan paling tinggi, tidak akan tertutup apa pun */
+  
+  /* Desain agar tetap keren */
+  padding: 8px 15px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 50px;
   border: none;
-  cursor: pointer;
   background: linear-gradient(45deg, #ff4b2b, #ff416c);
   color: white;
-  font-weight: bold;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(255, 65, 108, 0.4);
+  cursor: pointer;
+  transition: opacity 0.3s; /* Hanya animasi transparan saat hilang/muncul */
 }
 
+/* Hilangkan animasi scale/rotate agar tidak terasa 'geser' saat ditekan */
+#btnLogout:active {
+  opacity: 0.8;
+}
 /* Hover efek animasi keren */
 #btnLogout:hover {
   transform: scale(1.1) rotate(-3deg);
   box-shadow: 0 6px 25px rgba(255,65,108,0.6);
   background: linear-gradient(45deg, #ff416c, #ff4b2b);
   text-shadow: 0 0 5px #fff;
-}
-
-/* Saat ditekan */
-#btnLogout:active {
-  transform: scale(0.95) rotate(0deg);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
 }
 
 /* --- Notifikasi Style --- */
@@ -247,35 +254,80 @@ select:focus {
   flex-wrap: wrap;
   gap: 12px;
 }
-
+/* Navigasi Tab Modern */
 nav.tab {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 25px;
+  padding: 5px 5px 15px 5px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
+nav.tab::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
 
+/* Tombol Tab dengan Icon Berwarna & Animasi */
 nav.tab button {
-  padding: 14px 0;
-  border-radius: 16px;
-  border: 1.5px solid var(--border);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  min-width: 85px;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.75rem;
   cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Icon Modern */
+nav.tab button i {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.2px;
+  transition: transform 0.3s ease;
+}
+
+/* Warna Khusus Icon Saat Aktif (Modern Look) */
 nav.tab button.active {
-  background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 8px 24px var(--shadow-light);
+  background: white;
+  color: #00CAFF;
+  border-color: #00CAFF;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px var(--shadow-strong);
 }
 
+nav.tab button.active i {
+  transform: scale(1.2) rotate(-5deg);
+  color: #00CAFF; /* Icon jadi berwarna biru terang */
+}
+
+/* Efek Klik Animasi */
+nav.tab button:active {
+  transform: scale(0.95);
+}
+@keyframes smoothAppear {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px) scale(0.98); 
+    filter: blur(10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
 .row {
   display: flex;
   gap: 16px;
@@ -596,9 +648,6 @@ select, input {
 
 /* Mobile tweaks */
 @media (max-width: 900px) {
-  nav.tab {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .grid-3 {
     grid-template-columns: 1fr;
   }
@@ -687,19 +736,6 @@ select, input {
   th, td {
     padding: 10px 8px;
   }
-
-  /* Nav tab jadi 2 kolom */
-  nav.tab {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  nav.tab button {
-    padding: 10px 0;
-    font-size: 0.9rem;
-    border-radius: 14px;
-  }
-
   /* Tombol utama dan sekunder melebar penuh */
   .btn.full {
     width: 100%;
@@ -1219,18 +1255,34 @@ select, input {
 
       </div>
     </div>
-
       <div class="card">
         <nav class="tab" id="tabNav">
-          <button data-tab="notaTab" class="active" aria-label="Tab Nota">📝 Nota</button>
-          <button data-tab="riwayatTab" aria-label="Tab Riwayat">📋 Riwayat</button>
-          <button data-tab="laporanRekapTab" aria-label="Tab Rekap">📊 Rekap</button>
-          <button data-tab="ongkirTab" aria-label="Tab Cek Ongkir">📍 Cek Ongkir</button>
-          <button onclick="window.location.href='absensi-kurir-sahabatku.html'" aria-label="Absensi Kurir">🗓 Jadwal OFF</button>
-          <button data-tab="mitraTab" aria-label="Tab Data Mitra">🤝 Data Mitra</button>
-          <button data-tab="sopTab" aria-label="Tab SOP">📄 SOP </button>
-          <button data-tab="pengaturanTab" aria-label="Tab Pengaturan">⚙️ Pengaturan</button>
+          <button data-tab="notaTab" class="active">
+            <i data-lucide="layers-3"></i> Nota
+          </button>
+          <button data-tab="riwayatTab">
+            <i data-lucide="timer"></i> Riwayat
+          </button>
+          <button data-tab="laporanRekapTab">
+            <i data-lucide="activity"></i> Rekap
+          </button>
+          <button data-tab="ongkirTab">
+            <i data-lucide="map-pinned"></i> Cek Ongkir
+          </button>
+          <button onclick="window.location.href='absensi-kurir-sahabatku.html'">
+            <i data-lucide="calendar-range"></i> Jadwal OFF
+          </button>
+          <button data-tab="mitraTab">
+            <i data-lucide="contact-2"></i> Data Mitra
+          </button>
+          <button data-tab="sopTab">
+            <i data-lucide="sparkles"></i> SOP
+          </button>
+          <button data-tab="pengaturanTab">
+            <i data-lucide="gauge"></i> Pengaturan
+          </button>
         </nav>
+        
         <div id="notaTab" class="tabContent active">
           <h3>Buat / Edit Nota</h3>
           <div class="nota-card">
@@ -1581,6 +1633,7 @@ select, input {
   const db = getDatabase(app);
   const sampleUsers = {};
   let currentUser = null;
+  let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
   let lastNoNota = 0;
   let selectedMitraId = ''; 
   let notaCounterLoaded = false;
@@ -1808,40 +1861,49 @@ select, input {
       notificationModal.style.display = 'none';
     }
   });
-
   async function loadAllNotifications() {
-      notificationListEl.innerHTML = '';
-      noNotifMsgEl.classList.add('hidden');
-      
-      if (!currentUser) return;
-
-      try {
-        const notificationRef = ref(db, `messages/${currentUser}`);
-        const snapshot = await get(notificationRef);
-
-        if (snapshot.exists()) {
-          const allNotifications = snapshot.val();
-          const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
-            return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
+    notificationListEl.innerHTML = '';
+    noNotifMsgEl.classList.add('hidden');
+    
+    if (!currentUser) return;
+  
+    try {
+      const notificationRef = ref(db, `messages/${currentUser}`);
+      const snapshot = await get(notificationRef);
+  
+      if (snapshot.exists()) {
+        const allNotifications = snapshot.val();
+        // Urutkan dari yang terbaru
+        const sortedKeys = Object.keys(allNotifications).sort((a, b) => {
+          return allNotifications[b].timestamp.localeCompare(allNotifications[a].timestamp);
+        });
+        
+        // AMBIL HANYA 1 YANG TERAKHIR (.slice(0, 1))
+        const latestKey = sortedKeys.slice(0, 1);
+        
+        if (latestKey.length > 0) {
+          latestKey.forEach(key => {
+              const notif = allNotifications[key];
+              const li = document.createElement('li');
+              li.className = `notification-item ${notif.read ? '' : 'unread'}`;
+              li.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                  <strong>Pesan Terbaru</strong>
+                  <small style="color:#888; font-size:0.7rem;">${new Date(notif.timestamp).toLocaleString()}</small>
+                </div>
+                <div>${notif.message || 'Tidak ada konten'}</div>
+              `;
+              notificationListEl.appendChild(li);
           });
-          
-          if (sortedKeys.length > 0) {
-            sortedKeys.forEach(key => {
-                const notif = allNotifications[key];
-                const li = document.createElement('li');
-                li.className = `notification-item ${notif.read ? '' : 'unread'}`;
-                li.innerHTML = `<strong>Pesan:</strong><br>${notif.message || 'Tidak ada konten'}`;
-                notificationListEl.appendChild(li);
-            });
-          } else {
-              noNotifMsgEl.classList.remove('hidden');
-          }
         } else {
-          noNotifMsgEl.classList.remove('hidden');
+            noNotifMsgEl.classList.remove('hidden');
         }
-      } catch (error) {
-          console.error("Failed to load notifications:", error);
+      } else {
+        noNotifMsgEl.classList.remove('hidden');
       }
+    } catch (error) {
+        console.error("Failed to load notifications:", error);
+    }
   }
 // Fungsi wrapper untuk menjalankan pengecekan saat login dan setiap 3 jam
 function startMitraReminder() {
@@ -1913,7 +1975,6 @@ async function checkDailyTransactionStatusAndNotify() {
   const formatRp = n => "Rp " + (n || 0).toLocaleString("id-ID");
   let ongkirData = [];
   let todayNotes = [];
-  let allNotes = []; // Tambahkan ini untuk menyimpan semua nota
   // --- CEK ONGKIR DARI TAB NOTA ---
   const modalOngkirNota = el('cekOngkirNotaModal');
   const btnOpenOngkirNota = el('btnCekOngkirNota');
@@ -2964,71 +3025,71 @@ function refreshNotaHistory(filterDate = null){
         });
     }
 }
-// Tambahkan di akhir fungsi refreshNotaHistory(), setelah elemen tombol "Lihat" dibuat
-document.querySelectorAll('.btnLihatNota').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const notaId = btn.dataset.id;
-    const notaRef = ref(db, `nota/${currentUser}/${notaId}`);
-    const snap = await get(notaRef);
-
-    if (snap.exists()) {
-      const notaData = snap.val();
-
-      // Gunakan fungsi buildNotaPreviewText() kalau sudah ada,
-      // atau buat sederhana:
-      const notaText = `
-No Nota: ${notaData.noNota}
-Kurir: ${notaData.kurir}
-Tanggal: ${notaData.tanggal}
-Customer: ${notaData.customer || '-'}
-Ongkir: Rp ${notaData.ongkir?.toLocaleString('id-ID') || 0}
-Total: Rp ${notaData.total?.toLocaleString('id-ID') || 0}
-
-Daftar Item:
-${(notaData.items || [])
-  .map(i => `- ${i.nama} (${i.qty}x) @Rp${i.harga.toLocaleString('id-ID')}`)
-  .join('\n')}
-      `.trim();
-
-      // tampilkan modal sama seperti di tab Nota
-      el('notaModalText').innerText = notaText;
-      el('notaTextModal').style.display = 'block';
-    }
-  });
-});
-
-// Tombol tutup modal tetap sama
-el('closeNotaTextModal').addEventListener('click', () => {
-  el('notaTextModal').style.display = 'none';
-});
-
-function displayNotes(notes, listEl, filterDate = null) {
-    if (notes.length === 0) {
-        if (filterDate) {
-            listEl.innerHTML = `<p class="small">Tidak ada nota pada tanggal ini.</p>`;
-        } else {
-            listEl.innerHTML = '<p class="small">Belum ada nota.</p>';
-        }
-        return;
-    }
-    
-    let html = '<div class="list-v">';
-    notes.forEach(n => {
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
-            <div style="flex:1">
-                <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
-                <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}</div>
-                <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
-            </div>
-            <div class="btnbar">
-                <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
-                <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
-            </div>
-        </div>`;
+  // Tambahkan di akhir fungsi refreshNotaHistory(), setelah elemen tombol "Lihat" dibuat
+  document.querySelectorAll('.btnLihatNota').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const notaId = btn.dataset.id;
+      const notaRef = ref(db, `nota/${currentUser}/${notaId}`);
+      const snap = await get(notaRef);
+  
+      if (snap.exists()) {
+        const notaData = snap.val();
+  
+        // Gunakan fungsi buildNotaPreviewText() kalau sudah ada,
+        // atau buat sederhana:
+        const notaText = `
+  No Nota: ${notaData.noNota}
+  Kurir: ${notaData.kurir}
+  Tanggal: ${notaData.tanggal}
+  Customer: ${notaData.customer || '-'}
+  Ongkir: Rp ${notaData.ongkir?.toLocaleString('id-ID') || 0}
+  Total: Rp ${notaData.total?.toLocaleString('id-ID') || 0}
+  
+  Daftar Item:
+  ${(notaData.items || [])
+    .map(i => `- ${i.nama} (${i.qty}x) @Rp${i.harga.toLocaleString('id-ID')}`)
+    .join('\n')}
+        `.trim();
+  
+        // tampilkan modal sama seperti di tab Nota
+        el('notaModalText').innerText = notaText;
+        el('notaTextModal').style.display = 'block';
+      }
     });
-    html += '</div>';
-    listEl.innerHTML = html;
-}
+  });
+  
+  // Tombol tutup modal tetap sama
+  el('closeNotaTextModal').addEventListener('click', () => {
+    el('notaTextModal').style.display = 'none';
+  });
+  
+  function displayNotes(notes, listEl, filterDate = null) {
+      if (notes.length === 0) {
+          if (filterDate) {
+              listEl.innerHTML = `<p class="small">Tidak ada nota pada tanggal ini.</p>`;
+          } else {
+              listEl.innerHTML = '<p class="small">Belum ada nota.</p>';
+          }
+          return;
+      }
+      
+      let html = '<div class="list-v">';
+      notes.forEach(n => {
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
+              <div style="flex:1">
+                  <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
+                  <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}</div>
+                  <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
+              </div>
+              <div class="btnbar">
+                  <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
+                  <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
+              </div>
+          </div>`;
+      });
+      html += '</div>';
+      listEl.innerHTML = html;
+  }
   
   const notaTextModal = el('notaTextModal');
   const notaModalText = el('notaModalText');
@@ -3498,6 +3559,17 @@ function setupSuggestion(inputId, suggestId) {
     if (!suggest.contains(e.target) && e.target !== input) suggest.classList.remove('show');
   });
 }
+function scrollToCenter(element) {
+  const container = document.getElementById('tabNav');
+  const scrollPos = element.offsetLeft - (container.offsetWidth / 2) + (element.offsetWidth / 2);
+  container.scrollTo({ left: scrollPos, behavior: 'smooth' });
+}
+
+document.querySelectorAll('nav.tab button').forEach(button => {
+  button.addEventListener('click', function() {
+    scrollToCenter(this);
+  });
+});
 
 // Aktifkan suggestion untuk asal & tujuan
 setupSuggestion('asalNotaInput', 'asalNotaSuggest');
