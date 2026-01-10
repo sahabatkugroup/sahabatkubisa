@@ -292,8 +292,12 @@
     
     async function init() {
         const jam = new Date().getHours();
-        if (jam < 2 || jam >= 21) {
-            document.getElementById('time-blocked').style.display = 'flex';
+        
+        // Aplikasi tidak bisa diakses sama sekali antara jam 02:00 pagi hingga 04:59 pagi
+        if (jam >= 2 && jam < 5) {
+            const blockView = document.getElementById('time-blocked');
+            blockView.querySelector('p').innerHTML = "Mohon Maaf, aplikasi absensi tidak aktif pada jam<br><strong>02:00 - 05:00 WIB</strong>";
+            blockView.style.display = 'flex';
             return;
         }
         
@@ -409,28 +413,41 @@
     async function submitData() {
         const n = document.getElementById('selKurir').value;
         const s = document.getElementById('selStatus').value;
+        const jam = new Date().getHours();
         
         if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
     
-        // --- LOGIKA JEDA 1 JAM (MULAI) ---
+        // --- LOGIKA VALIDASI JADWAL (MULAI) ---
+        if (s === "MASUK") {
+            // Cek Jadwal Masuk: 05:00 - 20:00
+            if (jam < 5 || jam >= 20) {
+                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 20:00 WIB.");
+            }
+        } else if (s === "PULANG") {
+            // Cek Jadwal Pulang: 14:00 - 02:00 (Termasuk jam 00 dan 01 dini hari)
+            const bolehPulang = (jam >= 14 || jam < 2);
+            if (!bolehPulang) {
+                return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 02:00 WIB.");
+            }
+        }
+        // --- LOGIKA VALIDASI JADWAL (SELESAI) ---
+    
+        // --- LOGIKA JEDA 1 JAM ---
         const SEKARANG = new Date().getTime();
-        const JEDA_MS = 60 * 60 * 1000; // 1 Jam dalam milidetik
+        const JEDA_MS = 60 * 60 * 1000; 
     
         if (s === "PULANG") {
             const waktuMasukTerakhir = localStorage.getItem('last_absen_masuk_' + n);
-            
             if (waktuMasukTerakhir) {
                 const selisih = SEKARANG - parseInt(waktuMasukTerakhir);
                 if (selisih < JEDA_MS) {
                     const sisaMenit = Math.ceil((JEDA_MS - selisih) / (60 * 1000));
-                    return alert("Gagal! Anda baru bisa absen PULANG " + sisaMenit + " menit lagi (Jeda minimal 1 jam dari absen masuk).");
+                    return alert("Gagal! Jeda minimal 1 jam dari absen masuk. Tunggu " + sisaMenit + " menit lagi.");
                 }
             } else {
-                // Opsional: Jika Anda ingin mewajibkan absen masuk dulu sebelum boleh pulang
                 return alert("Anda belum melakukan absen MASUK hari ini melalui perangkat ini.");
             }
         }
-        // --- LOGIKA JEDA 1 JAM (SELESAI) ---
     
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
@@ -450,7 +467,6 @@
                 })
             });
     
-            // SIMPAN WAKTU MASUK jika statusnya MASUK
             if (s === "MASUK") {
                 localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
             }
@@ -465,7 +481,6 @@
             alert("Gagal mengirim data!");
         }
     }
-    
     function getDist(lat1, lon1, lat2, lon2) {
         const R = 6371000, p = Math.PI/180;
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
