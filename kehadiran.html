@@ -417,38 +417,45 @@
         
         if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
     
-        // --- LOGIKA VALIDASI JADWAL (MULAI) ---
+        // --- LOGIKA VALIDASI JADWAL OPERASIONAL ---
         if (s === "MASUK") {
-            // Cek Jadwal Masuk: 05:00 - 20:00
             if (jam < 5 || jam >= 20) {
                 return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 20:00 WIB.");
             }
         } else if (s === "PULANG") {
-            // Cek Jadwal Pulang: 14:00 - 02:00 (Termasuk jam 00 dan 01 dini hari)
             const bolehPulang = (jam >= 14 || jam < 2);
             if (!bolehPulang) {
                 return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 02:00 WIB.");
             }
         }
-        // --- LOGIKA VALIDASI JADWAL (SELESAI) ---
     
-        // --- LOGIKA JEDA 1 JAM ---
+        // --- LOGIKA JEDA 3 JAM (DIPERBARUI) ---
         const SEKARANG = new Date().getTime();
-        const JEDA_MS = 60 * 60 * 1000; 
+        const JEDA_MS = 3 * 60 * 60 * 1000; // 3 Jam dalam milidetik
     
         if (s === "PULANG") {
             const waktuMasukTerakhir = localStorage.getItem('last_absen_masuk_' + n);
+            
             if (waktuMasukTerakhir) {
                 const selisih = SEKARANG - parseInt(waktuMasukTerakhir);
                 if (selisih < JEDA_MS) {
+                    // Menghitung sisa waktu dalam menit
                     const sisaMenit = Math.ceil((JEDA_MS - selisih) / (60 * 1000));
-                    return alert("Gagal! Jeda minimal 1 jam dari absen masuk. Tunggu " + sisaMenit + " menit lagi.");
+                    const sisaJam = Math.floor(sisaMenit / 60);
+                    const sisaMenitTampil = sisaMenit % 60;
+                    
+                    let pesan = `Gagal! Jeda minimal 3 jam dari absen masuk. \nSisa waktu: `;
+                    pesan += sisaJam > 0 ? `${sisaJam} jam ${sisaMenitTampil} menit.` : `${sisaMenitTampil} menit.`;
+                    
+                    return alert(pesan);
                 }
             } else {
                 return alert("Anda belum melakukan absen MASUK hari ini melalui perangkat ini.");
             }
         }
+        // --- AKHIR LOGIKA JEDA ---
     
+        // ... (sisa kode fetch POST dan success view tetap sama) ...
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
         loadText.innerText = "MENGIRIM " + s + "...";
