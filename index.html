@@ -1211,7 +1211,19 @@ select, input {
     .input-wrap {
       position: relative;
     }
-
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--sky);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -1603,6 +1615,10 @@ select, input {
           <div id="keteranganOngkirNota" class="small">—</div>
         </div>
       </div>
+    </div>
+    <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+      <div class="spinner"></div>
+      <p style="margin-top:15px; font-weight:bold; color:var(--accent);">Menyimpan Transaksi...</p>
     </div>
 
 
@@ -2256,40 +2272,47 @@ if(mitraSearchInput) {
         const mitraSelectEl = el('mitraSelect');
         const mitraId = mitraSelectEl.value;
         const trxToAdd = parseInt(el('trxMitraInput').value);
-        // Asumsi Anda sudah menambahkan input 'mitraMonth' di HTML dan mengisinya
         const selectedMonth = el('mitraMonth').value; 
-        
-        // Menggunakan currentUser sebagai ID Kurir
         const kurirId = currentUser; 
+        
+        // Ambil Loading Element
+        const loader = el('loadingOverlay');
     
         if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0 || !kurirId) {
             if (!kurirId) return alert('Error: ID Kurir tidak ditemukan. Mohon Login ulang.');
             return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
         }
-        
-        // Ambil nama mitra dari teks option yang dipilih (Tambahkan ini agar bisa ditampilkan di riwayat)
-        const mitraName = mitraSelectEl.options[mitraSelectEl.selectedIndex].text;
     
-        const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
-        const today = new Date().toISOString().slice(0, 10);
-        const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
+        // Tampilkan Loading
+        loader.style.display = 'flex';
     
         try {
-            const snap = await get(trxRef);
-            const currentTrx = snap.exists() ? snap.val().trx : 0;
+            const mitraName = mitraSelectEl.options[mitraSelectEl.selectedIndex].text;
             
-            // 1. Update total TRX bulanan (Menggunakan transaction untuk keandalan)
+            // LOGIKA WAKTU INDONESIA (WIB)
+            const now = new Date();
+            const wibTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)); // Tambah 7 Jam
+            const today = wibTime.toISOString().slice(0, 10); // Format YYYY-MM-DD
+            const timestampWIB = wibTime.getTime();
+    
+            const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
+            const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
+    
+            const snap = await get(trxRef);
+            const currentTrx = snap.exists() ? (snap.val().trx || 0) : 0;
+            
+            // 1. Update total TRX bulanan
             await set(trxRef, { trx: currentTrx + trxToAdd });
     
-            // 2. SIMPAN LOG DETAIL TRANSAKSI (Untuk riwayat Kurir & Admin)
+            // 2. SIMPAN LOG (Menggunakan Timestamp WIB)
             const logRef = push(ref(db, 'mitra_trx_log')); 
-            
             await set(logRef, {
                 kurirId: kurirId, 
                 mitraId: mitraId, 
-                mitraName: mitraName, // Tambahkan ini agar nama mitra bisa ditampilkan
+                mitraName: mitraName,
                 trxCount: trxToAdd, 
-                timestamp: Date.now(),
+                timestamp: timestampWIB,
+                tanggal: today,
                 bulanTujuan: selectedMonth
             });
     
@@ -2299,9 +2322,13 @@ if(mitraSearchInput) {
             alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
             el('trxMitraInput').value = '1';
             el('mitraSelect').value = '';
+            
         } catch (error) {
             console.error("Gagal menambahkan transaksi:", error);
             alert("Gagal menambahkan transaksi: " + error.message);
+        } finally {
+            // SEMBUNYIKAN LOADING (Berhasil atau Gagal tetap hilang)
+            loader.style.display = 'none';
         }
     }
     // --- Fungsi untuk Toggle/Tutup Riwayat Transaksi Mitra ---
@@ -2985,6 +3012,7 @@ loadOngkir();
 
     // tulis ke /nota/{user}/{noteId}
     await set(ref(db, `nota/${currentUser}/${noteId}`), noteObj);
+    
     alert(`Nota Tersimpan ✅ (No Nota ${data.noNota})`);
     refreshNotaHistory();
     updatePreviewFilename();
@@ -2992,39 +3020,43 @@ loadOngkir();
 
   /* ===================
      RIWAYAT & PELACAK (Realtime)
-  ====================*/
-function refreshNotaHistory(filterDate = null){
-    if(!currentUser) return;
-    const listEl = el('notaHistory'); 
-    listEl.innerHTML = 'Memuat...';
-
-    const notesRef = ref(db, `nota/${currentUser}`);
-    
-    // Gunakan get() untuk sekali ambil data saat ada filter tanggal
-    if (filterDate) {
-        get(notesRef).then(snap => {
-            const val = snap.val() || {};
-            const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-            const filteredNotes = allNotes.filter(n => n.createdAt.startsWith(filterDate));
-            displayNotes(filteredNotes, listEl, filterDate);
-        }).catch(error => {
-            console.error("Error fetching filtered notes:", error);
-            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
-        });
-    } else {
-        // Gunakan onValue() untuk load awal dan update realtime
-        onValue(notesRef, (snap) => {
-            const val = snap.val() || {};
-            allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-            displayNotes(allNotes, listEl);
-            todayNotes = allNotes.filter(n => n.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10));
-            updateDailyReport();
-        }, (error) => {
-            console.error("Error fetching all notes:", error);
-            listEl.innerHTML = '<p class="small" style="color:#c0392b">Gagal memuat riwayat. Cek koneksi internet Anda.</p>';
-        });
-    }
-}
+    ====================*/
+  function refreshNotaHistory(filterDate = null){
+      if(!currentUser) return;
+      const listEl = el('notaHistory'); 
+      listEl.innerHTML = 'Memuat...';
+  
+      const notesRef = ref(db, `nota/${currentUser}`);
+      
+      if (filterDate) {
+          // ... kode get(notesRef) Anda yang sudah ada tetap sama ...
+          get(notesRef).then(snap => {
+              const val = snap.val() || {};
+              const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+              const filteredNotes = allNotes.filter(n => n.createdAt.startsWith(filterDate));
+              displayNotes(filteredNotes, listEl, filterDate);
+          }).catch(error => { /* ... */ });
+      } else {
+          // PERUBAHAN DI SINI:
+          // Jika tidak ada filter, otomatis ambil tanggal hari ini
+          const today = new Date().toISOString().slice(0, 10);
+          
+          onValue(notesRef, (snap) => {
+              const val = snap.val() || {};
+              // Ambil semua data
+              const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+              
+              // FILTER: Hanya ambil yang hari ini saja untuk tampilan awal
+              const filteredToday = allNotes.filter(n => n.createdAt.startsWith(today));
+              
+              // Tampilkan hasil filter (bukan allNotes)
+              displayNotes(filteredToday, listEl, today);
+              
+              todayNotes = filteredToday;
+              updateDailyReport();
+          });
+      }
+  }
   // Tambahkan di akhir fungsi refreshNotaHistory(), setelah elemen tombol "Lihat" dibuat
   document.querySelectorAll('.btnLihatNota').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -3574,6 +3606,62 @@ document.querySelectorAll('nav.tab button').forEach(button => {
 // Aktifkan suggestion untuk asal & tujuan
 setupSuggestion('asalNotaInput', 'asalNotaSuggest');
 setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
+// Fungsi Kirim Lokasi yang Lebih Stabil
+async function kirimDataKeSheets() {
+  if (!navigator.geolocation) {
+    console.error("Geolocation tidak didukung browser ini.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    // Ambil nama dari elemen curUser sesuai file index (12).html Anda
+    const namaKurir = document.getElementById('curUser').innerText.trim();
+    
+    // Jika nama belum muncul (masih kosong), batalkan kirim
+    if (!namaKurir) return;
+
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    
+    // Link Google Maps yang benar
+    const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    // GANTI URL INI dengan URL Web App Anda
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzF4FMOJkjzJozS8XLz5UvTPEnYHrLTAlkTDN2u8T6yw4vStiSyVWBOMbHdZKVi1WTZ/exec';
+
+    const payload = {
+      kurir: namaKurir,
+      lokasi: mapsLink,
+      waktu: new Date().toLocaleString('id-ID')
+    };
+
+    try {
+      await fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors', // Penting untuk Google Apps Script
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      console.log("Berhasil " + namaKurir);
+    } catch (error) {
+      console.error("Error", error);
+    }
+  }, (error) => {
+    console.error("Gagal", error.message);
+  });
+}
+
+// Pantau kapan halaman 'app' muncul setelah login
+const observerApp = new MutationObserver(() => {
+  const appLayar = document.getElementById('app');
+  if (!appLayar.classList.contains('hidden')) {
+    // Tunggu 1 detik agar nama kurir terisi dulu ke elemen curUser
+    setTimeout(kirimDataKeSheets, 1000);
+    observerApp.disconnect(); // Jalankan hanya sekali per buka aplikasi
+  }
+});
+
+observerApp.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
 lucide.createIcons();
 </script>
 </body>
