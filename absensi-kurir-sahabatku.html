@@ -1,783 +1,375 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Jadwal & Absensi Kurir</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Jadwal Sahabatku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ===== Reset & Root ===== */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --primary: #00CAFF;
-            --primary-dark: #0088B3;
-            --bg: #00CAFF;
-            --ok: #10B981;
-            --danger: #EF4444;
-            --pending: #F59E0B;
-            --text: #1F2937;
-            --text-muted: #6B7280;
-            --border-color: #E5E7EB;
-            --radius: 16px;
-            --shadow: rgba(0, 0, 0, 0.06);
-            --shadow-lg: rgba(0, 0, 0, 0.12);
-            --transition-speed: 0.3s;
-            --gradient-primary: linear-gradient(135deg, #00CAFF 0%, #0088B3 100%);
+        :root { 
+            --primary: #0ea5e9; --bg: #f8fafc; --card: #ffffff; --text: #0f172a; 
+            --border: rgba(0,0,0,0.04); --inner-card: #f1f5f9; 
         }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; 
-            background: linear-gradient(135deg, var(--bg) 0%, #e0f2fe 100%); 
-            color: var(--text); 
-            -webkit-font-smoothing: antialiased; 
-            -moz-osx-font-smoothing: grayscale; 
-            line-height: 1.6; 
-            font-size: 16px; 
-            min-height: 100vh;
+        .dark-mode { 
+            --bg: #020617; --card: #0f172a; --text: #f1f5f9; 
+            --border: rgba(255,255,255,0.06); --inner-card: #1e293b; 
         }
-        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
-        .card { 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(20px); 
-            border-radius: var(--radius); 
-            box-shadow: 0 8px 32px var(--shadow); 
-            padding: 32px; 
-            margin-bottom: 24px; 
-            position: relative; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeInUp 0.6s ease-out;
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); transition: background 0.5s ease; overflow-x: hidden; }
+        
+        .glass { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 32px; 
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05); transition: 0.3s;
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        /* --- DYNAMIC ISLAND NOTIFICATION --- */
+        #toast { 
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%); 
+            z-index: 9999; width: auto; min-width: 200px; max-width: 90%;
+            padding: 8px 8px 8px 18px; border-radius: 50px; display: flex; align-items: center; gap: 12px; 
+            background: #0f172a; color: white; opacity: 0;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+            pointer-events: none;
         }
-        h1 { 
-            color: var(--primary-dark); 
-            text-align: center; 
-            font-weight: 800; 
-            font-size: clamp(28px, 4vw, 40px); 
-            margin-bottom: 32px; 
-            letter-spacing: 0.05em; 
-            background: var(--gradient-primary); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            background-clip: text;
+        .dark-mode #toast { background: #ffffff; color: #0f172a; }
+
+        /* --- JADWAL CARD STYLING --- */
+        .date-badge {
+            min-width: 55px; height: 75px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; border-radius: 20px;
+            background: var(--inner-card); transition: 0.3s;
         }
-        h4 { 
-            color: var(--text); 
-            font-weight: 700; 
-            font-size: 1.375rem; 
-            margin-bottom: 24px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px;
+        .is-today-badge { background: #0ea5e9 !important; color: white !important; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+
+        .names-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; }
+        .name-tag {
+            background: var(--inner-card); padding: 12px 14px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-left: 4px solid #0ea5e9; animation: slideIn 0.4s ease-out forwards;
         }
-        h4::before {
-            content: '🎛️'; 
-            font-size: 1.2em;
+        .name-tag:only-child { grid-column: span 2; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* --- NAVIGATION --- */
+        .nav-container { 
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: var(--card); 
+            border: 1px solid var(--border); border-radius: 40px; padding: 10px;
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); backdrop-filter: blur(10px);
         }
-        .btn-kembali {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            background: rgba(255, 255, 255, 0.8);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            padding: 10px 18px;
-            border-radius: var(--radius);
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all var(--transition-speed) ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-kembali::before {
-            content: '←';
-        }
-        .btn-kembali:hover {
-            background: var(--primary);
-            color: #fff;
-            transform: translateX(-4px);
-            box-shadow: 0 4px 12px rgba(0, 202, 255, 0.3);
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 24px;
-            border: 1px solid transparent;
-            border-radius: var(--radius);
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            user-select: none;
-            background: var(--gradient-primary);
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(0, 202, 255, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .btn:hover::before {
-            left: 100%;
-        }
-        .btn:hover { 
-            background: var(--primary-dark); 
-            transform: translateY(-2px) scale(1.02); 
-            box-shadow: 0 8px 20px rgba(0, 202, 255, 0.4); 
-        }
-        .btn:active {
-            transform: translateY(0) scale(0.98);
-        }
-        .btn.danger { 
-            background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
-        }
-        .btn.danger:hover { 
-            background: #DC2626; 
-            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
-        }
-        .btn.ghost { 
-            background: transparent; 
-            color: var(--primary); 
-            border-color: var(--primary); 
-            box-shadow: none; 
-        }
-        .btn.ghost:hover { 
-            background: var(--primary); 
-            color: #fff; 
-            box-shadow: 0 4px 14px rgba(0, 202, 255, 0.3); 
-        }
-        .btn.alt { 
-            background: rgba(255, 255, 255, 0.8); 
-            color: var(--text); 
-            border-color: var(--border-color); 
-            box-shadow: none; 
-        }
-        .btn.alt:hover { 
-            background: #F9FAFB; 
-            transform: none; 
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
-        }
-        .btn-mini { 
-            padding: 8px 16px; 
-            font-size: 0.875rem; 
-            border-radius: 10px; 
-            font-weight: 600; 
-            min-width: 80px;
-            transition: all 0.2s ease;
-        }
-        .btn-mini:hover {
-            transform: scale(1.05);
-        }
-        .btn-on { 
-            background: linear-gradient(135deg, var(--ok) 0%, #059669 100%);
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-        }
-        .btn-off { 
-            background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
-        }
-        .btn-pending { 
-            background: linear-gradient(135deg, var(--pending) 0%, #D97706 100%);
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
-        }
-        input, select {
-            padding: 14px 18px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius);
-            font-size: 1rem;
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.9);
-            transition: all var(--transition-speed) ease;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        input:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(0, 202, 255, 0.2);
-            transform: scale(1.02);
-        }
-        input[type="month"], input[type="date"] {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        .topbar, .admin-bar { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 12px; 
-            align-items: center; 
-            margin-bottom: 32px; 
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-        }
-        .topbar .btn { 
-            flex: 1; 
-            min-width: 120px;
-            text-align: center; 
-            position: relative;
-        }
-        .topbar .btn.active { 
-            background: var(--gradient-primary); 
-            color: #fff; 
-            box-shadow: 0 6px 16px rgba(0, 202, 255, 0.4); 
-            transform: scale(1.05);
-        }
-        .topbar .month-wrap { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            margin-left: auto; 
-            background: rgba(255, 255, 255, 0.5);
-            padding: 8px 16px;
-            border-radius: 10px;
-        }
-        .tab { display: none; animation: fadeIn 0.4s ease-in; }
-        .tab.active { display: block; }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .table-wrap { 
-            overflow-x: auto; 
-            border: 1px solid var(--border-color); 
-            border-radius: var(--radius); 
-            margin-top: 20px; 
-            background: rgba(255, 255, 255, 0.8);
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            font-size: 15px; 
-            color: var(--text); 
-            min-width: 700px; 
-        }
-        thead th { 
-            background: var(--gradient-primary); 
-            color: #fff; 
-            font-weight: 700; 
-            padding: 16px 18px; 
-            text-align: center; 
-            position: sticky; 
-            top: 0;
-            z-index: 10;
-        }
-        tbody td { 
-            padding: 16px 18px; 
-            border-bottom: 1px solid var(--border-color); 
-            text-align: center; 
-            background: rgba(255, 255, 255, 0.9); 
-            transition: all 0.2s ease;
-        }
-        tbody tr:last-child td { border-bottom: none; }
-        tbody tr:hover td { 
-            background: rgba(0, 202, 255, 0.1); 
-            transform: scale(1.01);
-        }
-        .badge { 
-            display: inline-block; 
-            padding: 8px 16px; 
-            border-radius: 9999px; 
-            font-weight: 700; 
-            font-size: 13px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-        }
-        .badge:hover {
-            transform: scale(1.05);
-        }
-        .badge.on { 
-            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); 
-            color: var(--ok); 
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-        }
-        .badge.off { 
-            background: linear-gradient(135deg, #FEF2F2 0%, #FECACA 100%); 
-            color: var(--danger); 
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-        }
-        .badge.pending { 
-            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
-            color: var(--pending); 
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
-        }
-        .small { 
-            font-size: 14px; 
-            color: var(--text-muted); 
-            margin-top: 16px; 
-            font-style: italic;
-        }
-        #popup { 
-            position: fixed; 
-            top: 20px; 
-            right: -400px; 
-            width: min(95vw, 380px); 
-            background: rgba(255, 255, 255, 0.98); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            border-left: 6px solid var(--ok); 
-            border-radius: var(--radius); 
-            box-shadow: 0 12px 40px var(--shadow-lg); 
-            padding: 20px 24px; 
-            display: none; 
-            z-index: 9999; 
-            opacity: 0; 
-            transform: translateY(-20px) scale(0.95); 
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-            user-select: none;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        #popup.show { 
-            display: block; 
-            right: 20px; 
-            opacity: 1; 
-            transform: translateY(0) scale(1); 
-        }
-        #popup .title { 
-            font-weight: 800; 
-            font-size: 1.125rem; 
-            color: var(--primary-dark); 
-            display: flex; 
-            align-items: center; 
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        #popup .icon {
-            font-size: 1.5em;
-            animation: bounceIn 0.6s ease-out;
-        }
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        #popup .meta { 
-            font-size: 14px; 
-            color: var(--text-muted); 
-            line-height: 1.5;
-        }
-        #popup.error { border-left-color: var(--danger); }
-        #popup.pending { border-left-color: var(--pending); }
-        .search-bar {
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 24px; 
-            flex-wrap: wrap;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 16px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-        }
-        .form-tukar-off {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .form-tukar-off select {
-            width: 100%;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .form-group label {
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        @media (max-width: 768px) {
-            .container { padding: 0 12px; }
-            .topbar, .admin-bar { flex-direction: column; align-items: stretch; }
-            .topbar .month-wrap { margin-left: 0; margin-top: 12px; justify-content: center; }
-            .topbar .btn, .admin-bar .btn { width: 100%; }
-            .card { padding: 20px; }
-            #popup { right: -100%; width: 95vw; }
-            #popup.show { right: 5px; }
-        }
+        .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #94a3b8; transition: 0.3s; }
+        .nav-item.active { color: #0ea5e9; background: rgba(14, 165, 233, 0.1); }
+        .fab { width: 60px; height: 60px; background: #0ea5e9; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        input, textarea { width: 100%; background: var(--inner-card); border: 1px solid var(--border); border-radius: 20px; padding: 16px; color: var(--text); font-weight: 600; outline: none; transition: 0.3s; }
+        .type-card { padding: 22px 10px; border-radius: 26px; border: 2px solid var(--border); text-align: center; cursor: pointer; transition: 0.4s; background: var(--card); }
+        .type-card.selected { background: #0ea5e9; color: white; border-color: #0ea5e9; transform: scale(1.05) translateY(-5px); box-shadow: 0 15px 30px -5px rgba(14, 165, 233, 0.4); }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <a href="index.html" class="btn-kembali">Kembali</a>
-            <h1>Jadwal & Absensi Kurir</h1>
-            
-            <div class="topbar" id="topbar">
-                <button class="btn active" data-tab="tab-jadwal">Jadwal Off</button>
-                <button class="btn" data-tab="tab-rekap">Rekap & Keaktifan</button>
-                <button class="btn" data-tab="tab-pengajuan">Pengajuan Tukar Off</button>
-                <div class="month-wrap">
-                    <label for="monthPick" style="color: var(--text-muted);">Bulan:</label>
-                    <input type="month" id="monthPick"/>
-                </div>
-            </div>
+<body class="max-w-md mx-auto px-6 pb-40 text-sm">
 
-            <div id="tab-jadwal" class="tab active">
-                <div class="table-wrap">
-                    <table id="tableJadwal">
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Hari</th>
-                                <th>Kurir Off</th>
-                                <th>Pengganti</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+    <div id="toast">
+        <div id="toastContent" class="flex items-center gap-3">
+            <div id="toastIcon" class="w-8 h-8 rounded-full flex items-center justify-center bg-sky-500 text-white shadow-lg text-[10px]">
+                <i class="fa-solid fa-check"></i>
             </div>
-
-            <div id="tab-rekap" class="tab">
-                <div class="table-wrap">
-                    <table id="tableRekap">
-                        <thead>
-                            <tr>
-                                <th>Nama Kurir</th>
-                                <th>Total On</th>
-                                <th>Total Off</th>
-                                <th>Skor Keaktifan</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <div class="pr-4">
+                <p id="toastTitle" class="text-[8px] font-black uppercase tracking-[2px] opacity-60 leading-none mb-1">System</p>
+                <p id="toastMsg" class="text-[11px] font-bold whitespace-nowrap">Data Terupdate</p>
             </div>
-
-            <div id="tab-pengajuan" class="tab">
-                <div class="form-tukar-off">
-                    <div class="form-group">
-                        <label for="tanggalOffAsal">Tanggal yang Off</label>
-                        <select id="tanggalOffAsal">
-                            <option value="">-- Pilih Tanggal Off Asal --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="namaKurirPengganti">Nama Kurir Pengganti</label>
-                        <select id="namaKurirPengganti">
-                            <option value="">-- Pilih Nama Kurir --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="tanggalOffPengganti">Tanggal Off Kurir yang Dipilih</label>
-                        <select id="tanggalOffPengganti">
-                            <option value="">-- Pilih Tanggal Off Pengganti --</option>
-                        </select>
-                    </div>
-                    <button class="btn" id="btn-ajukan">Ajukan</button>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <div id="popup">
-        <div class="title"><span class="icon">✅</span><span id="popTitle"></span></div>
-        <div class="meta" id="popMeta"></div>
+    <div id="loading" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center gap-4">
+        <div class="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
+        <p class="text-[10px] font-black text-sky-500 uppercase tracking-[5px]">loading</p>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <header class="pt-12 pb-8 flex justify-between items-center">
+        <div>
+            <p class="text-[10px] font-bold text-sky-500 uppercase tracking-[4px] mb-1">Dashboard</p>
+            <h1 class="text-4xl font-[900] tracking-tighter">Sahabat<span class="text-sky-500">ku.</span></h1>
+        </div>
+        <button onclick="document.body.classList.toggle('dark-mode')" class="w-14 h-14 glass flex items-center justify-center text-sky-500 text-xl active:scale-90">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+    </header>
+
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="glass p-6">
+            <p class="text-[9px] font-black opacity-30 uppercase tracking-widest mb-1">Squad Team</p>
+            <h2 id="statKurir" class="text-3xl font-[900]">0</h2>
+        </div>
+        <div class="glass p-6 border-l-4 border-sky-500">
+            <p class="text-[9px] font-black text-sky-500 uppercase tracking-widest mb-1">Off Today</p>
+            <h2 id="statOff" class="text-3xl font-[900] text-sky-500">0</h2>
+        </div>
+    </div>
+
+    <main>
+        <div class="mb-6 flex justify-between items-center px-2">
+            <h3 class="text-[10px] font-black uppercase tracking-[3px] opacity-30">Operational Calendar</h3>
+            <div class="glass px-4 py-2 flex items-center gap-2">
+                <i class="fa-solid fa-calendar text-sky-500 text-xs"></i>
+                <input type="month" id="monthPick" onchange="render()" class="bg-transparent text-xs font-bold outline-none p-0 border-none w-24">
+            </div>
+        </div>
+
+        <section id="tab-jadwal" class="tab-content active space-y-4"></section>
+        <section id="tab-rekap" class="tab-content space-y-3"></section>
+
+        <section id="tab-form" class="tab-content">
+            <div class="glass p-8 space-y-6">
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl font-[900] tracking-tight">E-Submission</h2>
+                    <p class="text-[10px] opacity-40 font-bold uppercase tracking-widest">Digital Request</p>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <div onclick="selectType('Tukar Off', this)" class="type-card selected">
+                        <i class="fa-solid fa-rotate mb-2 block text-xl"></i>
+                        <span class="text-[9px] font-bold uppercase">Tukar</span>
+                    </div>
+                    <div onclick="selectType('Sakit', this)" class="type-card">
+                        <i class="fa-solid fa-stethoscope mb-2 block text-xl"></i>
+                        <span class="text-[9px] font-bold uppercase">Sakit</span>
+                    </div>
+                    <div onclick="selectType('Izin', this)" class="type-card">
+                        <i class="fa-solid fa-file-signature mb-2 block text-xl"></i>
+                        <span class="text-[9px] font-bold uppercase">Izin</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4">
+                    <div onclick="openSheet()" class="w-full bg-[var(--inner-card)] p-4 rounded-[20px] flex justify-between items-center cursor-pointer border border-[var(--border)]">
+                        <span id="selectedNamaDisplay" class="font-bold opacity-40">Pilih Personel</span>
+                        <i class="fa-solid fa-chevron-down text-sky-500"></i>
+                    </div>
+                    <input type="date" id="pTgl">
+                    <textarea id="pKet" placeholder="Alasan tambahan..." rows="3"></textarea>
+                </div>
+
+                <button onclick="openConfirm()" class="w-full bg-sky-500 text-white py-5 rounded-[22px] font-[900] shadow-xl shadow-sky-500/20 active:scale-95 transition-all flex items-center justify-center gap-3">
+                    KIRIM DATA <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <nav class="nav-container">
+        <button onclick="switchTab('jadwal', this)" class="nav-item active"><i class="fa-solid fa-house-chimney"></i></button>
+        <button onclick="switchTab('form', this)" class="fab active:scale-90 transition-all"><i class="fa-solid fa-plus"></i></button>
+        <button onclick="switchTab('rekap', this)" class="nav-item"><i class="fa-solid fa-chart-simple"></i></button>
+    </nav>
+
+    <div id="sheetNama" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[2000] hidden items-end" onclick="closeSheet()">
+        <div class="sheet-content glass w-full rounded-t-[40px] p-8 max-h-[70vh] overflow-y-auto translate-y-full transition-transform duration-500" onclick="event.stopPropagation()">
+            <div class="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
+            <div id="listNamaSheet" class="grid grid-cols-1 gap-3"></div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[3000] hidden items-center justify-center p-8">
+        <div id="confirmBox" class="glass p-10 w-full max-w-sm text-center opacity-0 scale-90">
+            <h3 class="text-2xl font-[900] mb-2">Kirim Sekarang?</h3>
+            <p class="text-[10px] opacity-50 mb-8 uppercase tracking-widest font-bold">Pastikan data sudah benar.</p>
+            <div class="flex gap-4">
+                <button onclick="closeConfirm()" class="flex-1 py-4 font-bold opacity-50">Batal</button>
+                <button onclick="processSubmit()" class="flex-1 py-4 bg-sky-500 text-white rounded-2xl font-black">Ya, Kirim</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Inisialisasi Firebase (Ganti dengan konfigurasi Anda)
-        const firebaseConfig = {
-            apiKey: "AIzaSyCtva8TeL40-WotK4kFL_vL8uUXL3GDfww",
-            authDomain: "sahabatkuu-bisa.firebaseapp.com",
-            databaseURL: "https://sahabatkuu-bisa-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "sahabatkuu-bisa",
-            storageBucket: "sahabatkuu-bisa.firebasestorage.app",
-            messagingSenderId: "315555564115",
-            appId: "1:315555564115:web:56f46dbceb8c154589d4a6",
-            measurementId: "G-PFGYL96VPS"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const API_URL = "https://script.google.com/macros/s/AKfycbyn3QGF16fBCxZqPANlRVFKfagLBHOC0Ue0Df9Cfc16fDFhAU2q8uMF2H5GHkU3wUJd/exec";
+        let db = { kurir: [], jadwal: [] };
+        let selectedJenis = "Tukar Off";
+        let selectedNama = "";
 
-        // Variabel global
-        let kurirList = [];
-        let jadwalData = {};
-        const idDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-        // Fungsi utility
-        const formatDate = (isoDate) => {
-            const date = new Date(isoDate + 'T00:00:00');
-            return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        window.onload = () => {
+            const now = new Date();
+            document.getElementById('monthPick').value = now.toLocaleDateString('en-CA').slice(0, 7);
+            fetchData();
         };
 
-        const popupShow = (isSuccess, title, message) => {
-            const popup = document.getElementById('popup');
-            const popTitle = document.getElementById('popTitle');
-            const popMeta = document.getElementById('popMeta');
-            const icon = popup.querySelector('.icon');
-
-            popup.classList.remove('show', 'error', 'pending');
-            popTitle.textContent = title;
-            popMeta.textContent = message;
-
-            if (isSuccess) {
-                icon.innerHTML = '✅';
-                popup.classList.add('show');
-            } else if (isSuccess === false) {
-                icon.innerHTML = '❌';
-                popup.classList.add('show', 'error');
-            } else {
-                icon.innerHTML = '⏳';
-                popup.classList.add('show', 'pending');
-            }
-
-            setTimeout(() => {
-                popup.classList.remove('show');
-            }, 5000);
-        };
-
-        // Fungsi untuk mengelola tab
-        const switchTab = (tabId) => {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.topbar .btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-        };
-        
-        // Render Jadwal Off
-        const renderJadwal = (ym) => {
-            const tableJadwalBody = document.querySelector('#tableJadwal tbody');
-            tableJadwalBody.innerHTML = '';
-            
-            if(!jadwalData[ym]) return;
-            jadwalData[ym].forEach(it=>{
-                const d = new Date(it.tanggal + 'T00:00:00');
-                const hari = idDays[d.getDay()];
-                const tr = document.createElement('tr');
-                const tdTanggal = document.createElement('td'); tdTanggal.textContent = it.tanggal.slice(8, 10);
-                const tdHari = document.createElement('td'); tdHari.textContent = hari;
-                const tdOff = document.createElement('td');
-                const badge = document.createElement('span');
-                badge.className = it.off ? 'badge off' : 'badge on';
-                badge.textContent = it.off || 'Semua On';
-                tdOff.appendChild(badge);
-                const tdPeng = document.createElement('td');
-                tdPeng.textContent = it.pengganti || '—';
-                tr.append(tdTanggal, tdHari, tdOff, tdPeng);
-                tableJadwalBody.appendChild(tr);
-            });
-        };
-        const renderRekap = () => {
-            const tableRekapBody = document.querySelector('#tableRekap tbody');
-            tableRekapBody.innerHTML = '';
-            const ym = document.getElementById('monthPick').value;
-            if(!jadwalData[ym]) return;
-        
-            const arr = jadwalData[ym];
-            const sum = Object.fromEntries(kurirList.map(k => [k, {on: 0, off: 0}]));
-        
-            arr.forEach(it => { 
-                // Pecah string 'off' menjadi array nama, bersihkan spasi, dan hilangkan string kosong
-                const namesOff = it.off ? it.off.split(',').map(n => n.trim()).filter(n => n !== "") : [];
-                
-                kurirList.forEach(k => { 
-                    // Periksa apakah nama kurir ada di dalam daftar yang sedang OFF
-                    if(namesOff.includes(k)) {
-                        sum[k].off++; 
-                    } else {
-                        sum[k].on++; 
-                    }
-                }); 
-            });
-        
-            kurirList.forEach(k => {
-                const {on, off} = sum[k]; 
-                const total = on + off || 1; 
-                const skor = Math.round((on / total) * 100);
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${k}</td><td>${on}</td><td>${off}</td><td>${skor}%</td>`;
-                tableRekapBody.appendChild(tr);
-            });
-        };
-        const renderPengajuanForm = () => {
-            const selectTanggalOffAsal = document.getElementById('tanggalOffAsal');
-            const selectKurirPengganti = document.getElementById('namaKurirPengganti');
-            const selectTanggalOffPengganti = document.getElementById('tanggalOffPengganti');
-            const ym = document.getElementById('monthPick').value;
-        
-            selectTanggalOffAsal.innerHTML = '<option value="">-- Pilih Tanggal Off Asal --</option>';
-            selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
-            selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
-        
-            if(!jadwalData[ym]) return;
-        
-            // 1. Dropdown Tanggal Off Asal: Pisahkan jika ada 2 kurir di tanggal yang sama
-            jadwalData[ym].forEach(day => {
-                if(day.off && day.off !== '') {
-                    // Memisahkan nama kurir jika menggunakan koma atau pemisah lain
-                    const listKurirOff = day.off.split(',').map(s => s.trim());
-                    
-                    listKurirOff.forEach(namaKurir => {
-                        const option = document.createElement('option');
-                        // Simpan format "tanggal|namaKurir" agar mudah diambil saat onchange
-                        option.value = `${day.tanggal}|${namaKurir}`;
-                        option.textContent = `${formatDate(day.tanggal)} - Off: ${namaKurir}`;
-                        selectTanggalOffAsal.appendChild(option);
-                    });
-                }
-            });
-        
-            // 2. Listener saat Tanggal & Kurir Asal dipilih
-            selectTanggalOffAsal.onchange = (e) => {
-                const val = e.target.value; // format: "YYYY-MM-DD|Nama"
-                if(!val) return;
-                
-                const [selectedDate, kurirAsal] = val.split('|');
-                
-                // Filter Kurir Pengganti: Tampilkan semua KECUALI kurir yang sedang dipilih di atas
-                const filteredKurirList = kurirList.filter(k => k !== kurirAsal);
-                
-                selectKurirPengganti.innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
-                filteredKurirList.forEach(kurir => {
-                    const option = document.createElement('option');
-                    option.value = kurir;
-                    option.textContent = kurir;
-                    selectKurirPengganti.appendChild(option);
-                });
-                selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
-            };
-        
-            // 3. Listener saat Kurir Pengganti dipilih
-            selectKurirPengganti.onchange = (e) => {
-                const selectedCourier = e.target.value;
-                selectTanggalOffPengganti.innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
-        
-                if (selectedCourier) {
-                    // Cari semua tanggal dimana 'selectedCourier' terjadwal OFF
-                    const courierOffDates = jadwalData[ym].filter(day => {
-                        if(!day.off) return false;
-                        const listOff = day.off.split(',').map(s => s.trim());
-                        return listOff.includes(selectedCourier);
-                    });
-                    
-                    if(courierOffDates.length > 0) {
-                        courierOffDates.forEach(day => {
-                            const option = document.createElement('option');
-                            option.value = day.tanggal;
-                            option.textContent = `${formatDate(day.tanggal)} (Jadwal Off ${selectedCourier})`;
-                            selectTanggalOffPengganti.appendChild(option);
-                        });
-                    } else {
-                        const option = document.createElement('option');
-                        option.value = 'Tidak Ada';
-                        option.textContent = 'Tidak Ada (Ambil Hari Off)';
-                        selectTanggalOffPengganti.appendChild(option);
-                    }
-                }
-            };
-        };
-        // Event handler untuk tombol Ajukan
-        document.getElementById('btn-ajukan').onclick = async () => {
-            const rawTanggalAsal = document.getElementById('tanggalOffAsal').value; // Mengambil "YYYY-MM-DD|Nama"
-            const namaKurirPengganti = document.getElementById('namaKurirPengganti').value;
-            const tanggalOffPengganti = document.getElementById('tanggalOffPengganti').value;
-        
-            // Validasi input
-            if (!rawTanggalAsal || !namaKurirPengganti || !tanggalOffPengganti) {
-                popupShow(false, 'Gagal', 'Semua field harus diisi.');
-                return;
-            }
-        
-            // Memisahkan tanggal dan nama kurir asal dari value dropdown
-            const [tanggalOffAsal, kurirAsal] = rawTanggalAsal.split('|');
-        
-            const confirmTukar = confirm(`Apakah Anda yakin ingin menukar jadwal ${kurirAsal} (Tgl ${tanggalOffAsal.slice(8,10)}) dengan ${namaKurirPengganti}?`);
-            if (!confirmTukar) return;
-        
+        async function fetchData() {
             try {
-                // Menyiapkan objek data untuk disimpan ke Firebase
-                const newRequest = {
-                    tanggal: tanggalOffAsal,
-                    asal: kurirAsal,
-                    pengganti: namaKurirPengganti,
-                    tukarTanggal: (tanggalOffPengganti === 'Tidak Ada') ? null : tanggalOffPengganti,
-                    status: 'Pending',
-                    created: firebase.firestore.FieldValue.serverTimestamp() // Timestamp otomatis dari server
-                };
-        
-                // Menyimpan ke koleksi 'pengajuan_off'
-                await db.collection('pengajuan_off').add(newRequest);
+                const res = await fetch(API_URL);
+                db = await res.json();
+                document.getElementById('loading').style.display = 'none';
+                render();
                 
-                // Notifikasi berhasil
-                popupShow(null, 'Berhasil Terkirim', 'Pengajuan tukar off telah disimpan dan menunggu persetujuan admin.');
-        
-                // Reset Form ke posisi semula
-                document.getElementById('tanggalOffAsal').value = '';
-                document.getElementById('namaKurirPengganti').innerHTML = '<option value="">-- Pilih Nama Kurir --</option>';
-                document.getElementById('tanggalOffPengganti').innerHTML = '<option value="">-- Pilih Tanggal Off Pengganti --</option>';
+                // CEK STATUS HARI INI UNTUK NOTIFIKASI
+                const todayStr = new Date().toLocaleDateString('en-CA');
+                const rowToday = db.jadwal.find(r => r[0] && new Date(r[0]).toLocaleDateString('en-CA') === todayStr);
+                const namesToday = (rowToday && rowToday[2]) ? String(rowToday[2]).split(',').filter(n => n.trim()) : [];
                 
-            } catch (e) {
-                popupShow(false, 'Gagal Simpan', 'Terjadi kesalahan sistem: ' + e.message);
-                console.error("Error saving to Firestore: ", e);
+                setTimeout(() => showDailyIsland(namesToday), 800);
+            } catch (e) { 
+                showIsland("Error", "Gagal menghubungkan ke server", "bg-red-500");
             }
-        };
+        }
 
-        // Listeners
-        const listenMasterKurir = () => {
-            db.collection('appdata').doc('master').onSnapshot(doc => {
-                if (doc.exists) {
-                    kurirList = doc.data().kurirList || [];
-                    kurirList.sort();
-                } else {
-                    kurirList = [];
-                }
-                const ym = document.getElementById('monthPick').value;
-                listenJadwal(ym);
-            }, err => console.error("Error listening to master_kurir: ", err));
-        };
+        // --- ANIMASI MODERN NOTIFICATION (ISLAND STYLE) ---
+        function showDailyIsland(names) {
+            const toast = document.getElementById('toast');
+            const title = document.getElementById('toastTitle');
+            const msg = document.getElementById('toastMsg');
+            const icon = document.getElementById('toastIcon');
 
-        const listenJadwal = (ym) => {
-            db.collection('jadwal_off').doc(ym).onSnapshot(doc => {
-                if (doc.exists) {
-                    jadwalData[ym] = doc.data().data || [];
-                } else {
-                    jadwalData[ym] = [];
-                }
-                renderJadwal(ym);
-                renderRekap();
-                renderPengajuanForm();
-            }, err => console.error("Error listening to jadwal_off: ", err));
-        };
+            if(names.length > 0) {
+                title.innerText = "Info Libur Hari Ini";
+                msg.innerText = names.join(', ');
+                icon.innerHTML = '<i class="fa-solid fa-mug-hot"></i>';
+                icon.className = "w-8 h-8 rounded-full flex items-center justify-center bg-amber-500 text-white shadow-lg text-[10px]";
+            } else {
+                title.innerText = "Status Operasional";
+                msg.innerText = "Semua Personel Bertugas";
+                icon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
+                icon.className = "w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500 text-white shadow-lg text-[10px]";
+            }
 
-        // Event listener untuk tombol tab
-        document.querySelectorAll('.topbar .btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const tabId = button.getAttribute('data-tab');
-                switchTab(tabId);
+            gsap.to(toast, { top: 30, opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.7)" });
+            setTimeout(() => {
+                gsap.to(toast, { top: -100, opacity: 0, scale: 0.8, duration: 0.5, ease: "power2.in" });
+            }, 5000);
+        }
+
+        function showIsland(title, text, iconColor = "bg-sky-500") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMsg').innerText = text;
+            document.getElementById('toastIcon').className = `w-8 h-8 rounded-full flex items-center justify-center ${iconColor} text-white shadow-lg text-[10px]`;
+            
+            gsap.to(toast, { top: 30, opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.7)" });
+            setTimeout(() => {
+                gsap.to(toast, { top: -100, opacity: 0, scale: 0.8, duration: 0.5 });
+            }, 3000);
+        }
+
+        function render() {
+            const ym = document.getElementById('monthPick').value;
+            const [year, month] = ym.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            
+            const listJ = document.getElementById('tab-jadwal');
+            const listR = document.getElementById('tab-rekap');
+            const listS = document.getElementById('listNamaSheet');
+            
+            listJ.innerHTML = ''; listR.innerHTML = ''; listS.innerHTML = '';
+            let offCount = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateIso = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = dateIso === todayStr;
+                
+                const row = db.jadwal.find(r => r[0] && new Date(r[0]).toLocaleDateString('en-CA') === dateIso);
+                let names = (row && row[2] && String(row[2]) !== "null") ? String(row[2]).split(',').map(n => n.trim()).filter(n => n) : [];
+                if(isToday) offCount = names.length;
+
+                let namesHtml = names.map(n => `
+                    <div class="name-tag">
+                        <span class="font-bold text-[10px] uppercase truncate">${n}</span>
+                        <button onclick="batalOff('${n}', '${dateIso}')" class="text-emerald-500 active:scale-75 transition-all"><i class="fa-solid fa-circle-check"></i></button>
+                    </div>
+                `).join('');
+
+                listJ.innerHTML += `
+                    <div class="glass p-4 flex gap-4 items-center ${isToday ? 'ring-2 ring-sky-500 scale-[1.02] shadow-xl' : ''}">
+                        <div class="date-badge ${isToday ? 'is-today-badge' : ''}">
+                            <span class="text-[9px] font-black uppercase opacity-50">${new Date(dateIso).toLocaleDateString('id-ID',{weekday:'short'})}</span>
+                            <span class="text-xl font-[900]">${d}</span>
+                        </div>
+                        <div class="names-grid">
+                            ${names.length > 0 ? namesHtml : '<p class="text-[10px] font-bold opacity-20 uppercase tracking-[2px] col-span-2 text-center py-2">Tugas Penuh</p>'}
+                        </div>
+                    </div>`;
+            }
+
+            db.kurir.forEach(n => {
+                listS.innerHTML += `<div onclick="selectNama('${n}')" class="p-5 bg-[var(--inner-card)] rounded-2xl font-bold uppercase flex justify-between items-center active:scale-95 transition-all">${n} <i class="fa-solid fa-plus-circle text-sky-500"></i></div>`;
+                
+                const total = db.jadwal.filter(r => {
+                    if (!r[0] || !r[2]) return false;
+                    const rd = new Date(r[0]);
+                    const rdMonth = `${rd.getFullYear()}-${String(rd.getMonth() + 1).padStart(2, '0')}`;
+                    return rdMonth === ym && String(r[2]).toUpperCase().split(',').map(x => x.trim()).includes(n.toUpperCase().trim());
+                }).length;
+
+                listR.innerHTML += `
+                    <div class="glass p-5 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center font-black">${n.charAt(0)}</div>
+                            <span class="font-bold uppercase text-sm">${n}</span>
+                        </div>
+                        <div class="px-4 py-2 bg-sky-500/10 rounded-full font-black text-sky-500 text-xs">${total} OFF</div>
+                    </div>`;
             });
-        });
 
-        // Init
-        const monthPick = document.getElementById('monthPick');
-        monthPick.value = new Date().toISOString().slice(0, 7);
-        listenMasterKurir();
+            document.getElementById('statKurir').innerText = db.kurir.length;
+            document.getElementById('statOff').innerText = offCount;
+        }
 
-        monthPick.onchange = () => {
-            listenJadwal(monthPick.value);
-        };
+        async function batalOff(nama, tgl) {
+            if(!confirm(`Konfirmasi masuk kerja untuk ${nama}?`)) return;
+            showIsland("Syncing", "Membatalkan jadwal off...");
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "cancelOff", nama, tgl }) });
+            location.reload();
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            if(el.classList.contains('nav-item')) el.classList.add('active');
+        }
+
+        function selectType(val, el) {
+            selectedJenis = val;
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function openSheet() { 
+            document.getElementById('sheetNama').style.display = 'flex';
+            setTimeout(() => { document.querySelector('.sheet-content').classList.remove('translate-y-full'); }, 10);
+        }
+        function closeSheet() { 
+            document.querySelector('.sheet-content').classList.add('translate-y-full');
+            setTimeout(() => { document.getElementById('sheetNama').style.display = 'none'; }, 500);
+        }
+        function selectNama(n) { 
+            selectedNama = n; 
+            document.getElementById('selectedNamaDisplay').innerText = n; 
+            document.getElementById('selectedNamaDisplay').classList.remove('opacity-40');
+            closeSheet(); 
+        }
+
+        function openConfirm() {
+            if(!selectedNama || !document.getElementById('pTgl').value) return showIsland("Warning", "Data belum lengkap!", "bg-orange-500");
+            document.getElementById('confirmModal').style.display = 'flex';
+            gsap.to("#confirmBox", { scale: 1, opacity: 1, duration: 0.4, ease: "back.out" });
+        }
+        function closeConfirm() {
+            gsap.to("#confirmBox", { scale: 0.9, opacity: 0, duration: 0.2, onComplete: () => { document.getElementById('confirmModal').style.display = 'none'; }});
+        }
+
+        async function processSubmit() {
+            closeConfirm();
+            showIsland("Sending", "Memproses pengajuan...");
+            const data = { action: "submit", nama: selectedNama, jenis: selectedJenis, tgl: document.getElementById('pTgl').value, ket: document.getElementById('pKet').value };
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
+            location.reload();
+        }
     </script>
 </body>
 </html>
