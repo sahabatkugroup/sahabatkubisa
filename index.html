@@ -2290,10 +2290,20 @@ if(mitraSearchInput) {
             const mitraName = mitraSelectEl.options[mitraSelectEl.selectedIndex].text;
             
             // LOGIKA WAKTU INDONESIA (WIB)
+            // LOGIKA WAKTU INDONESIA (WIB) YANG AKURAT
             const now = new Date();
-            const wibTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)); // Tambah 7 Jam
-            const today = wibTime.toISOString().slice(0, 10); // Format YYYY-MM-DD
-            const timestampWIB = wibTime.getTime();
+            // Mengonversi waktu lokal ke string format Indonesia dengan zona Jakarta
+            const wibString = now.toLocaleString("en-CA", { 
+                timeZone: "Asia/Jakarta", 
+                hour12: false 
+            }).replace(', ', 'T'); 
+            
+            // today akan menghasilkan format "YYYY-MM-DD" sesuai waktu Jakarta
+            const today = wibString.split('T')[0]; 
+            
+            // timestampWIB tetap menggunakan waktu saat ini (universal) 
+            // karena Firebase/Database biasanya mengurutkan berdasarkan UTC global
+            const timestampWIB = now.getTime();
     
             const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
             const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
