@@ -2709,6 +2709,8 @@ loadOngkir();
               <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
               <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
               <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
+              <option ${pref.type === "Tambahan Tempat (Ojek)" ? "selected" : ""}>Tambahan Tempat (Ojek)</option>
+              <option ${pref.type === "Tambahan Tempat >3 (Pasar)" ? "selected" : ""}>Tambahan Tempat >3 (Pasar)</option>
               <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
               <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
               <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
@@ -2760,7 +2762,11 @@ loadOngkir();
               case "Tambahan Hujan":
               case "Tambahan Parkir":
               case "Tambahan Tempat":
+              case "Tambahan Tempat (Ojek)":
                   autoNominal = 2000;
+                  break;
+              case "Tambahan Tempat >3 (Pasar)":
+                  autoNominal = 3000;
                   break;
               case "Tambahan Cash Minuman":
                   autoNominal = 5000;
