@@ -1304,10 +1304,6 @@ select, input {
                 <input id="kurirName" type="text" readonly>
               </div>
               <div>
-                <label for="custPhone">Nomor WhatsApp Customer</label>
-                <input id="custPhone" type="text" placeholder="6281234... (opsional)">
-              </div>
-              <div>
                 <label for="ongkir">Ongkir (Rp)</label>
                 <div style="display: flex; gap: 6px;">
                   <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()" style="flex:1;">
@@ -2617,7 +2613,6 @@ loadOngkir();
 
   // Reset input lain
   el('ongkir').value = 0;
-  el('custPhone').value = '';
 
   // Reset total & preview
   updateTotals();
@@ -2871,7 +2866,6 @@ loadOngkir();
 
     // PERBAIKAN: Gunakan helper untuk mendapatkan nilai murni
     const ongkir = getNumericValueFromInput(el('ongkir'))||0;
-    const custPhone=(el('custPhone').value||'').replace(/\D/g,'');
     const kurir = currentUser || '';
 
     const total = subtotal + ongkir + tambahTotal;
@@ -2921,7 +2915,7 @@ loadOngkir();
     
     return {
       kurir, noNota, createdAt,
-      items, tambahans, ongkir, total, custPhone,
+      items, tambahans, ongkir, total,
       text: lines.join('\n')
     };
 
