@@ -252,9 +252,10 @@
 <canvas id="c"></canvas>
 
 <script>
-    const URL_APPS = "https://script.google.com/macros/s/AKfycbwntZzvURlu7mxm0UyE_HDKyBTyLruRCO2YzzNr_A3kr7vkUpMLp_7O60o1ElTRMfI4ZQ/exec";
+    const URL_APPS = "https://script.google.com/macros/s/AKfycbyNUbvnX89nM3ke5cj9tG3-nyOfzQzvgtFESaY4SxSmKDl_eC_815s4gFh_Fx-wpKijVQ/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
     
+    let statusServer = {}; // Menyimpan data dari spreadsheet
     let isGpsValid = false;
     let isFaceValid = false;
     let modelsLoaded = false;
@@ -264,20 +265,16 @@
     async function loadModels() {
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
-        
-        loader.style.display = 'flex'; // Tampilkan loading berputar
+        loader.style.display = 'flex';
         loadText.innerText = "MENGUNDUH SENSOR WAJAH...";
-    
         try {
             const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            
-            loader.style.display = 'none'; // Sembunyikan jika sudah selesai
+            loader.style.display = 'none';
             modelsLoaded = true;
             startFaceDetection();
         } catch (e) {
             loadText.innerText = "GAGAL MEMUAT SENSOR!";
-            console.error(e);
         }
     }
     
@@ -292,11 +289,8 @@
     
     async function init() {
         const jam = new Date().getHours();
-        
-        // Aplikasi tidak bisa diakses sama sekali antara jam 02:00 pagi hingga 04:59 pagi
         if (jam >= 2 && jam < 5) {
             const blockView = document.getElementById('time-blocked');
-            blockView.querySelector('p').innerHTML = "Mohon Maaf, aplikasi absensi tidak aktif pada jam<br><strong>02:00 - 05:00 WIB</strong>";
             blockView.style.display = 'flex';
             return;
         }
@@ -307,34 +301,57 @@
             });
             document.getElementById('v').srcObject = stream;
             
+            // AMBIL DATA DARI SERVER (Kurir & Status Hari Ini)
             const res = await fetch(URL_APPS);
             const data = await res.json();
+            
+            statusServer = data.statusHariIni || {}; 
+            
             const sel = document.getElementById('selKurir');
             sel.innerHTML = '<option value="">Pilih Nama Kurir...</option>';
             data.daftarKurir.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
             
             const saved = localStorage.getItem('user_nama_v13');
-            if(saved) sel.value = saved;
-    
+            if(saved) {
+                sel.value = saved;
+                updateAutoStatus(saved); 
+            }
+
             trackGPS();
             loadModels(); 
         } catch(e) { 
-            alert("Mohon izinkan kamera dan lokasi untuk absen!"); 
+            alert("Mohon izinkan kamera dan lokasi!"); 
+        }
+    }
+
+    function updateAutoStatus(nama) {
+        const selStatus = document.getElementById('selStatus');
+        const statusTerakhir = statusServer[nama]; 
+
+        if (!nama) return;
+
+        if (!statusTerakhir) {
+            selStatus.value = "MASUK";
+        } else if (statusTerakhir === "MASUK") {
+            selStatus.value = "PULANG";
+        } else {
+            selStatus.value = "PULANG";
+            alert("Sistem mendeteksi Anda sudah Masuk & Pulang hari ini.");
         }
     }
     
-    // 2. Loop Deteksi Wajah
+    function saveName() { 
+        const nama = document.getElementById('selKurir').value;
+        localStorage.setItem('user_nama_v13', nama); 
+        updateAutoStatus(nama); 
+    }
+
     async function startFaceDetection() {
         const video = document.getElementById('v');
-        modelsLoaded = true;
-    
-        // Simpan ke variabel faceInterval
         faceInterval = setInterval(async () => {
             if (video.paused || video.ended || !modelsLoaded) return;
-    
             const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
             isFaceValid = detections.length > 0;
-            
             syncButtonAndStatus(); 
         }, 500);
     }
@@ -343,7 +360,6 @@
         navigator.geolocation.watchPosition(p => {
             const d = getDist(p.coords.latitude, p.coords.longitude, KANTOR.lat, KANTOR.lng);
             isGpsValid = (d <= KANTOR.rad);
-            
             const box = document.getElementById('gps-box');
             if(!isGpsValid) {
                 box.className = "gps-status inactive"; 
@@ -356,13 +372,11 @@
     function syncButtonAndStatus() {
         const btn = document.getElementById('btnSnap');
         const box = document.getElementById('gps-box');
-        
         if (!isGpsValid) {
             btn.disabled = true;
             btn.classList.remove('ready');
-            return; // Jika lokasi salah, stop di sini
+            return;
         }
-    
         if (isFaceValid) {
             box.className = "gps-status active";
             box.innerText = "SIAP ABSEN (WAJAH TERDETEKSI)";
@@ -377,15 +391,10 @@
     }
     
     function takePhoto() {
-        // BERHENTIKAN DETEKSI WAJAH DI SINI
         clearInterval(faceInterval);
-        console.log("Deteksi wajah dihentikan karena foto sudah diambil");
-    
         const v = document.getElementById('v'), c = document.getElementById('c'), p = document.getElementById('p');
         c.width = 600; c.height = 800;
         const ctx = c.getContext('2d');
-        
-        // ... sisa kode takePhoto Anda (sama seperti sebelumnya) ...
         const vW = v.videoWidth, vH = v.videoHeight;
         const ratio = 3/4;
         let sW = vW, sH = vH, sX = 0, sY = 0;
@@ -393,7 +402,6 @@
         else { sH = vW / ratio; sY = (vH - sH) / 2; }
         ctx.translate(c.width, 0); ctx.scale(-1, 1);
         ctx.drawImage(v, sX, sY, sW, sH, 0, 0, c.width, c.height);
-        
         p.src = c.toDataURL('image/jpeg', 0.5);
         p.style.display = 'block'; v.style.display = 'none';
         document.getElementById('ui-1').style.display = 'none';
@@ -405,97 +413,93 @@
         document.getElementById('p').style.display = 'none';
         document.getElementById('ui-1').style.display = 'block';
         document.getElementById('ui-2').style.display = 'none';
-        document.getElementById('gps-box').style.display = 'block';
-    
-        // JALANKAN LAGI DETEKSI WAJAH
         startFaceDetection(); 
     }
+
     async function submitData() {
         const n = document.getElementById('selKurir').value;
         const s = document.getElementById('selStatus').value;
         const jam = new Date().getHours();
-        
-        if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
-    
-        // --- LOGIKA VALIDASI JADWAL OPERASIONAL ---
-        if (s === "MASUK") {
-            if (jam < 5 || jam >= 20) {
-                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 20:00 WIB.");
-            }
-        } else if (s === "PULANG") {
-            const bolehPulang = (jam >= 14 || jam < 2);
-            if (!bolehPulang) {
-                return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 02:00 WIB.");
-            }
-        }
-    
-        // --- LOGIKA JEDA 3 JAM (DIPERBARUI) ---
         const SEKARANG = new Date().getTime();
-        const JEDA_MS = 3 * 60 * 60 * 1000; // 3 Jam dalam milidetik
-    
+        
+        if(!n) return alert("Pilih Nama Kurir!");
+
+        // VALIDASI STATUS BERDASARKAN SERVER
+        const lastS = statusServer[n];
+        if (s === "MASUK" && (lastS === "MASUK" || lastS === "PULANG")) {
+            return alert("Gagal! Anda sudah absen MASUK hari ini.");
+        }
+        if (s === "PULANG" && !lastS) {
+            return alert("Gagal! Anda belum absen MASUK hari ini.");
+        }
+        if (s === "PULANG" && lastS === "PULANG") {
+            return alert("Gagal! Anda sudah absen PULANG hari ini.");
+        }
+
+        // VALIDASI JEDA 3 JAM
         if (s === "PULANG") {
-            const waktuMasukTerakhir = localStorage.getItem('last_absen_masuk_' + n);
-            
-            if (waktuMasukTerakhir) {
-                const selisih = SEKARANG - parseInt(waktuMasukTerakhir);
-                if (selisih < JEDA_MS) {
-                    // Menghitung sisa waktu dalam menit
-                    const sisaMenit = Math.ceil((JEDA_MS - selisih) / (60 * 1000));
-                    const sisaJam = Math.floor(sisaMenit / 60);
-                    const sisaMenitTampil = sisaMenit % 60;
-                    
-                    let pesan = `Gagal! Jeda minimal 3 jam dari absen masuk. \nSisa waktu: `;
-                    pesan += sisaJam > 0 ? `${sisaJam} jam ${sisaMenitTampil} menit.` : `${sisaMenitTampil} menit.`;
-                    
-                    return alert(pesan);
+            const waktuMasuk = localStorage.getItem('last_absen_masuk_' + n);
+            if (waktuMasuk) {
+                const selisih = SEKARANG - parseInt(waktuMasuk);
+                if (selisih < 3 * 60 * 60 * 1000) {
+                    const sisa = Math.ceil((3*60*60*1000 - selisih) / (60*1000));
+                    return alert("Gagal! Jeda minimal 3 jam. Sisa: " + sisa + " menit lagi.");
                 }
-            } else {
-                return alert("Anda belum melakukan absen MASUK hari ini melalui perangkat ini.");
             }
         }
-        // --- AKHIR LOGIKA JEDA ---
-    
-        // ... (sisa kode fetch POST dan success view tetap sama) ...
+
+        // PROSES KIRIM
         const loader = document.getElementById('loading-overlay');
-        const loadText = document.getElementById('load-text');
-        loadText.innerText = "MENGIRIM " + s + "...";
+        document.getElementById('load-text').innerText = "MENGIRIM " + s + "...";
         loader.style.display = 'flex';
-    
-        const waktuAbsen = clock();
-    
+
         try {
             await fetch(URL_APPS, {
                 method: 'POST', 
                 mode: 'no-cors', 
-                body: JSON.stringify({
-                    nama: n, 
-                    status: s,
-                    foto: document.getElementById('p').src
-                })
+                body: JSON.stringify({ nama: n, status: s, foto: document.getElementById('p').src })
             });
-    
-            if (s === "MASUK") {
-                localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
-            }
-    
+
+            if (s === "MASUK") localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
+
             loader.style.display = 'none';
             document.getElementById('res-nama').innerText = n + " (" + s + ")";
-            document.getElementById('res-waktu').innerText = waktuAbsen;
+            document.getElementById('res-waktu').innerText = clock();
             document.getElementById('success-view').style.display = 'flex';
-    
         } catch(e) {
             loader.style.display = 'none';
-            alert("Gagal mengirim data!");
+            alert("Gagal kirim data!");
         }
     }
+
     function getDist(lat1, lon1, lat2, lon2) {
         const R = 6371000, p = Math.PI/180;
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
+    function updateAutoStatus(nama) {
+        const selStatus = document.getElementById('selStatus');
+        const statusTerakhir = statusServer[nama]; // Cek status di data yang ditarik dari server
     
-    function saveName() { localStorage.setItem('user_nama_v13', document.getElementById('selKurir').value); }
+        if (!nama) return;
     
+        if (!statusTerakhir) {
+            // Jika belum ada data sama sekali hari ini
+            selStatus.value = "MASUK";
+        } else if (statusTerakhir === "MASUK") {
+            // Jika sudah absen masuk, arahkan ke pulang
+            selStatus.value = "PULANG";
+        } else if (statusTerakhir === "PULANG") {
+            // Jika sudah absen pulang, kunci agar tidak absen lagi
+            selStatus.value = "PULANG";
+            alert("Anda sudah melakukan absen MASUK dan PULANG hari ini.");
+        }
+    }
+    function saveName() { 
+        const nama = document.getElementById('selKurir').value;
+        localStorage.setItem('user_nama_v13', nama); 
+        updateAutoStatus(nama); // Tambahkan baris ini
+    }
     init();
     clock();
 </script>
