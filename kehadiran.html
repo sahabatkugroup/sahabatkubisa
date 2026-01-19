@@ -250,18 +250,16 @@
 </div>
 
 <canvas id="c"></canvas>
-
 <script>
     const URL_APPS = "https://script.google.com/macros/s/AKfycbyNUbvnX89nM3ke5cj9tG3-nyOfzQzvgtFESaY4SxSmKDl_eC_815s4gFh_Fx-wpKijVQ/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
     
-    let statusServer = {}; // Menyimpan data dari spreadsheet
+    let statusServer = {}; 
     let isGpsValid = false;
     let isFaceValid = false;
     let modelsLoaded = false;
     let faceInterval;
     
-    // 1. Load Model AI
     async function loadModels() {
         const loader = document.getElementById('loading-overlay');
         const loadText = document.getElementById('load-text');
@@ -301,10 +299,9 @@
             });
             document.getElementById('v').srcObject = stream;
             
-            // AMBIL DATA DARI SERVER (Kurir & Status Hari Ini)
+            // AMBIL DATA DARI SERVER
             const res = await fetch(URL_APPS);
             const data = await res.json();
-            
             statusServer = data.statusHariIni || {}; 
             
             const sel = document.getElementById('selKurir');
@@ -334,7 +331,7 @@
             selStatus.value = "MASUK";
         } else if (statusTerakhir === "MASUK") {
             selStatus.value = "PULANG";
-        } else {
+        } else if (statusTerakhir === "PULANG") {
             selStatus.value = "PULANG";
             alert("Sistem mendeteksi Anda sudah Masuk & Pulang hari ini.");
         }
@@ -342,8 +339,10 @@
     
     function saveName() { 
         const nama = document.getElementById('selKurir').value;
-        localStorage.setItem('user_nama_v13', nama); 
-        updateAutoStatus(nama); 
+        if(nama) {
+            localStorage.setItem('user_nama_v13', nama); 
+            updateAutoStatus(nama); 
+        }
     }
 
     async function startFaceDetection() {
@@ -419,12 +418,11 @@
     async function submitData() {
         const n = document.getElementById('selKurir').value;
         const s = document.getElementById('selStatus').value;
-        const jam = new Date().getHours();
         const SEKARANG = new Date().getTime();
         
         if(!n) return alert("Pilih Nama Kurir!");
 
-        // VALIDASI STATUS BERDASARKAN SERVER
+        // 1. VALIDASI STATUS BERDASARKAN SERVER
         const lastS = statusServer[n];
         if (s === "MASUK" && (lastS === "MASUK" || lastS === "PULANG")) {
             return alert("Gagal! Anda sudah absen MASUK hari ini.");
@@ -436,31 +434,36 @@
             return alert("Gagal! Anda sudah absen PULANG hari ini.");
         }
 
-        // VALIDASI JEDA 3 JAM
+        // 2. VALIDASI JEDA 3 JAM
         if (s === "PULANG") {
             const waktuMasuk = localStorage.getItem('last_absen_masuk_' + n);
             if (waktuMasuk) {
                 const selisih = SEKARANG - parseInt(waktuMasuk);
-                if (selisih < 3 * 60 * 60 * 1000) {
-                    const sisa = Math.ceil((3*60*60*1000 - selisih) / (60*1000));
-                    return alert("Gagal! Jeda minimal 3 jam. Sisa: " + sisa + " menit lagi.");
+                const JEDA_3_JAM = 3 * 60 * 60 * 1000;
+                if (selisih < JEDA_3_JAM) {
+                    const sisaMenitTotal = Math.ceil((JEDA_3_JAM - selisih) / (60 * 1000));
+                    const jamSisa = Math.floor(sisaMenitTotal / 60);
+                    const menitSisa = sisaMenitTotal % 60;
+                    return alert(`Gagal! Jeda minimal 3 jam dari absen masuk.\nSisa waktu: ${jamSisa} jam ${menitSisa} menit.`);
                 }
             }
         }
 
-        // PROSES KIRIM
+        // 3. PROSES KIRIM
         const loader = document.getElementById('loading-overlay');
         document.getElementById('load-text').innerText = "MENGIRIM " + s + "...";
         loader.style.display = 'flex';
 
         try {
-            await fetch(URL_APPS, {
+            const response = await fetch(URL_APPS, {
                 method: 'POST', 
                 mode: 'no-cors', 
                 body: JSON.stringify({ nama: n, status: s, foto: document.getElementById('p').src })
             });
 
-            if (s === "MASUK") localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
+            if (s === "MASUK") {
+                localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
+            }
 
             loader.style.display = 'none';
             document.getElementById('res-nama').innerText = n + " (" + s + ")";
@@ -468,7 +471,7 @@
             document.getElementById('success-view').style.display = 'flex';
         } catch(e) {
             loader.style.display = 'none';
-            alert("Gagal kirim data!");
+            alert("Gagal kirim data ke server!");
         }
     }
 
@@ -477,31 +480,7 @@
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
-    function updateAutoStatus(nama) {
-        const selStatus = document.getElementById('selStatus');
-        const statusTerakhir = statusServer[nama]; // Cek status di data yang ditarik dari server
-    
-        if (!nama) return;
-    
-        if (!statusTerakhir) {
-            // Jika belum ada data sama sekali hari ini
-            selStatus.value = "MASUK";
-        } else if (statusTerakhir === "MASUK") {
-            // Jika sudah absen masuk, arahkan ke pulang
-            selStatus.value = "PULANG";
-        } else if (statusTerakhir === "PULANG") {
-            // Jika sudah absen pulang, kunci agar tidak absen lagi
-            selStatus.value = "PULANG";
-            alert("Anda sudah melakukan absen MASUK dan PULANG hari ini.");
-        }
-    }
-    function saveName() { 
-        const nama = document.getElementById('selKurir').value;
-        localStorage.setItem('user_nama_v13', nama); 
-        updateAutoStatus(nama); // Tambahkan baris ini
-    }
+
     init();
     clock();
 </script>
-</body>
-</html>
