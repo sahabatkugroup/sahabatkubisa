@@ -1311,6 +1311,13 @@ select, input {
                 </div>
                 <div class="small" id="ongkirNotaInfo" style="margin-top:4px;color:#555;">Belum dihitung</div>
               </div>
+              <div>
+                <label for="statusOrder">Status Order</label>
+                <select id="statusOrder" onchange="updatePreview()">
+                  <option value="Admin">Admin</option>
+                  <option value="OL">OL (Orderan Luar)</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -2877,12 +2884,13 @@ loadOngkir();
     const total = subtotal + ongkir + tambahTotal;
     const noNota = leftPad((lastNoNota||0)+1);
     const createdAt = new Date().toISOString();
-
+    const statusOrder = document.getElementById('statusOrder').value; // <--- TAMBAHKAN INI
     // Text nota
     const lines = [];
     lines.push('📒 NOTA SAHABATKU DELIVERY');
     lines.push('══════════════════════');
     lines.push(`Kurir   : ${kurir}`);
+    lines.push(`Status  : ${statusOrder}`); // <--- TAMBAHKAN BARIS INI
     lines.push(`No Nota : ${noNota}`);
     lines.push(`Tanggal : ${new Date(createdAt).toLocaleString('id-ID')}`);
     lines.push('──────────────────────');
@@ -2921,6 +2929,7 @@ loadOngkir();
     
     return {
       kurir, noNota, createdAt,
+      statusOrder, // <--- MASUKKAN KE OBJEK AGAR TERSIMPAN DI FIREBASE
       items, tambahans, ongkir, total,
       text: lines.join('\n')
     };
@@ -3117,10 +3126,15 @@ loadOngkir();
       
       let html = '<div class="list-v">';
       notes.forEach(n => {
+          // Cari baris ini di dalam loop notes.forEach:
           html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
               <div style="flex:1">
                   <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
-                  <div style="font-weight:800">No: ${n.noNota} • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}</div>
+                  
+                  <div style="font-weight:800">
+                      No: ${n.noNota} • <span style="color:var(--accent)">[${n.statusOrder || 'Admin'}]</span> • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}
+                  </div>
+                  
                   <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
               </div>
               <div class="btnbar">
@@ -3205,6 +3219,7 @@ loadOngkir();
       lines.push('📒 NOTA SAHABATKU DELIVERY');
       lines.push('══════════════════════════');
       lines.push(`Kurir   : ${nota.kurir || '-'}`);
+      lines.push(`Status  : ${nota.statusOrder || '-'}`); // <--- TAMBAHKAN INI
       lines.push(`No Nota : ${nota.noNota || '-'}`);
       lines.push(`Tanggal : ${new Date(nota.createdAt).toLocaleString('id-ID')}`); // Gunakan createdAt dari DB jika ada
       lines.push('────────────────────────────');
