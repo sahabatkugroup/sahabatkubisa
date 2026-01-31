@@ -3632,58 +3632,75 @@ document.querySelectorAll('nav.tab button').forEach(button => {
 setupSuggestion('asalNotaInput', 'asalNotaSuggest');
 setupSuggestion('tujuanNotaInput', 'tujuanNotaSuggest');
 // Fungsi Kirim Lokasi yang Lebih Stabil
-async function kirimDataKeSheets() {
-  if (!navigator.geolocation) {
-    console.error("Geolocation tidak didukung browser ini.");
-    return;
+async function kirimDataKeSheets(jenisAksi) {
+  if (!navigator.geolocation) return;
+
+  // --- 1. KUNCI DATA DI SINI (Snapshot) ---
+  // Kita ambil data sebelum GPS berjalan agar No Nota tidak berubah
+  const namaKurir = document.getElementById('curUser').innerText.trim();
+  
+  let noNotaAktif = "-";
+  let statusOrderAktif = "-";
+
+  if (jenisAksi !== "Login Aplikasi") {
+    // Ambil nomor nota yang sedang dikerjakan user saat ini
+    noNotaAktif = document.getElementById('nextNota').innerText.trim();
+    statusOrderAktif = document.getElementById('statusOrder').value;
   }
 
+  // --- 2. JALANKAN GPS ---
   navigator.geolocation.getCurrentPosition(async (position) => {
-    // Ambil nama dari elemen curUser sesuai file index (12).html Anda
-    const namaKurir = document.getElementById('curUser').innerText.trim();
-    
-    // Jika nama belum muncul (masih kosong), batalkan kirim
-    if (!namaKurir) return;
+    if (!namaKurir && jenisAksi !== "Login Aplikasi") return;
 
     const lat = position.coords.latitude;
     const lng = position.coords.longitude;
-    
-    // Link Google Maps yang benar
+    // Link Maps yang benar (menggunakan koordinat)
     const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
 
-    // GANTI URL INI dengan URL Web App Anda
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzF4FMOJkjzJozS8XLz5UvTPEnYHrLTAlkTDN2u8T6yw4vStiSyVWBOMbHdZKVi1WTZ/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzAMH4FQP1POtoQDEY56U0WEL4_EdzaTWlmZyXq42ZyX5YsSwpPkolY0LDYVFRJq2M-/exec';
 
     const payload = {
+      waktu: new Date().toLocaleString('id-ID'),
       kurir: namaKurir,
+      noNota: noNotaAktif, // Menggunakan nota yang sudah dikunci di atas
+      statusOrder: statusOrderAktif,
       lokasi: mapsLink,
-      waktu: new Date().toLocaleString('id-ID')
+      aksi: jenisAksi
     };
 
     try {
       await fetch(scriptURL, {
         method: 'POST',
-        mode: 'no-cors', // Penting untuk Google Apps Script
+        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      console.log("Berhasil " + namaKurir);
+      console.log(`Berhasil: ${jenisAksi} | Nota: ${noNotaAktif}`);
     } catch (error) {
-      console.error("Error", error);
+      console.error("Gagal kirim log", error);
     }
   }, (error) => {
-    console.error("Gagal", error.message);
-  });
+    console.error("GPS Error: ", error.message);
+  }, { enableHighAccuracy: true });
 }
 
-// Pantau kapan halaman 'app' muncul setelah login
+// --- TRIGGER OTOMATIS SAAT LOGIN ---
 const observerApp = new MutationObserver(() => {
   const appLayar = document.getElementById('app');
   if (!appLayar.classList.contains('hidden')) {
-    // Tunggu 1 detik agar nama kurir terisi dulu ke elemen curUser
-    setTimeout(kirimDataKeSheets, 1000);
-    observerApp.disconnect(); // Jalankan hanya sekali per buka aplikasi
+    setTimeout(() => kirimDataKeSheets("Login Aplikasi"), 2000);
+    observerApp.disconnect();
   }
+});
+observerApp.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
+
+// --- TRIGGER SAAT KLIK TOMBOL ---
+document.getElementById('btnSaveForm').addEventListener('click', () => {
+    kirimDataKeSheets("Simpan Nota");
+});
+
+document.getElementById('btnExportPreview').addEventListener('click', () => {
+    kirimDataKeSheets("Simpan Foto");
 });
 
 observerApp.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
