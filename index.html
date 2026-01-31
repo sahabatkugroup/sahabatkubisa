@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>Aplikasi Kurir Sahabatku</title>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
   --sky-light: #00CAFF;
@@ -1224,6 +1227,18 @@ select, input {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .warning-strip {
+        background: #fff5f5;
+        border: 1px dashed #feb2b2;
+        color: #c53030;
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-bottom: 15px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
   </style>
 </head>
 <body>
@@ -1377,30 +1392,58 @@ select, input {
             <h3 style="margin-top: 20px;">Semua Riwayat Nota (Akun Ini)</h3>
             <div id="notaHistory"></div>
         </div>
-
         <div id="laporanRekapTab" class="tabContent hidden">
-          <h3>Rekap</h3>
-          <div class="card" style="margin-top: 10px;">
-            <h4>Rekap Bulanan</h4>
-            <div class="grid grid-3">
-              <div>
-                <label>Bulan</label>
-                <input id="rekapMonth" type="month">
+          <div style="display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 12px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <input id="rekapMonth" type="month" style="flex-grow: 1; border: 1px solid #eef2f7; padding: 10px; border-radius: 10px; font-family: inherit; outline: none;">
+            <button id="btnLoadRekap" class="btn" style="background: var(--sky-strong); color: white; border-radius: 10px; padding: 0 20px; font-weight: 700;">MUAT</button>
+          </div>
+        
+          <div id="captureArea" style="background: #fdfdfd; padding: 20px; border-radius: 25px; border: 1px solid #f0f4f8;">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+              <div class="card" style="margin:0; padding:15px; border-radius:20px; border-left: 4px solid #2ecc71;">
+                <small style="font-size:0.6rem; font-weight:800; color:var(--text-secondary); text-transform:uppercase;">Income Hari Ini</small>
+                <h3 id="todayIncome" style="margin:4px 0; color:#2ecc71; font-size:1.2rem; font-weight:800;">Rp 0</h3>
+                <div style="font-size:0.55rem; color:#94a3b8; font-weight: 600;">
+                  O: <span id="hO">0</span> | T: <span id="hT">0</span>
+                </div>
               </div>
-              <div style="align-self: end;">
-                <button id="btnLoadRekap" class="btn">Muat Rekap</button>
+              
+              <div class="card" style="margin:0; padding:15px; border-radius:20px; border-left: 4px solid var(--sky-strong);">
+                <small style="font-size:0.6rem; font-weight:800; color:var(--text-secondary); text-transform:uppercase;">Total Trx Mitra</small>
+                <h3 id="sumTrxBulanan" style="margin:4px 0; color:var(--text-primary); font-size:1.2rem; font-weight:800;">0</h3>
+                <div style="font-size:0.55rem; color:#94a3b8; font-weight: 600;">Aktivitas Bulan Ini</div>
               </div>
             </div>
-            <div class="table-container">
-              <table aria-label="Rekap Bulanan">
-                <thead><tr><th>Tanggal</th><th>Jumlah Nota</th><th>Ongkir</th><th>Tambahan</th><th>Total</th></tr></thead>
-                <tbody id="rekapBody"></tbody>
-                <tfoot><tr><th>Total Bulan</th><th id="sumNota">0</th><th id="sumOngkir">0</th><th id="sumTambahan">0</th><th id="sumTotal">0</th></tr></tfoot>
-              </table>
+        
+            <div id="rekapWarning" style="display:none; background:#fff5f5; border:1px dashed #feb2b2; color:#c53030; padding:12px; border-radius:15px; font-size:0.7rem; margin-bottom:15px; text-align:center;">
+              ⚠️ <strong>Status:</strong> Tidak ada aktivitas input dalam 2 hari terakhir!
             </div>
+        
+            <div style="background: linear-gradient(135deg, #00CAFF, #0077c8); padding: 22px; border-radius: 20px; color: white; margin-bottom: 20px;">
+              <span style="font-size: 0.7rem; opacity: 0.9; font-weight: 700; text-transform: uppercase;">Total Pendapatan Bulan Ini</span>
+              <h1 id="sumTotal" style="margin: 5px 0 15px 0; font-size: 1.8rem; font-weight: 800;">Rp 0</h1>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <div>
+                  <small style="display:block; opacity:0.8; font-size:0.55rem; font-weight:700;">ONGKIR</small>
+                  <strong id="sumOngkir" style="font-size:0.85rem;">0</strong>
+                </div>
+                <div>
+                  <small style="display:block; opacity:0.8; font-size:0.55rem; font-weight:700;">TAMBAHAN</small>
+                  <strong id="sumTambahan" style="font-size:0.85rem;">0</strong>
+                </div>
+                <div>
+                  <small style="display:block; opacity:0.8; font-size:0.55rem; font-weight:700;">JML NOTA</small>
+                  <strong id="sumNota" style="font-size:0.85rem;">0</strong>
+                </div>
+              </div>
+            </div>
+        
+            <h4 style="margin:0 0 10px 5px; font-size:0.8rem; color:var(--text-primary); font-weight:800;">RINCIAN HARIAN</h4>
+            <div id="rekapList" style="display: flex; flex-direction: column; gap: 10px;"></div>
           </div>
         </div>
-
         <div id="mitraTab" class="tabContent hidden">
           <h3>Data Mitra</h3>
           <div class="card">
@@ -2269,8 +2312,6 @@ if(mitraSearchInput) {
             mitraListBody.innerHTML = '<tr><td colspan="5">Gagal memuat data.</td></tr>';
         }
     }
-    // index (1).html: di dalam <script type="module">
-    
     async function addMitraTrx() {
         const mitraSelectEl = el('mitraSelect');
         const mitraId = mitraSelectEl.value;
@@ -2278,46 +2319,38 @@ if(mitraSearchInput) {
         const selectedMonth = el('mitraMonth').value; 
         const kurirId = currentUser; 
         
-        // Ambil Loading Element
         const loader = el('loadingOverlay');
-    
+
         if (!mitraId || !selectedMonth || isNaN(trxToAdd) || trxToAdd <= 0 || !kurirId) {
             if (!kurirId) return alert('Error: ID Kurir tidak ditemukan. Mohon Login ulang.');
             return alert('Pilih mitra, bulan, dan isi jumlah TRX yang valid.');
         }
-    
-        // Tampilkan Loading
+
         loader.style.display = 'flex';
-    
+
         try {
             const mitraName = mitraSelectEl.options[mitraSelectEl.selectedIndex].text;
             
             // LOGIKA WAKTU INDONESIA (WIB)
-            // LOGIKA WAKTU INDONESIA (WIB) YANG AKURAT
             const now = new Date();
-            // Mengonversi waktu lokal ke string format Indonesia dengan zona Jakarta
             const wibString = now.toLocaleString("en-CA", { 
                 timeZone: "Asia/Jakarta", 
                 hour12: false 
             }).replace(', ', 'T'); 
             
-            // today akan menghasilkan format "YYYY-MM-DD" sesuai waktu Jakarta
             const today = wibString.split('T')[0]; 
-            
-            // timestampWIB tetap menggunakan waktu saat ini (universal) 
-            // karena Firebase/Database biasanya mengurutkan berdasarkan UTC global
             const timestampWIB = now.getTime();
-    
+
             const trxRef = ref(db, `mitra_trx_monthly/${mitraId}/${selectedMonth}`);
             const trxDailyRef = ref(db, `mitra_trx_daily/${mitraId}/${today}`); 
-    
+
             const snap = await get(trxRef);
             const currentTrx = snap.exists() ? (snap.val().trx || 0) : 0;
             
             // 1. Update total TRX bulanan
             await set(trxRef, { trx: currentTrx + trxToAdd });
-    
-            // 2. SIMPAN LOG (Menggunakan Timestamp WIB)
+
+            // 2. SIMPAN LOG
             const logRef = push(ref(db, 'mitra_trx_log')); 
             await set(logRef, {
                 kurirId: kurirId, 
@@ -2328,23 +2361,30 @@ if(mitraSearchInput) {
                 tanggal: today,
                 bulanTujuan: selectedMonth
             });
-    
+
             // 3. Tambahkan transaksi harian
             await set(trxDailyRef, { trx: true }); 
-    
+
             alert(`Berhasil menambahkan ${trxToAdd} transaksi.`);
-            el('trxMitraInput').value = '1';
-            el('mitraSelect').value = '';
+
+            // --- BAGIAN RESET FORM ---
+            el('trxMitraInput').value = '0';       // Reset jumlah ke 1
+            el('mitraSelect').value = '';          // Reset pilihan mitra ke default
+            // el('mitraMonth').value = '';        // Boleh direset atau tidak (tergantung kebutuhan)
+
+            // --- AUTO REFRESH RIWAYAT ---
+            // Agar setelah klik "OK" di alert, tabel di bawah langsung muncul data baru
+            if (!el('trxMitraHistoryContainer').classList.contains('hidden')) {
+                refreshMitraTrxHistory(today); 
+            }
             
         } catch (error) {
             console.error("Gagal menambahkan transaksi:", error);
             alert("Gagal menambahkan transaksi: " + error.message);
         } finally {
-            // SEMBUNYIKAN LOADING (Berhasil atau Gagal tetap hilang)
             loader.style.display = 'none';
         }
     }
-    // --- Fungsi untuk Toggle/Tutup Riwayat Transaksi Mitra ---
     async function toggleMitraTrxHistory() {
         const container = el('trxMitraHistoryContainer');
         const button = el('btnToggleTrxHistory');
@@ -2355,12 +2395,12 @@ if(mitraSearchInput) {
             button.textContent = 'Memuat Riwayat...';
             button.disabled = true;
     
-            // 🎯 LOGIC UNTUK TANGGAL HARI INI:
-            const today = new Date().toISOString().slice(0, 10);
-            dateInput.value = today; // Set input ke tanggal hari ini
+            // 🎯 OTOMATIS HARI INI (WIB)
+            const todayIndo = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+            dateInput.value = todayIndo; 
             
-            // Panggil fungsi refresh dengan tanggal hari ini
-            refreshMitraTrxHistory(today).then(() => {
+            // Langsung refresh data berdasarkan hari ini
+            refreshMitraTrxHistory(todayIndo).then(() => {
                 button.textContent = 'Sembunyikan Riwayat Transaksi Mitra';
                 button.disabled = false;
             });
@@ -2371,7 +2411,7 @@ if(mitraSearchInput) {
             button.disabled = false;
         }
     }
-    // --- Fungsi untuk Memuat Riwayat Transaksi Mitra (Difilter Tanggal) ---
+    // --- Fungsi untuk Memuat Riwayat Transaksi Mitra (Sinkron WIB) ---
     async function refreshMitraTrxHistory(filterDate = null) {
         return new Promise((resolve) => {
             if (!currentUser) {
@@ -2390,8 +2430,11 @@ if(mitraSearchInput) {
                         const trx = childSnapshot.val();
                         
                         if (trx.kurirId === currentUser) {
-                            // 🎯 LOGIC FILTER TANGGAL:
-                            const trxDate = new Date(trx.timestamp).toISOString().slice(0, 10);
+                            // 🎯 SINKRONISASI TANGGAL:
+                            // Kita gunakan field 'tanggal' yang sudah kita simpan saat addMitraTrx
+                            // Jika tidak ada, baru fallback ke timestamp yang diconvert ke WIB
+                            const trxDate = trx.tanggal || new Date(trx.timestamp).toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+    
                             if (!filterDate || trxDate === filterDate) {
                                  trxs.push(trx);
                             }
@@ -2399,40 +2442,40 @@ if(mitraSearchInput) {
                     });
                 }
     
-                // Urutkan dan tampilkan data
+                // Urutkan: Terbaru di atas
                 trxs.sort((a, b) => b.timestamp - a.timestamp);
                 historyBody.innerHTML = '';
                 
                 if (trxs.length === 0) {
                     const msg = filterDate 
-                        ? `Tidak ada riwayat transaksi Mitra untuk akun ini pada tanggal ${filterDate}.` 
-                        : 'Belum ada riwayat transaksi Mitra untuk akun ini.';
+                        ? `Tidak ada riwayat transaksi untuk tanggal ${filterDate}.` 
+                        : 'Belum ada riwayat transaksi.';
                     historyBody.innerHTML = `<tr><td colspan="3">${msg}</td></tr>`;
                     resolve();
                     return;
                 }
     
-                // ... (Loop menampilkan data ke tabel) ...
+                // Tampilkan data ke tabel
                 trxs.forEach(trx => {
-                    const date = new Date(trx.timestamp).toLocaleString('id-ID', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
+                    // Format jam menit untuk tampilan tabel (WIB)
+                    const jamIndo = new Date(trx.timestamp).toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
                         hour: '2-digit',
                         minute: '2-digit'
                     });
+    
                     const row = `
                         <tr>
-                            <td>${date}</td>
-                            <td style="text-align:left;">${trx.mitraName || trx.mitraId || '-'}</td>
-                            <td>${trx.trxCount}</td>
+                            <td style="font-size: 0.75rem;">${trx.tanggal}<br><small>${jamIndo} WIB</small></td>
+                            <td style="text-align:left; font-weight:600;">${trx.mitraName || '-'}</td>
+                            <td style="font-weight:bold; color:#2ecc71;">${trx.trxCount}</td>
                         </tr>
                     `;
                     historyBody.insertAdjacentHTML('beforeend', row);
                 });
                 resolve();
             }).catch((error) => {
-                console.error("Gagal memuat riwayat transaksi mitra:", error);
+                console.error("Gagal memuat riwayat:", error);
                 historyBody.innerHTML = '<tr><td colspan="3" style="color:#c0392b;">Gagal memuat data.</td></tr>';
                 resolve();
             });
@@ -3040,39 +3083,44 @@ loadOngkir();
   /* ===================
      RIWAYAT & PELACAK (Realtime)
     ====================*/
-  function refreshNotaHistory(filterDate = null){
-      if(!currentUser) return;
-      const listEl = el('notaHistory'); 
+  function refreshNotaHistory(filterDate = null) {
+      if (!currentUser) return;
+      const listEl = el('notaHistory');
       listEl.innerHTML = 'Memuat...';
   
+      // Helper untuk mendapatkan tanggal YYYY-MM-DD format Indonesia (WIB)
+      const getTglIndo = (dateObj) => {
+          return new Date(dateObj).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+      };
+  
       const notesRef = ref(db, `nota/${currentUser}`);
-      
+  
       if (filterDate) {
-          // ... kode get(notesRef) Anda yang sudah ada tetap sama ...
+          // Jika user mencari tanggal spesifik
           get(notesRef).then(snap => {
               const val = snap.val() || {};
               const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-              const filteredNotes = allNotes.filter(n => n.createdAt.startsWith(filterDate));
+              
+              // Filter berdasarkan tanggal Indonesia
+              const filteredNotes = allNotes.filter(n => getTglIndo(n.createdAt) === filterDate);
               displayNotes(filteredNotes, listEl, filterDate);
-          }).catch(error => { /* ... */ });
+          });
       } else {
-          // PERUBAHAN DI SINI:
-          // Jika tidak ada filter, otomatis ambil tanggal hari ini
-          const today = new Date().toISOString().slice(0, 10);
-          
+          // Tampilan AWAL: Otomatis ambil hari ini (WIB)
+          const todayIndo = getTglIndo(new Date());
+  
           onValue(notesRef, (snap) => {
               const val = snap.val() || {};
-              // Ambil semua data
               const allNotes = Object.values(val).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  
+              // Filter hanya yang tanggal pembuatannya = hari ini di Indonesia
+              const filteredToday = allNotes.filter(n => getTglIndo(n.createdAt) === todayIndo);
+  
+              displayNotes(filteredToday, listEl, todayIndo);
               
-              // FILTER: Hanya ambil yang hari ini saja untuk tampilan awal
-              const filteredToday = allNotes.filter(n => n.createdAt.startsWith(today));
-              
-              // Tampilkan hasil filter (bukan allNotes)
-              displayNotes(filteredToday, listEl, today);
-              
-              todayNotes = filteredToday;
-              updateDailyReport();
+              // Update variabel global jika diperlukan untuk dashboard
+              window.todayNotes = filteredToday;
+              if(typeof updateDailyReport === "function") updateDailyReport();
           });
       }
   }
@@ -3116,30 +3164,34 @@ loadOngkir();
   
   function displayNotes(notes, listEl, filterDate = null) {
       if (notes.length === 0) {
-          if (filterDate) {
-              listEl.innerHTML = `<p class="small">Tidak ada nota pada tanggal ini.</p>`;
-          } else {
-              listEl.innerHTML = '<p class="small">Belum ada nota.</p>';
-          }
+          listEl.innerHTML = `<p class="small" style="text-align:center; padding:20px;">Tidak ada nota pada tanggal ${filterDate || ''}.</p>`;
           return;
       }
-      
-      let html = '<div class="list-v">';
+  
+      let html = '<div class="list-v" style="display:flex; flex-direction:column; gap:10px;">';
       notes.forEach(n => {
-          // Cari baris ini di dalam loop notes.forEach:
-          html += `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #eef6ff;padding:12px;border-radius:12px;background:#fff;gap:8px">
+          // Konversi jam ke WIB untuk tampilan di list
+          const jamIndo = new Date(n.createdAt).toLocaleTimeString('id-ID', { 
+              timeZone: 'Asia/Jakarta', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+          });
+  
+          html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; border:1px solid #eef6ff; padding:12px; border-radius:12px; background:#fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
               <div style="flex:1">
-                  <div class="small">${new Date(n.createdAt).toLocaleString('id-ID')}</div>
-                  
-                  <div style="font-weight:800">
-                      No: ${n.noNota} • <span style="color:var(--accent)">[${n.statusOrder || 'Admin'}]</span> • Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}
+                  <div class="small" style="color:#64748b; font-weight:bold;">🕒 Jam ${jamIndo}</div>
+                  <div style="font-weight:800; margin:4px 0;">
+                      No: ${n.noNota} • <span style="color:var(--sky)">[${n.statusOrder || 'Admin'}]</span>
                   </div>
-                  
-                  <div class="small">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
+                  <div style="font-size:0.9rem; font-weight:700; color:#2ecc71;">
+                      Total: Rp ${(Number(n.total) || 0).toLocaleString('id-ID')}
+                  </div>
+                  <div class="small" style="color:#94a3b8;">${(n.items || []).length} item • Ongkir Rp ${(Number(n.ongkir) || 0).toLocaleString('id-ID')}</div>
               </div>
-              <div class="btnbar">
-                  <button class="btn" onclick="viewNote('${n.id}')">Lihat</button>
-                  <button class="btn danger" onclick="hapusNote('${n.id}')">Hapus</button>
+              <div class="btnbar" style="display:flex; flex-direction:column; gap:5px;">
+                  <button class="btn" style="padding:6px 12px; font-size:0.8rem;" onclick="viewNote('${n.id}')">Lihat</button>
+                  <button class="btn danger" style="padding:6px 12px; font-size:0.8rem;" onclick="hapusNote('${n.id}')">Hapus</button>
               </div>
           </div>`;
       });
@@ -3288,7 +3340,7 @@ loadOngkir();
   }
 );
 window.hapusNote = async (id)=>{
-    if(!confirm('Hapus nota ini dari Firebase?')) return;
+    if(!confirm('Hapus nota ini dari Riwayat?')) return;
     const snap = await get(ref(db, `nota/${currentUser}/${id}`));
     if(!snap.exists()){ alert('Nota tidak ditemukan'); return; }
     const n = snap.val();
@@ -3319,7 +3371,13 @@ window.hapusNote = async (id)=>{
     alert('Nota berhasil dihapus. Nomor nota berikutnya telah diperbarui.');
     refreshNotaHistory();
 };
-
+// Fungsi mendapatkan waktu WIB saat ini dalam format ISO string
+function getWIBTime() {
+  const now = new Date();
+  // Menambahkan offset 7 jam untuk WIB
+  const wibTime = new Date(now.getTime() + (7 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+  return now.toISOString(); // Firebase biasanya simpan ISO, kita atur tampilannya saja nanti
+}
 // Fungsi bantu
 function clearPreviewNota(){
     const preview = document.getElementById('previewNota');
@@ -3333,11 +3391,11 @@ function updateTotalPesananLabel(){
 }
 
 el('btnCariRiwayat').addEventListener('click', () => {
-    const date = el('riwayatDate').value;
-    if (date) {
-        refreshNotaHistory(date);
+    const dateInput = el('riwayatDate').value; // Hasilnya YYYY-MM-DD
+    if (dateInput) {
+        refreshNotaHistory(dateInput);
     } else {
-        alert('Pilih tanggal untuk mencari.');
+        alert('Pilih tanggal dulu.');
     }
 });
 
@@ -3363,57 +3421,133 @@ function updateDailyReport() {
     el('laporanNotaHarian').innerText = todayNotes.length;
     el('laporanOngkirHarian').innerText = formatRp(ongkirHarian + tambahanHarian);
 }
+el('btnLoadRekap').addEventListener('click', async () => {
+    if (!currentUser) return alert('Login dulu!');
+    const ym = el('rekapMonth').value; 
+    if (!ym) return alert('Pilih bulan!');
 
-el('btnLoadRekap').addEventListener('click', async ()=>{
-  if(!currentUser){ alert('Login dulu'); return; }
-  const ym = el('rekapMonth').value;
-  if(!ym){ alert('Pilih bulan'); return; }
-  const [year, month] = ym.split('-').map(Number);
+    const [year, month] = ym.split('-').map(Number);
+    
+    // 1. Ambil Data
+    const snapNota = await get(ref(db, `nota/${currentUser}`));
+    const snapTrxLog = await get(ref(db, 'mitra_trx_log'));
+    
+    const dataNota = snapNota.val() || {};
+    const dataTrx = snapTrxLog.val() || {};
+    
+    const byDate = {};
 
-  const snap = await get(ref(db, `nota/${currentUser}`));
-  const val = snap.val()||{};
-  const arr = Object.values(val);
-  const byDate = {};
+    // --- LOGIKA WAKTU INDONESIA ---
+    const options = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const todayStr = new Date().toLocaleDateString('en-CA', options); // YYYY-MM-DD jam HP
 
-  arr.forEach(n=>{
-    const d = new Date(n.createdAt);
-    if(d.getFullYear()===year && (d.getMonth()+1)===month){
-      const key = n.createdAt.slice(0,10);
-      if(!byDate[key]) byDate[key] = {count:0,ongkir:0,tambahan:0,total:0, ids:[]};
-      byDate[key].count++;
-      byDate[key].ongkir += Number(n.ongkir)||0;
-      const t = Array.isArray(n.tambahans) ? n.tambahans.reduce((s,x)=> s+(Number(x.nominal)||0), 0) : 0;
-      byDate[key].tambahan += t;
-      byDate[key].total += (Number(n.ongkir)||0) + t;
-      byDate[key].ids.push(n.id || n._id || n.key); // simpan id nota
+    let hIncome = 0, hO = 0, hT = 0;
+    let totalTrxBulanan = 0;
+
+    // --- 2. PROSES DATA NOTA (Sumber Utama Rincian Harian) ---
+    Object.values(dataNota).forEach(n => {
+        if (!n.createdAt) return;
+        
+        // Konversi createdAt (UTC) ke Tanggal Indonesia (WIB)
+        const dObj = new Date(n.createdAt);
+        const dStrIndo = dObj.toLocaleDateString('en-CA', options); // Hasil: YYYY-MM-DD
+        
+        const ong = Number(n.ongkir) || 0;
+        const tam = Array.isArray(n.tambahans) 
+            ? n.tambahans.reduce((s, x) => s + (Number(x.nominal) || 0), 0) 
+            : (Number(n.tambahan) || 0);
+        const tot = ong + tam;
+
+        // Dashboard Atas: Income Hari Ini (Realtime WIB)
+        if (dStrIndo === todayStr) {
+            hIncome += tot;
+            hO += ong;
+            hT += tam;
+        }
+
+        // Kelompokkan Nota per Tanggal (Hanya untuk bulan yang dipilih user)
+        const [yIndo, mIndo] = dStrIndo.split('-').map(Number);
+        if (yIndo === year && mIndo === month) {
+            if (!byDate[dStrIndo]) {
+                byDate[dStrIndo] = { notaCount: 0, trxCount: 0, ongkir: 0, tambahan: 0, total: 0 };
+            }
+            byDate[dStrIndo].notaCount++;
+            byDate[dStrIndo].ongkir += ong;
+            byDate[dStrIndo].tambahan += tam;
+            byDate[dStrIndo].total += tot;
+        }
+    });
+
+    // --- 3. PROSES DATA TRX MITRA (Sinkronkan dengan Tanggal Indonesia) ---
+    Object.values(dataTrx).forEach(t => {
+        if (t.kurirId === currentUser && t.timestamp) {
+            const tObj = new Date(t.timestamp);
+            const tStrIndo = t.tanggal || tObj.toLocaleDateString('en-CA', options);
+
+            const [yT, mT] = tStrIndo.split('-').map(Number);
+            
+            // Akumulasi Total TRX Mitra Sebulan (Dashboard Atas)
+            if (yT === year && mT === month) {
+                totalTrxBulanan += (Number(t.trxCount) || 0);
+                
+                // Masukkan ke rincian harian hanya jika tanggal tersebut ada notanya
+                if (byDate[tStrIndo]) {
+                    byDate[tStrIndo].trxCount += (Number(t.trxCount) || 0);
+                }
+            }
+        }
+    });
+
+    // --- 4. UPDATE DASHBOARD ATAS ---
+    el('todayIncome').innerText = "Rp " + hIncome.toLocaleString('id-ID');
+    el('hO').innerText = hO.toLocaleString('id-ID');
+    el('hT').innerText = hT.toLocaleString('id-ID');
+    el('sumTrxBulanan').innerText = totalTrxBulanan.toLocaleString('id-ID');
+
+    // --- 5. RENDER LIST (Hanya Tanggal yang ada Riwayat Nota) ---
+    const listContainer = el('rekapList');
+    listContainer.innerHTML = '';
+    let sN = 0, sOng = 0, sTam = 0, sTot = 0;
+
+    const sortedDates = Object.keys(byDate).sort().reverse();
+
+    if (sortedDates.length === 0) {
+        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada riwayat nota di bulan ini.</div>';
+    } else {
+        sortedDates.forEach(k => {
+            const v = byDate[k];
+            const card = `
+                <div style="background:white; padding:12px; border-radius:15px; border:1px solid #f1f5f9; display:grid; grid-template-columns: 50px 1fr 90px; align-items:center; margin-bottom:8px;">
+                    <div style="text-align:center; border-right:2px solid #f8fbff;">
+                        <small style="display:block; font-size:0.5rem; color:#94a3b8; font-weight:800;">TGL</small>
+                        <strong style="font-size:1rem;">${k.split('-')[2]}</strong>
+                    </div>
+                    <div style="padding-left:12px;">
+                        <div style="font-size:0.85rem; font-weight:800;">${v.notaCount} Nota | ${v.trxCount || 0} Trx Mitra</div>
+                        <div style="font-size:0.6rem; color:#64748b;">O: ${v.ongkir.toLocaleString()} | T: ${v.tambahan.toLocaleString()}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <small style="display:block; font-size:0.5rem; color:#94a3b8;">TOTAL</small>
+                        <strong style="font-size:0.85rem; color:#2ecc71;">Rp${v.total.toLocaleString()}</strong>
+                    </div>
+                </div>`;
+            listContainer.insertAdjacentHTML('beforeend', card);
+            
+            sN += v.notaCount;
+            sOng += v.ongkir;
+            sTam += v.tambahan;
+            sTot += v.total;
+        });
     }
-  });
 
-  const tbody = el('rekapBody'); 
-  tbody.innerHTML='';
-  let sumNota=0,sumO=0,sumT=0,sumTot=0;
-
-  Object.keys(byDate).sort().forEach(k=>{
-      const v = byDate[k];
-      const totalHarian = v.ongkir + v.tambahan;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-          <td>${new Date(k).toLocaleDateString('id-ID')}</td>
-          <td>${v.count}</td>
-          <td>${v.ongkir.toLocaleString('id-ID')}</td>
-          <td>${v.tambahan.toLocaleString('id-ID')}</td>
-          <td>${totalHarian.toLocaleString('id-ID')}</td>
-      `;
-      tbody.appendChild(tr);
-      sumNota += v.count; sumO += v.ongkir; sumT += v.tambahan; sumTot += totalHarian;
-  });
-
-  el('sumNota').innerText = sumNota;
-  el('sumOngkir').innerText = sumO.toLocaleString('id-ID');
-  el('sumTambahan').innerText = sumT.toLocaleString('id-ID');
-  el('sumTotal').innerText = sumTot.toLocaleString('id-ID');
+    // --- 6. UPDATE SUMMARY TOTAL (BOX BIRU) ---
+    el('sumNota').innerText = sN;
+    el('sumOngkir').innerText = "Rp " + sOng.toLocaleString('id-ID');
+    el('sumTambahan').innerText = "Rp " + sTam.toLocaleString('id-ID');
+    el('sumTotal').innerText = "Rp " + sTot.toLocaleString('id-ID');
+    
+    el('btnDownloadRekap').style.display = 'block';
 });
-
 /* ===================
    Export / Share Image (Web)
    Versi Sinkron dengan Preview (#notaPreview)
@@ -3677,10 +3811,10 @@ async function kirimDataKeSheets(jenisAksi) {
       });
       console.log(`Berhasil: ${jenisAksi} | Nota: ${noNotaAktif}`);
     } catch (error) {
-      console.error("Gagal kirim log", error);
+      console.error("Gagal", error);
     }
   }, (error) => {
-    console.error("GPS Error: ", error.message);
+    console.error("Error: ", error.message);
   }, { enableHighAccuracy: true });
 }
 
