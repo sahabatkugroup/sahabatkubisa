@@ -419,13 +419,13 @@
     
         // --- LOGIKA VALIDASI JADWAL OPERASIONAL ---
         if (s === "MASUK") {
-            if (jam < 5 || jam >= 20) {
-                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 20:00 WIB.");
+            if (jam < 5 || jam >= 21) {
+                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 21:00 WIB.");
             }
         } else if (s === "PULANG") {
-            const bolehPulang = (jam >= 14 || jam < 2);
+            const bolehPulang = (jam >= 14 || jam < 5);
             if (!bolehPulang) {
-                return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 02:00 WIB.");
+                return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 05:00 WIB.");
             }
         }
     
