@@ -419,8 +419,8 @@
     
         // --- LOGIKA VALIDASI JADWAL OPERASIONAL ---
         if (s === "MASUK") {
-            if (jam < 5 || jam >= 21) {
-                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 21:00 WIB.");
+            if (jam < 5 || jam >= 22) {
+                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 22:00 WIB.");
             }
         } else if (s === "PULANG") {
             const bolehPulang = (jam >= 14 || jam < 5);
