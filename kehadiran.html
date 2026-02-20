@@ -291,16 +291,16 @@
     setInterval(clock, 1000);
     
     async function init() {
-        const jam = new Date().getHours();
-        
-        // Aplikasi tidak bisa diakses sama sekali antara jam 02:00 pagi hingga 04:59 pagi
-        if (jam >= 2 && jam < 5) {
+        // BAGIAN DIBAWAH INI DINONAKTIFKAN (DIBLOKIR) AGAR TIDAK MUNCUL
+        /* if (jam >= 2 && jam < 5) {
             const blockView = document.getElementById('time-blocked');
             blockView.querySelector('p').innerHTML = "Mohon Maaf, aplikasi absensi tidak aktif pada jam<br><strong>02:00 - 05:00 WIB</strong>";
             blockView.style.display = 'flex';
             return;
         }
-        
+        */
+        const jam = new Date().getHours();
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
