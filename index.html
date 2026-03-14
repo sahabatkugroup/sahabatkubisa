@@ -25,6 +25,7 @@
   --text-primary: #0b3b5a;
   --text-main: #0080f7;     /* Font yang Anda minta */
   --text-secondary: #506273;
+  --content-max-width: 900px; /* Lebar yang ingin disamakan */
 }
 
 * {
@@ -1364,8 +1365,9 @@ select, input {
       margin: 20px 0;
       box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
       overflow: hidden; /* Penting agar animasi tidak keluar dari radius */
+      width: 100%;
+      box-sizing: border-box; /* Penting agar padding tidak merusak lebar */
     }
-    
     /* Membuat garis kiri dan kanan dengan animasi */
     .nota-card::before, .nota-card::after {
       content: '';
@@ -1862,7 +1864,6 @@ select, input {
             <i data-lucide="gauge"></i> Pengaturan
           </button>
         </nav>
-    <div id="contentWrapper" style="padding-bottom: 100px;">
       <div class="card">
         <div id="notaTab" class="tabContent active">
           <h3>Buat / Edit Nota</h3>
