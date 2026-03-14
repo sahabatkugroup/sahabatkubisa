@@ -12,9 +12,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-  --sky-light: #0080f7;
-  --sky: #0080f7;
-  --sky-strong: #0080f7;
+  --sky-light: #00CAFF;
+  --sky: #00CAFF;
+  --sky-strong: #00CAFF;
   --accent: #0077c8;
   --muted: #4a6fa5;
   --card-bg: #ffffff;
@@ -23,7 +23,6 @@
   --shadow-light: rgba(74, 144, 226, 0.15);
   --shadow-strong: rgba(74, 144, 226, 0.3);
   --text-primary: #0b3b5a;
-  --text-main: #0080f7;     /* Font yang Anda minta */
   --text-secondary: #506273;
 }
 
@@ -47,420 +46,107 @@ html, body {
   margin: 24px auto;
   padding: 16px 20px;
 }
-.pro-header-modern {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  margin: 20px auto;
-  max-width: 900px;
-  
-  /* Bentuk tidak kotak (pill shape) */
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 40px; /* Radius tinggi untuk menghilangkan kesan kaku */
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  
-  /* Shadow lembut dan melayang */
-  box-shadow: 0 15px 35px -5px rgba(11, 72, 112, 0.15);
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.pro-header-modern {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  margin: 15px auto;
-  max-width: 900px;
-  
-  /* Glassmorphism Premium */
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 24px;
-  
-  /* Soft Shadow */
-  box-shadow: 0 8px 32px rgba(11, 72, 112, 0.1);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.avatar-mock {
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #0b4870, #0077c8);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 4px 10px rgba(11, 72, 112, 0.2);
-}
-
-.title {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #0b4870;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-}
-
-/* Status Indicator dengan Deteksi Internet */
-.status-indicator {
-  font-size: 9px;
-  color: #64748b;
-  font-weight: 700;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.dot {
-  width: 7px;
-  height: 7px;
-  background: #2ecc71; /* Hijau Online */
-  border-radius: 50%;
-  box-shadow: 0 0 6px #2ecc71;
-}
-
-.status-indicator.offline .dot {
-  background: #e74c3c; /* Merah Offline */
-  box-shadow: 0 0 6px #e74c3c;
-}
-
-.nota-floating-pill {
-  background: rgba(11, 72, 112, 0.05);
-  padding: 6px 14px;
-  border-radius: 16px;
-  text-align: right;
-  border: 1px solid rgba(11, 72, 112, 0.1);
-}
-
-.nota-floating-pill small {
-  font-size: 8px;
-  color: #0b4870;
-  opacity: 0.7;
-  display: block;
-  text-transform: uppercase;
-}
-
-.nota-value {
-  font-weight: 900;
-  font-size: 1rem;
-  color: #0b4870;
-}
-
-.btn-logout-minimal {
-  background: none;
-  border: none;
-  color: #ff416c;
-  padding: 10px;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.btn-logout-minimal:hover {
-  background: rgba(255, 65, 108, 0.1);
-}
-/* --- FULL WIDTH LAYOUT --- */
-#contentWrapper {
-  padding: 20px 20px 120px 20px; /* Padding kiri-kanan agar kartu tidak menempel layar */
-  width: 100%;                   /* Memastikan konten mengisi lebar */
-  max-width: 100%;               /* Menghilangkan batasan 500px */
-  margin: 0 auto;
-  box-sizing: border-box;        /* Penting: agar padding tidak menambah lebar */
-}
-
 .card {
-  background: #ffffff;             /* Background putih bersih */
-  padding: 20px;                  /* Sama dengan section-container */
-  border-radius: 20px;            /* Sama dengan section-container */
-  border: 1px solid #e2e8f0;      /* Border tipis untuk kejelasan */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Bayangan lembut */
-  margin-bottom: 24px;
-  width: 100%;
+  background: var(--card-bg);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 10px 30px var(--shadow-light);
+  border: 1px solid var(--border);
+  
+  /* TAMBAHKAN INI */
+  margin-bottom: 20px; /* Jarak antar card sebesar 20px */
+  display: block;      /* Memastikan card mengambil ruang baris baru */
 }
 
-/* GARIS BIRU DIHAPUS (Hapus block .card::before di kode lama Anda) */
-.card::before {
-  display: none; 
+/* Opsional: Menghilangkan jarak pada card terakhir agar tidak ada ruang kosong berlebih di bawah */
+.card:last-child {
+  margin-bottom: 0;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 40px var(--shadow-strong);
+  transform: translateY(-2px); /* Tambahan sedikit efek angkat saat hover agar lebih premium */
+  transition: all 0.3s ease;    /* Agar pergerakan smooth */
 }
 
-/* --- TYPOGRAPHY --- */
 h2, h3 {
-  margin: 0 0 16px 0;
-  color: var(--text-main); /* Warna font yang Anda minta */
+  margin: 8px 0 16px 0;
+  color: var(--sky-strong);
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.02em;
 }
 
 label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.75rem;
-  color: #64748b;                /* Warna label lebih soft */
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-/* Menggabungkan style agar kartu tidak perlu banyak pengaturan ulang */
-.section-container, 
-.card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-}
-/* Pastikan CSS ini ada di style tag Anda */
-.line-card {
-  position: relative;
-  /* ... properti lainnya ... */
-}
-
-.removeBtn-floating {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #ff4d4d;
-  color: white;
-  border: 2px solid white;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  margin-top: 12px;
   font-size: 14px;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 10;
-  transition: transform 0.2s, background 0.2s;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.removeBtn-floating:hover {
-  transform: scale(1.1);
-  background: #ff1a1a;
-}
-/* 1. Section Container (Pembungkus Utama) */
-.section-container {
-  width: 100%;
-  max-width: 900px; /* Samakan dengan header */
-  margin: 20px auto;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.75); /* Efek semi-transparan */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 24px; /* Samakan dengan header */
-  box-shadow: 0 8px 32px rgba(11, 72, 112, 0.1);
-  box-sizing: border-box;
-}
-
-/* 2. Kartu Item (line-card) di dalam container */
-.line-card {
-  background: rgba(0, 128, 247, 0.85); /* Biru dengan sedikit transparansi */
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 20px; /* Sedikit lebih melengkung dari container */
-  margin-bottom: 16px;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 128, 247, 0.2);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* 3. Header di dalam container agar senada */
-.section-header {
-  background: rgba(0, 128, 247, 0.9);
-  padding: 16px 20px;
-  border-radius: 16px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-/* Judul h3 spesifik untuk section */
-.section-container h3.section-title {
-  margin: 0;
-  font-size: 0.800rem;        /* Ukuran besar dan jelas */
-  font-weight: 800;         /* Sangat t0.800l */
-  color: #ffffff;           /* Teks putih */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
-}
-/* Judul section dengan warna putih */
-.section-title {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #ffffff; /* Teks Putih */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Tombol FAB di dalam header biru (Putih dengan aksen biru) */
-.btn-fab {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #ffffff; /* Background tombol putih */
-  color: #0080f7;      /* Warna ikon/teks biru */
-  border: none;
-  font-size: 1.2rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.btn-fab:hover {
-  transform: scale(1.1);
-}
-
-/* Warna untuk Nama Item dan Detail di dalam konten */
-.item-name, 
-.tambahan-name {
-  color: #0080f7; /* Warna biru untuk isi item */
-  font-weight: 700;
-}
-
-/* Grid Layout untuk Total/Summary di bawah */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
-}
-/* --- INPUT FIELDS --- */
-input, select, textarea {
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="month"],
+input[type="date"],
+textarea,
+select {
   width: 100%;
   padding: 14px 16px;
-  border-radius: 16px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;           /* Background putih bersih */
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+  background: var(--glass);
   outline: none;
   font-size: 1rem;
-  color: #1e293b;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+  color: var(--text-primary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(0, 119, 200, 0.08);
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="month"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--sky-strong);
+  box-shadow: 0 0 8px var(--sky-strong);
+  background: #f0f8ff;
 }
-
-/* --- LOGOUT BUTTON --- */
 #btnLogout {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 9999;
-  padding: 8px 16px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 12px;           /* Senada dengan input */
-  border: none;
-  background: #fee2e2;           /* Warna soft red */
-  color: #dc2626;                /* Teks merah */
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#btnLogout:hover {
-  background: #fecaca;
-  transform: translateY(-2px);
-}
-/* Container Utama: Penyangga Navigasi */
-.dock-container {
-  position: fixed;
-  bottom: 25px; /* Jarak dari bawah */
-  left: 0;
-  width: 100%;
-  z-index: 9999;
-  display: flex;
-  justify-content: center; /* Memaksa isi container ke tengah */
-  pointer-events: none; /* Klik tembus area kosong */
-}
-
-/* Navigasi Inner: Biarkan ukurannya pas dengan konten */
-.dock-inner {
-  pointer-events: auto;
-  display: flex;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 6px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  position: fixed;   /* Mengunci posisi terhadap layar (bukan terhadap card) */
+  top: 15px;         /* Jarak dari atas layar */
+  right: 15px;       /* Jarak dari kanan layar */
+  z-index: 9999;     /* Lapisan paling tinggi, tidak akan tertutup apa pun */
   
-  /* PENTING: Gunakan width fit-content agar tidak melar */
-  width: fit-content; 
-  max-width: 92vw; /* Memberi ruang napas di kiri-kanan layar */
-  overflow-x: auto;
-  gap: 4px;
-}
-
-.dock-inner::-webkit-scrollbar { display: none; }
-
-.dock-inner button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 14px;
+  /* Desain agar tetap keren */
+  padding: 8px 15px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 50px;
   border: none;
-  background: transparent;
-  color: #8898aa;
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: 40px;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  white-space: nowrap;
-}
-
-/* Animasi Ikon & Tombol saat Aktif */
-.dock-inner button.active {
-  background: #0b4870;
+  background: linear-gradient(45deg, #ff4b2b, #ff416c);
   color: white;
-  transform: translateY(-5px); /* Efek melompat halus */
-  box-shadow: 0 8px 15px rgba(11, 72, 112, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 65, 108, 0.4);
+  cursor: pointer;
+  transition: opacity 0.3s; /* Hanya animasi transparan saat hilang/muncul */
 }
 
-.dock-inner button i {
-  transition: transform 0.3s ease;
+/* Hilangkan animasi scale/rotate agar tidak terasa 'geser' saat ditekan */
+#btnLogout:active {
+  opacity: 0.8;
+}
+/* Hover efek animasi keren */
+#btnLogout:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 6px 25px rgba(255,65,108,0.6);
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  text-shadow: 0 0 5px #fff;
 }
 
-.dock-inner button.active i {
-  transform: scale(1.15); /* Ikon sedikit membesar */
-}
-
-.dock-inner button:active {
-  transform: scale(0.9) translateY(0);
-}
 /* --- Notifikasi Style --- */
 #notificationBtn {
   position: fixed;
@@ -688,6 +374,15 @@ nav.tab button:active {
   grid-template-columns: repeat(4, 1fr);
 }
 
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-weight: 700;
+  color: var(--sky-strong);
+  font-size: 1.1rem;
+}
 .section-title .small {
   color: #00CAFF !important;
   font-size: 1.1rem;     /* ukuran sedikit lebih besar dari default */
@@ -701,39 +396,20 @@ nav.tab button:active {
   flex-direction: column;
   gap: 12px;
 }
+/* === Kartu Item Dua Baris === */
 .line-card {
-  background: #0080f7; /* Background Biru */
-  padding: 16px;
+  background: #00CAFF;
+  border: 1.5px solid var(--border);
   border-radius: 16px;
-  margin-bottom: 12px;
-  color: #ffffff;      /* Teks Putih */
-  box-shadow: 0 4px 10px rgba(0, 128, 247, 0.2);
-}
-/* Styling agar kolom input punya background putih sendiri */
-.line-card input {
-  background: #ffffff !important; /* Background putih bersih */
-  color: #1e293b !important;      /* Teks gelap agar mudah dibaca */
-  border: 1px solid #e2e8f0;      /* Border tipis */
-  border-radius: 8px;             /* Sudut membulat */
-  padding: 8px 12px;              /* Ruang agar tidak sempit */
-  font-weight: 600;
-  width: 100%;
-  box-sizing: border-box;         /* Penting agar lebar pas */
+  padding: 16px 20px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
-/* Label agar tetap terbaca di atas background biru */
-.line-card label {
-  color: #ffffff; 
-  font-size: 0.75rem;
-  margin-bottom: 4px;
-  font-weight: 600;
-  display: block;
-}
-
-.line-card .isub {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #ffffff;
+.line-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 128, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 /* === Baris Atas === */
@@ -885,37 +561,7 @@ nav.tab button:active {
   padding: 8px 14px;
 
 }
-/* Container Total & Action */
-.total-action-container {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 24px;
-  border: 1px solid #e2e8f0;
-  margin-top: 24px;
-}
 
-.total-display {
-  margin-bottom: 20px;
-}
-
-#totalPesanan {
-  font-size: 2rem; /* Ukuran lebih besar agar menonjol */
-  color: #0080f7; /* Warna utama Anda */
-  font-weight: 800;
-  letter-spacing: -1px;
-}
-
-/* Action Bar: Gunakan Flex-wrap agar tombol otomatis turun ke baris baru di HP */
-.btnbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.btnbar .btn {
-  flex: 1 1 calc(50% - 10px); /* Tombol mengisi 50% lebar di HP */
-  min-width: 140px;
-}
 /* Nota Preview */
 .nota-box {
   white-space: pre-wrap;
@@ -929,60 +575,7 @@ nav.tab button:active {
   font-size: 0.95rem;
   box-shadow: inset 0 0 10px #dbeeff;
 }
-/* Container Total & Aksi */
-.total-action-container {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 24px;
-  border: 1px solid #e2e8f0;
-  margin-top: 24px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-}
 
-/* Tampilan Total */
-.total-display {
-  margin-bottom: 24px;
-  text-align: center; /* Dibuat center agar terlihat menonjol */
-}
-
-#totalPesanan {
-  font-size: 2.5rem;
-  color: #0080f7;
-  font-weight: 800;
-  letter-spacing: -1.5px;
-  transition: all 0.3s ease;
-}
-
-/* Grid Tombol 2x2 */
-.btn-grid-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 kolom sejajar */
-  gap: 12px;
-}
-
-/* Tombol Premium */
-.btn-premium {
-  padding: 14px;
-  border-radius: 16px;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
-}
-
-.btn-premium:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-.btn-premium:active { transform: scale(0.95); }
-
-/* Warna Tombol */
-.btn-save { background: #0080f7; color: white; }
-.btn-photo { background: #6366f1; color: white; }
-.btn-wa { background: #25d366; color: white; }
-.btn-clear { background: #dc2626; color: white; }
 /* Table */
 .table-container {
     overflow-x: auto;
@@ -1118,26 +711,7 @@ select, input {
     padding: 12px 14px;
     gap: 8px;
   }
-  /* Styling untuk label di dalam line-card */
-  .line-card .small {
-    color: #ffffff !important; /* Memaksa warna putih */
-    font-weight: 600;
-    font-size: 0.75rem;
-    margin-bottom: 4px;
-    display: block;
-    opacity: 0.9;             /* Sedikit transparan agar lebih elegan */
-  }
-  
-  /* Pastikan input di dalamnya juga terbaca dengan jelas */
-  .line-card input {
-    color: #ffffff;           /* Teks yang diketik user juga putih */
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Garis bawah putih */
-    width: 100%;
-    padding: 8px 0;
-    font-weight: 700;
-  }
+
 
   /* Font dan padding lebih kecil untuk teks dan tombol mini */
   .line-card .sub {
@@ -1375,104 +949,48 @@ select, input {
         line-height: 1.4;
       }
     }
-    /* --- Nota Card dengan Animasi Garis Sisi --- */
+
+    /* Nota Card Style */
     .nota-card {
-      position: relative;
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 24px;
-      margin: 20px 0;
-      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
-      overflow: hidden; /* Penting agar animasi tidak keluar dari radius */
+      background: linear-gradient(180deg, #00CAFF 50%, #00CAFF 100%);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 8px 24px rgba(0, 128, 255, 0.1);
+      margin-top: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
     }
     
-    /* Membuat garis kiri dan kanan dengan animasi */
-    .nota-card::before, .nota-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      width: 4px; /* Ketebalan garis */
-      height: 100%;
-      background: #0080f7;
-      opacity: 0; /* Awalnya transparan */
-      transition: opacity 0.3s ease;
+    .nota-card:hover {
+      box-shadow: 0 10px 30px rgba(0, 128, 255, 0.2);
+      transform: translateY(-2px);
     }
-    
-    .nota-card::before { left: 0; }  /* Garis kiri */
-    .nota-card::after { right: 0; } /* Garis kanan */
-    
-    /* Animasi saat hover */
-    .nota-card:hover::before, 
-    .nota-card:hover::after {
-      opacity: 1;
-      animation: pulse-border 1.5s infinite;
-    }
-    
-    @keyframes pulse-border {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(100%); }
-    }
-    
-    /* Pastikan warna teks di dalam tetap biru */
-    .nota-card h2, .nota-card h3, .nota-card p {
-      color: #0080f7 !important;
-    }
-    /* Layout baris atas: Nama Kurir dan Ongkir */
-    .top-row-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr; /* Nama Kurir lebih kecil, Ongkir lebih lebar untuk tombol */
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    /* Layout bawah: Dibuat lebih elegan dengan spasi dan visual feedback */
-    .bottom-row-full {
-      width: 100%;
-      margin-top: 20px;
-      /* Tambahkan padding/margin agar tidak menempel ke atas */
-      padding-top: 4px; 
-    }
-    
-    /* Memastikan label status terlihat senada */
-    .bottom-row-full label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.75rem;
-      color: #64748b;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    /* Responsif: Jika layar sangat kecil (HP), tumpuk semua ke bawah */
-    @media (max-width: 450px) {
-      .top-row-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    /* --- Modern Item Table --- */
+
+    /* --- Daftar Item Rapi --- */
     .item-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 12px; /* Memberi jarak antar baris */
-      margin-top: 10px;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px var(--shadow-light);
     }
     
-    .item-table td {
-      padding: 16px;
-      background: #f8fafc;
-      border-top: 1px solid #e2e8f0;
-      border-bottom: 1px solid #e2e8f0;
+    .item-table th, .item-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
     }
-    
-    .item-table td:first-child { border-left: 1px solid #e2e8f0; border-radius: 12px 0 0 12px; }
-    .item-table td:last-child { border-right: 1px solid #e2e8f0; border-radius: 0 12px 12px 0; }
     
     .item-table th {
-      text-transform: uppercase;
-      font-size: 0.7rem;
-      letter-spacing: 1px;
-      color: #64748b;
-      padding: 8px;
+      background: linear-gradient(90deg, var(--sky-strong), #6fc2ff);
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
     
     .item-table td input[type="text"],
@@ -1552,90 +1070,64 @@ select, input {
       color: #b0c6e0;
       font-style: italic;
     }
+    /* Tombol kecil modern di pojok kanan atas */
     .btn-fab {
-      width: 42px;
-      height: 42px;
-      border-radius: 16px; /* Lebih kotak rounded agar modern */
-      background: #2ecc71;
-      color: white;
+      position: absolute;
+      top: -4px;
+      right: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: var(--sky-strong);
+      color: #fff;
       border: none;
-      box-shadow: 0 8px 16px -4px rgba(46, 204, 113, 0.5);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      transition: all 0.25s ease;
     }
-    
-    .btn-fab:hover {
-      transform: rotate(90deg) scale(1.1); /* Efek rotasi saat hover */
-      box-shadow: 0 12px 20px -4px rgba(46, 204, 113, 0.7);
-    }
-    .line-card-tambahan {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 20px;
-      border: 1px solid #e2e8f0;
-      margin-top: 15px;
-      transition: all 0.3s ease;
-      border-left: 5px solid #0077c8; /* Aksen warna */
-    }
-    
-    /* Animasi Pulse yang lebih halus */
-    @keyframes pulse-soft {
-      0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-    }
-    
     .btn-fab.secondary {
-      animation: pulse-soft 2s infinite;
+      background: #2ecc71 !important; 
+      color: #ffffff !important;      /* Teks putih */
+      border: 2px solid #2ecc71 !important;
     }
-    /* Mengatur agar kartu konsisten */
+    .btn-fab.secondary:hover {
+      /* Override hover shadow dengan warna hijau agar serasi */
+      box-shadow: 0 6px 18px rgba(46, 204, 113, 0.6); 
+      transform: scale(1.15); /* Biar tombolnya membesar juga */
+    }
     .line-card-tambahan {
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(0, 128, 255, 0.1);
-      padding: 16px;
-      border-radius: 20px;
-      margin-bottom: 12px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       transition: all 0.3s ease;
     }
+    .line-card-tambahan:hover {
+      box-shadow: 0 8px 20px rgba(0,128,255,0.1);
+      transform: translateY(-2px);
+    }
     
-    /* Pastikan input terlihat bagus di grid */
+    /* baris atas sejajar seperti daftar item */
     .line-card-tambahan .top-row {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 2fr 1fr; /* kiri panjang, kanan sempit */
       gap: 12px;
       align-items: end;
     }
     
-    /* KHUSUS HP: Mengatur agar tidak terlalu menumpuk */
-    @media (max-width: 600px) {
-      .line-card-tambahan .top-row {
-        grid-template-columns: 1fr; /* Jadi satu baris ke bawah */
-        gap: 10px;
-      }
-      
-      /* Membuat tombol sedikit lebih ringkas di HP */
-      .line-card-tambahan .bottom-row .mini-btn {
-        padding: 12px 0; /* Sedikit lebih tebal agar enak dipencet jempol */
-        font-size: 0.85rem;
-      }
-
-    }
-    /* Pastikan bottom-row membentang penuh */
+    /* tombol hapus full panjang di bawah */
     .line-card-tambahan .bottom-row {
-      margin-top: 14px;
-      width: 100%; /* Memastikan kontainer tombol lebar penuh */
+      margin-top: 12px;
     }
-    
-    /* Update tombol agar full-width */
     .line-card-tambahan .bottom-row .mini-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;       /* Full ke kanan dan kiri */
-      padding: 12px 0;   /* Lebih nyaman untuk jempol di HP */
+      width: 100%;
+      padding: 10px 0;
       border-radius: 10px;
       font-size: 0.9rem;
       font-weight: 600;
@@ -1643,13 +1135,13 @@ select, input {
       color: white;
       border: none;
       cursor: pointer;
-      box-sizing: border-box; /* SANGAT PENTING: Agar padding tidak merusak lebar */
       transition: background 0.3s ease, transform 0.2s ease;
     }
-    /* Samakan border-radius dengan input/select Anda */
-    .line-card-tambahan .mini-btn {
-      border-radius: 8px; /* Sesuaikan dengan border-radius input Anda */
+    .line-card-tambahan .bottom-row .mini-btn:hover {
+      background: #e04e4e;
+      transform: translateY(-1px);
     }
+    
     /* Responsif di HP */
     @media (max-width: 700px) {
       .line-card-tambahan .top-row {
@@ -1695,29 +1187,30 @@ select, input {
       100% { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
     }
     .suggest {
+      display: none;
       position: absolute;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-      padding: 8px;
-      margin-top: 8px;
-      z-index: 999;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      margin-top: 2px;
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 99;
     }
     
-    .s-item {
-      padding: 12px;
-      color: #334155;
-      border-radius: 10px;
-    }
-    
-    .s-item:hover {
-      background: #f1f5f9;
-    }
     .suggest.show {
       display: block;
     }
-
+    
+    .s-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      color: #eee;
+    }
+    
+    .s-item:hover {
+      background: #444;
+    }
     .input-wrap {
       position: relative;
     }
@@ -1746,7 +1239,6 @@ select, input {
         align-items: center;
         gap: 8px;
       }
-      
   </style>
 </head>
 <body>
@@ -1773,29 +1265,25 @@ select, input {
 
     <div id="app" class="hidden">
       <button id="notificationBtn" aria-label="Buka notifikasi">🔔<span id="notificationBadge" class="badge hidden"></span></button>
-      <button id="btnLogout" class="btn-logout-minimal hidden">
-        <i data-lucide="log-out"></i>
+      <button id="btnAbsenFloating" onclick="window.location.href='kehadiran.html'" title="Absen Kehadiran">
+        <i data-lucide="calendar-check"></i>
       </button>
-    <header class="pro-header-modern animate__animated animate__fadeInDown">
-      <div class="user-profile">
-        <div class="avatar-mock">
-          <i data-lucide="user"></i>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <h2>Halo, <span id="curUser" style="color:#0b4870;font-weight:800"></span></h2>
+          <div class="small">Buat nota • Simpan Nota • Rekap bulanan • Cek Ongkir</div>
         </div>
-        <div class="user-info">
-          <h2 class="title">Halo, <span id="curUser"></span></h2>
-          <div id="statusIndicator" class="status-indicator">
-            <span class="dot"></span> <span id="statusText">Sedang online</span>
-          </div>
+        <div>
+          <div class="small">No Nota berikutnya:</div>
+          <div id="nextNota" style="font-weight:800;font-size:18px;color:#0b4870">-</div>
         </div>
+          <button id="btnLogout" class="btn danger hidden">Logout</button>
+
       </div>
-      
-      <div class="nota-floating-pill">
-        <small>Next Nota</small>
-        <div id="nextNota" class="nota-value">-</div>
-      </div>
-    </header>
-        <nav class="dock-container animate__animated animate__slideInUp" id="tabNav">
-          <div class="dock-inner">
+    </div>
+      <div class="card">
+        <nav class="tab" id="tabNav">
           <button data-tab="notaTab" class="active">
             <i data-lucide="layers-3"></i> Nota
           </button>
@@ -1804,9 +1292,6 @@ select, input {
           </button>
           <button data-tab="laporanRekapTab">
             <i data-lucide="activity"></i> Rekap
-          </button>
-          <button onclick="window.location.href='kehadiran.html'">
-            <i data-lucide="calendar-check"></i> Absensi
           </button>
           <button data-tab="ongkirTab">
             <i data-lucide="map-pinned"></i> Cek Ongkir
@@ -1824,67 +1309,66 @@ select, input {
             <i data-lucide="gauge"></i> Pengaturan
           </button>
         </nav>
-      <div class="card">
+        
         <div id="notaTab" class="tabContent active">
           <h3>Buat / Edit Nota</h3>
           <div class="nota-card">
-            <div class="top-row-grid">
-              <div class="input-group">
+            <div class="grid grid-3">
+              <div>
                 <label for="kurirName">Nama Kurir</label>
                 <input id="kurirName" type="text" readonly>
               </div>
-              
-              <div class="input-group">
+              <div>
                 <label for="ongkir">Ongkir (Rp)</label>
-                <div style="display: flex; gap: 8px;">
-                  <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()">
-                  <button id="btnCekOngkirNota" class="btn secondary">Cek</button>
+                <div style="display: flex; gap: 6px;">
+                  <input id="ongkir" type="number" value="0" min="0" oninput="calculateTotal()" style="flex:1;">
+                  <button id="btnCekOngkirNota" class="btn secondary" style="padding: 10px 14px;">Cek</button>
                 </div>
+                <div class="small" id="ongkirNotaInfo" style="margin-top:4px;color:#555;">Belum dihitung</div>
+              </div>
+              <div>
+                <label for="statusOrder">Status Order</label>
+                <select id="statusOrder" onchange="updatePreview()">
+                  <option value="Admin">Admin</option>
+                  <option value="OL">OL (Orderan Luar)</option>
+                </select>
               </div>
             </div>
-          
-            <div class="bottom-row-full">
-              <label for="statusOrder">Status Orderan</label>
-              <select id="statusOrder" onchange="updatePreview()">
-                <option value="Admin">Admin</option>
-                <option value="OL">OL (Orderan Luar)</option>
-              </select>
+          </div>
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Daftar Item</div>
+            <button id="btnAddItem" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah item">+</button>
+          </div>
+          <div id="itemsArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="section-title" style="margin-top: 14px; position: relative;">
+            <div class="small" style="font-weight: 700;">Tambahan Biaya</div>
+            <button id="btnAddTambahan" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah biaya tambahan">+</button>
+          </div>
+          <div id="tambahanArea" class="list-v" style="margin-top: 10px;"></div>
+
+          <div class="grid grid-3" style="margin-top: 8px; align-items: end;">
+            <div class="nota-card">
+              <div>
+                <label>Total</label>
+                <div id="totalPesanan" style="font-weight: 800; font-size: 22px; color: var(--danger-color);">Rp 0</div>
+                <div class="small">Subtotal item + ongkir + tambahan</div>
+              </div>
+              <div></div>
+              <div class="btnbar" style="justify-content: flex-end;">
+                <button id="btnSaveForm" class="btn secondary" aria-label="Simpan nota">Simpan Nota</button>
+                <button id="btnExportPreview" class="btn secondary" aria-label="Simpan foto">Simpan Foto</button>
+                <button id="btnSharePreview" class="btn secondary" aria-label="Bagikan WhatsApp">Bagikan WhatsApp</button>
+                <button id="btnClearAll" class="btn danger" aria-label="Bersihkan semua">Bersihkan Semua</button>
+              </div>
             </div>
           </div>
-          <div class="section-container animate__animated animate__fadeInDown">
-            <div class="section-header">
-              <h3 class="section-title">Daftar Item</h3>
-              <button id="btnAddItem" class="btn-fab" aria-label="Tambah item">+</button>
-            </div>
-            <div id="itemsArea" class="list-v"></div>
-          </div>
-          
-          <div class="section-container animate__animated animate__fadeInDown">
-            <div class="section-header">
-              <h3 class="section-title">Tambahan Biaya</h3>
-              <button id="btnAddTambahan" class="btn-fab" aria-label="Tambah biaya">+</button>
-            </div>
-            <div id="tambahanArea" class="list-v"></div>
-          </div>
-          <div class="total-action-container">
-            <div class="total-display">
-              <label style="color: #64748b; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">Total Keseluruhan</label>
-              <div id="totalPesanan">Rp 0</div>
-              <div class="small" style="color: #94a3b8; margin-top: 4px;">Subtotal item + ongkir + tambahan</div>
-            </div>
-          
-            <div class="btn-grid-layout">
-              <button id="btnSaveForm" class="btn-premium btn-save">Simpan Nota</button>
-              <button id="btnExportPreview" class="btn-premium btn-photo">Simpan Foto</button>
-              <button id="btnSharePreview" class="btn-premium btn-wa">Bagikan WhatsApp</button>
-              <button id="btnClearAll" class="btn-premium btn-clear">Bersihkan Semua</button>
-            </div>
-          </div>
-          
-          <div class="card preview-card">
-            <div class="section-header">
-              <h3 class="section-title" style="margin: 0;">Preview Nota</h3>
-              <span id="previewFilename" class="small">-</span>
+
+          <div class="card preview-card" style="margin-top: 10px;">
+            <div class="section-title">
+              <h3 style="margin: 0;">Preview Nota</h3>
+              <div class="small"><span id="previewFilename">-</span></div>
             </div>
             <div id="notaPreview" class="nota-box">Belum ada nota.</div>
           </div>
@@ -3254,70 +2738,110 @@ loadOngkir();
   
     updateTotals();
   }
+
   function addTambahanUI(pref = {}) {
-    const row = document.createElement("div");
-    row.className = "line-card";
-    row.style.position = "relative"; // Penting untuk acuan tombol melayang
-    
-    row.innerHTML = `
-      <button class="removeBtn-floating" title="Hapus">✕</button>
-  
-      <div class="top-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; align-items: end;">
-        <div>
-          <label class="small">Jenis Tambahan</label>
-          <select class="t-type" style="width: 100%;">
-            <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
-            <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
-            <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
-            <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
-            <option ${pref.type === "Tambahan Tempat (Ojek)" ? "selected" : ""}>Tambahan Tempat (Ojek)</option>
-            <option ${pref.type === "Tambahan Tempat >3 (Pasar)" ? "selected" : ""}>Tambahan Tempat >3 (Pasar)</option>
-            <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
-            <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
-            <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
-            <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
-            <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
-          </select>
+      const row = document.createElement("div");
+      row.className = "line-card line-card-tambahan";
+      
+      // Perhatikan bahwa di sini saya sudah memastikan input nominal bertipe text
+      // dan sudah diformat di awal: value="${(pref.nominal || 0).toLocaleString('id-ID')}"
+      row.innerHTML = `
+        <div class="top-row" style="
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 14px;
+            align-items: end;
+        ">
+          <div>
+            <label class="small">Jenis Tambahan</label>
+            <select class="t-type" style="width: 100%;">
+              <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
+              <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
+              <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
+              <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
+              <option ${pref.type === "Tambahan Tempat (Ojek)" ? "selected" : ""}>Tambahan Tempat (Ojek)</option>
+              <option ${pref.type === "Tambahan Tempat >3 (Pasar)" ? "selected" : ""}>Tambahan Tempat >3 (Pasar)</option>
+              <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
+              <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
+              <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
+              <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
+              <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Nominal (Rp)</label>
+            <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" style="width: 100%;">
+          </div>
         </div>
-        <div>
-          <label class="small">Nominal (Rp)</label>
-          <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" style="width: 100%;">
+        
+        <div class="bottom-row" style="margin-top: 14px;">
+          <button class="mini-btn t-remove" style="width: 100%;">Hapus Tambahan</button>
         </div>
-      </div>
-    `;
-    
-    tambahanArea.appendChild(row);
-    
-    const typeSelect = row.querySelector(".t-type");
-    const nominalInput = row.querySelector(".t-nom");
+      `;
+      
+      tambahanArea.appendChild(row);
+      
+      // Ambil referensi elemen setelah mereka dimasukkan ke dalam DOM
+      const typeSelect = row.querySelector(".t-type");
+      const nominalInput = row.querySelector(".t-nom");
   
-    // Event Listener Nominal
-    nominalInput.addEventListener("input", (e) => {
-      let value = e.target.value.replace(/\D/g, '');
-      e.target.value = value === '' ? '' : Number(value).toLocaleString('id-ID');
-      updateTotals();
-    });
+      // 🎯 KODE BARU DIMULAI DI SINI 🎯
+      
+      // 1. Event Listener INPUT pada Nominal (Untuk Formatting 2.000, 5.000, dll.)
+      nominalInput.addEventListener("input", (e) => {
+          let value = e.target.value;
+          value = value.replace(/\D/g, ''); // Hapus semua non-digit (termasuk titik/koma)
   
-    // Event Listener Tipe (Auto Nominal)
-    typeSelect.addEventListener("change", () => {
-      const autoPrices = {
-        "Tambahan Ojeg": 2000, "Tambahan Malam": 2000, "Tambahan Hujan": 2000,
-        "Tambahan Parkir": 2000, "Tambahan Tempat": 2000, "Tambahan Tempat (Ojek)": 2000,
-        "Tambahan Tempat >3 (Pasar)": 3000, "Tambahan Cash Minuman": 5000
-      };
-      const autoNominal = autoPrices[typeSelect.value] || 0;
-      nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
+          if (value === '') {
+              e.target.value = '';
+          } else {
+              const numericValue = Number(value);
+              e.target.value = numericValue.toLocaleString('id-ID');
+          }
+          updateTotals(); // Hitung ulang total
+      });
+  
+      // 2. Event Listener CHANGE pada Tipe Tambahan (Untuk Harga Otomatis)
+      typeSelect.addEventListener("change", () => {
+          const selectedType = typeSelect.value;
+          let autoNominal = 0;
+  
+          switch(selectedType) {
+              case "Tambahan Ojeg":
+              case "Tambahan Malam":
+              case "Tambahan Hujan":
+              case "Tambahan Parkir":
+              case "Tambahan Tempat":
+              case "Tambahan Tempat (Ojek)":
+                  autoNominal = 2000;
+                  break;
+              case "Tambahan Tempat >3 (Pasar)":
+                  autoNominal = 3000;
+                  break;
+              case "Tambahan Cash Minuman":
+                  autoNominal = 5000;
+                  break;
+              // Tambahan Kapasitas & Lainnya akan tetap 0 (input manual)
+              default:
+                  autoNominal = 0; 
+                  break;
+          }
+  
+          // Set nilai nominal input. Gunakan toLocaleString agar tampil 2.000 atau 5.000
+          nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
+          
+          // Setelah nilai berubah, panggil updateTotals
+          updateTotals();
+      });
+      
+      // 3. Event Listener Hapus (Kode lama Anda)
+      row.querySelector(".t-remove").addEventListener("click", () => {
+        row.remove();
+        updateTotals();
+      });
+      
       updateTotals();
-    });
-    
-    // Event Listener Hapus Melayang
-    row.querySelector(".removeBtn-floating").addEventListener("click", () => {
-      row.remove();
-      updateTotals();
-    });
-    
-    updateTotals();
-  }
+   }
   function updateTotals() {
     let total = 0;
   
@@ -4231,22 +3755,7 @@ function scrollToCenter(element) {
   const scrollPos = element.offsetLeft - (container.offsetWidth / 2) + (element.offsetWidth / 2);
   container.scrollTo({ left: scrollPos, behavior: 'smooth' });
 }
-function checkConnection() {
-  const statusEl = document.getElementById('statusIndicator');
-  const textEl = document.getElementById('statusText');
-  
-  if (navigator.onLine) {
-    statusEl.classList.remove('offline');
-    textEl.innerText = "Sedang online";
-  } else {
-    statusEl.classList.add('offline');
-    textEl.innerText = "Offline";
-  }
-}
 
-window.addEventListener('online', checkConnection);
-window.addEventListener('offline', checkConnection);
-checkConnection();
 document.querySelectorAll('nav.tab button').forEach(button => {
   button.addEventListener('click', function() {
     scrollToCenter(this);
@@ -4327,6 +3836,7 @@ document.getElementById('btnSaveForm').addEventListener('click', () => {
 document.getElementById('btnExportPreview').addEventListener('click', () => {
     kirimDataKeSheets("Simpan Foto");
 });
+
 observerApp.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
 lucide.createIcons();
 </script>
