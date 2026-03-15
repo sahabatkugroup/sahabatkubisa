@@ -12,9 +12,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-  --sky-light: #00CAFF;
-  --sky: #00CAFF;
-  --sky-strong: #00CAFF;
+  --sky-light: #0080f7;
+  --sky: #0080f7;
+  --sky-strong: #0080f7;
   --accent: #0077c8;
   --muted: #4a6fa5;
   --card-bg: #ffffff;
@@ -23,6 +23,7 @@
   --shadow-light: rgba(74, 144, 226, 0.15);
   --shadow-strong: rgba(74, 144, 226, 0.3);
   --text-primary: #0b3b5a;
+  --text-main: #0080f7;     /* Font yang Anda minta */
   --text-secondary: #506273;
 }
 
@@ -146,7 +147,239 @@ select:focus {
   background: linear-gradient(45deg, #ff416c, #ff4b2b);
   text-shadow: 0 0 5px #fff;
 }
+/* --- Premium Header Element --- */
+.header-element-premium {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 40px; /* Sangat bulat agar tidak kaku */
+  padding: 30px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 10px 30px rgba(0, 128, 247, 0.08),
+    0 20px 60px rgba(0, 0, 0, 0.03);
+  animation: slideDownIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
 
+/* Dekorasi background elemen */
+.header-element-premium::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(0, 128, 247, 0.1) 0%, transparent 70%);
+  z-index: 0;
+}
+
+/* User Info Styling */
+.user-visual-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 1;
+}
+
+.avatar-soft-glow {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #0080f7, #00c6ff);
+  border-radius: 20px; /* Squircle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 10px 20px rgba(0, 128, 247, 0.3);
+}
+
+.text-upper-tiny {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.user-name-stylish {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #0b4870;
+  letter-spacing: -0.5px;
+}
+
+.feature-pills {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.pill-dot { color: #0080f7; font-weight: 900; }
+
+/* Nota Status Column (Right Top) */
+.nota-status-column {
+  background: #f8fafc;
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  text-align: right;
+  min-width: 120px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.nota-status-column:hover {
+  transform: translateY(-3px);
+  border-color: #0080f7;
+  box-shadow: 0 10px 20px rgba(0, 128, 247, 0.05);
+}
+
+.nota-mini-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.nota-value-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.nota-number-small {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #0080f7;
+}
+
+.pulse-indicator {
+  width: 8px;
+  height: 8px;
+  background: #2ecc71;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #2ecc71;
+  animation: pulse-green 2s infinite;
+}
+
+/* Animations */
+@keyframes slideDownIn {
+  from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.wave-hand {
+  display: inline-block;
+  animation: wave 2.5s infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(14deg); }
+  40% { transform: rotate(-8deg); }
+  60% { transform: rotate(10deg); }
+}
+
+/* Responsive Mobile */
+@media (max-width: 600px) {
+  .header-element-premium {
+    padding: 20px;
+    flex-direction: column;
+    gap: 20px;
+    border-radius: 30px;
+  }
+  .nota-status-column {
+    width: 100%;
+    text-align: left;
+  }
+  .nota-value-wrapper { justify-content: flex-start; }
+}
+/* Container Navigasi: Glassmorphism Effect */
+.floating-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  overflow-x: auto;
+  padding: 5px 10px;
+  z-index: 9999;
+  scrollbar-width: none;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.floating-bottom-nav::-webkit-scrollbar { display: none; }
+
+/* Tombol dengan Animasi Spring */
+.floating-bottom-nav button {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
+  border-radius: 12px;
+}
+
+/* Efek Active: Tombol sedikit naik dan berubah warna */
+.floating-bottom-nav button.active {
+  color: #0080f7;
+  transform: translateY(-8px);
+  background: rgba(0, 128, 247, 0.08);
+}
+
+/* Ikon dengan transisi halus */
+.floating-bottom-nav button i {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+
+.floating-bottom-nav button.active i {
+  transform: scale(1.1);
+}
+
+/* Biar konten tidak tertutup */
+body { padding-bottom: 90px; }
 /* --- Notifikasi Style --- */
 #notificationBtn {
   position: fixed;
@@ -304,15 +537,15 @@ nav.tab button i {
 /* Warna Khusus Icon Saat Aktif (Modern Look) */
 nav.tab button.active {
   background: white;
-  color: #00CAFF;
-  border-color: #00CAFF;
+  color: #0080f7;
+  border-color: #0080f7;
   transform: translateY(-5px);
   box-shadow: 0 10px 20px var(--shadow-strong);
 }
 
 nav.tab button.active i {
   transform: scale(1.2) rotate(-5deg);
-  color: #00CAFF; /* Icon jadi berwarna biru terang */
+  color: #0080f7; /* Icon jadi berwarna biru terang */
 }
 
 /* Efek Klik Animasi */
@@ -384,7 +617,7 @@ nav.tab button:active {
   font-size: 1.1rem;
 }
 .section-title .small {
-  color: #00CAFF !important;
+  color: #0080f7;!important;
   font-size: 1.1rem;     /* ukuran sedikit lebih besar dari default */
   font-weight: 700;
   letter-spacing: 0.3px; /* biar lebih rapi */
@@ -396,22 +629,204 @@ nav.tab button:active {
   flex-direction: column;
   gap: 12px;
 }
-/* === Kartu Item Dua Baris === */
-.line-card {
-  background: #00CAFF;
-  border: 1.5px solid var(--border);
+/* Container Total */
+.total-action-card {
+  background: white;
+  padding: 24px;
+  border-radius: 28px;
+  box-shadow: 0 15px 35px rgba(0, 128, 247, 0.15);
+  margin-top: 25px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Animasi Total Berdenyut (Pulse) */
+@keyframes pulse-total {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.total-value {
+  font-size: 40px;
+  font-weight: 900;
+  color: #0080f7;
+  margin: 5px 0;
+  animation: pulse-total 2s infinite ease-in-out;
+}
+
+.total-label { font-size: 11px; font-weight: 800; color: #94a3b8; letter-spacing: 1.5px; }
+
+/* Grid Tombol 2x2 */
+.btnbar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 14px 10px;
   border-radius: 16px;
-  padding: 16px 20px;
-  margin-top: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-weight: 700;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+/* Container Kotak Total */
+.total-highlight-box {
+  background: linear-gradient(135deg, #0080f7 0%, #00d2ff 100%);
+  padding: 25px;
+  border-radius: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 128, 247, 0.4);
+  margin-top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
+}
+
+/* Animasi Fokus / Pulse */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(0, 128, 247, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(0, 128, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 128, 247, 0); }
+}
+
+.total-highlight-box {
+  animation: pulse-glow 3s infinite;
+}
+
+/* Angka Total */
+.total-pesanan-text {
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 10px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.label-total {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.btn-logout-tiny {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px; /* Sangat kecil */
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.btn-logout-tiny:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.05);
+}
+/* Warna Tombol Modern */
+.btn-save { background: #0080f7; color: white; }
+.btn-photo { background: #6366f1; color: white; }
+.btn-wa { background: #25d366; color: white; }
+.btn-clear { background: #fee2e2; color: #ef4444; }
+
+.btn:active { transform: translateY(2px); opacity: 0.9; }
+.btn-absen-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2); /* Efek glass */
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
   transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.line-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 128, 255, 0.1);
+.btn-absen-mini:hover {
+  background: white;
+  color: #0080f7;
   transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
+/* Pastikan icon lucide ter-render dengan benar */
+.btn-absen-mini i {
+  stroke-width: 2.5;
+}
+/* === Kartu Item === */
+.line-card {
+  background: #0080f7;
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 20px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* === Nama Item (Full Lebar) === */
+.col-name input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  background: #ffffff;
+  color: #333;
+}
+
+/* === Subtotal: Highlight Paling Menonjol === */
+.isub {
+  /* Efek menonjol dengan background kontras & border */
+  background: rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  padding: 16px 20px;
+  border-radius: 14px;
+  text-align: right;
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 0.5px;
+  margin-top: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Label total agar lebih estetik */
+.isub::before {
+  content: "TOTAL";
+  font-size: 0.7rem;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
 /* === Baris Atas === */
 .top-row {
   display: grid;
@@ -473,7 +888,7 @@ nav.tab button:active {
   right: 25px;
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #00CAFF 0%, #0077c8 100%);
+  background: linear-gradient(135deg, #0080f7 0%, #0077c8 100%);
   color: white;
   border-radius: 18px; /* Sudut agak kotak melengkung modern (Squircle) */
   display: flex;
@@ -496,7 +911,7 @@ nav.tab button:active {
 
 #btnAbsenFloating:hover {
   transform: translateY(-5px) scale(1.05);
-  background: linear-gradient(135deg, #0077c8 0%, #00CAFF 100%);
+  background: linear-gradient(135deg, #0077c8 0%, #0080f7 100%);
 }
 
 #btnAbsenFloating i {
@@ -563,17 +978,56 @@ nav.tab button:active {
 }
 
 /* Nota Preview */
+/* Container Nota Preview */
 .nota-box {
-  white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  background: #f5faff;
-  padding: 20px 24px;
-  border-radius: 16px;
-  border: 1.5px solid #c9dbf8;
-  min-height: 160px;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  box-shadow: inset 0 0 10px #dbeeff;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  font-family: 'Courier New', Courier, monospace; /* Kesan struk klasik */
+  color: #1e293b;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efek Kertas (Dashed Line) */
+.nota-box::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 20px; right: 20px;
+  height: 1px;
+  border-top: 2px dashed #cbd5e1;
+}
+
+/* Styling Tabel Nota */
+.nota-box table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.nota-box th {
+  text-align: left;
+  border-bottom: 2px solid #0080f7;
+  padding-bottom: 8px;
+  color: #0080f7;
+  font-size: 14px;
+}
+
+.nota-box td {
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+/* Total di Nota */
+.nota-total {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #1e293b;
+  text-align: right;
+  font-weight: 900;
+  font-size: 18px;
 }
 
 /* Table */
@@ -952,7 +1406,7 @@ select, input {
 
     /* Nota Card Style */
     .nota-card {
-      background: linear-gradient(180deg, #00CAFF 50%, #00CAFF 100%);
+      background: linear-gradient(180deg, #0080f7  50%, #0080f7 100%);
       border: 1.5px solid var(--border);
       border-radius: 20px;
       padding: 24px 28px;
@@ -966,7 +1420,13 @@ select, input {
       box-shadow: 0 10px 30px rgba(0, 128, 255, 0.2);
       transform: translateY(-2px);
     }
-
+    .nota-card label {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 6px;
+      display: block;
+    }
     /* --- Daftar Item Rapi --- */
     .item-table {
       width: 100%;
@@ -1265,51 +1725,52 @@ select, input {
 
     <div id="app" class="hidden">
       <button id="notificationBtn" aria-label="Buka notifikasi">🔔<span id="notificationBadge" class="badge hidden"></span></button>
-      <button id="btnAbsenFloating" onclick="window.location.href='kehadiran.html'" title="Absen Kehadiran">
-        <i data-lucide="calendar-check"></i>
-      </button>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div>
-          <h2>Halo, <span id="curUser" style="color:#0b4870;font-weight:800"></span></h2>
-          <div class="small">Buat nota • Simpan Nota • Rekap bulanan • Cek Ongkir</div>
+    <div class="header-element-premium">
+      <div class="user-visual-group">
+        <div class="avatar-soft-glow">
+          <i data-lucide="user" class="icon-user"></i>
         </div>
-        <div>
-          <div class="small">No Nota berikutnya:</div>
-          <div id="nextNota" style="font-weight:800;font-size:18px;color:#0b4870">-</div>
+        <button id="btnLogout" class="btn-logout-tiny hidden">
+          <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+          <span></span>
+        </button>
+        <div class="greeting-content">
+          <span class="text-upper-tiny">Professional Courier</span>
+          <h2 class="user-name-stylish">Halo, <span id="curUser"></span> <span class="wave-hand">👋</span></h2>
+          
+          <div class="feature-pills">
+            <span class="pill">Buat nota</span>
+            <span class="pill-dot">•</span>
+            <span class="pill">Rekap</span>
+            <span class="pill-dot">•</span>
+            <span class="pill">Cek Ongkir</span>
+          </div>
+    
+          <button id="btnAbsenModern" class="btn-absen-mini" onclick="window.location.href='kehadiran.html'">
+            <i data-lucide="calendar-check" style="width:14px; height:14px;"></i>
+            <span>Klik untuk Absen</span>
+          </button>
         </div>
-          <button id="btnLogout" class="btn danger hidden">Logout</button>
-
+      </div>
+      <div class="nota-status-column">
+        <div class="nota-mini-label">NEXT NOTA ID</div>
+        <div class="nota-value-wrapper">
+          <span id="nextNota" class="nota-number-small">-</span>
+          <div class="pulse-indicator"></div>
+        </div>
       </div>
     </div>
+      <nav class="floating-bottom-nav" id="tabNav">
+        <button data-tab="notaTab" class="active"><i data-lucide="layers-3"></i><span>Nota</span></button>
+        <button data-tab="riwayatTab"><i data-lucide="timer"></i><span>Riwayat</span></button>
+        <button data-tab="laporanRekapTab"><i data-lucide="activity"></i><span>Rekap</span></button>
+        <button data-tab="ongkirTab"><i data-lucide="map-pinned"></i><span>Ongkir</span></button>
+        <button onclick="window.location.href='absensi-kurir-sahabatku.html'"><i data-lucide="calendar-range"></i><span>Jadwal</span></button>
+        <button data-tab="mitraTab"><i data-lucide="contact-2"></i><span>Mitra</span></button>
+        <button data-tab="sopTab"><i data-lucide="sparkles"></i><span>SOP</span></button>
+        <button data-tab="pengaturanTab"><i data-lucide="gauge"></i><span>Setting</span></button>
+      </nav>
       <div class="card">
-        <nav class="tab" id="tabNav">
-          <button data-tab="notaTab" class="active">
-            <i data-lucide="layers-3"></i> Nota
-          </button>
-          <button data-tab="riwayatTab">
-            <i data-lucide="timer"></i> Riwayat
-          </button>
-          <button data-tab="laporanRekapTab">
-            <i data-lucide="activity"></i> Rekap
-          </button>
-          <button data-tab="ongkirTab">
-            <i data-lucide="map-pinned"></i> Cek Ongkir
-          </button>
-          <button onclick="window.location.href='absensi-kurir-sahabatku.html'">
-            <i data-lucide="calendar-range"></i> Jadwal OFF
-          </button>
-          <button data-tab="mitraTab">
-            <i data-lucide="contact-2"></i> Data Mitra
-          </button>
-          <button data-tab="sopTab">
-            <i data-lucide="sparkles"></i> SOP
-          </button>
-          <button data-tab="pengaturanTab">
-            <i data-lucide="gauge"></i> Pengaturan
-          </button>
-        </nav>
-        
         <div id="notaTab" class="tabContent active">
           <h3>Buat / Edit Nota</h3>
           <div class="nota-card">
@@ -1347,21 +1808,18 @@ select, input {
             <button id="btnAddTambahan" class="btn btn-fab secondary" style="background: #2ecc71 !important; color: white !important; border: 2px solid #2ecc71 !important;" aria-label="Tambah biaya tambahan">+</button>
           </div>
           <div id="tambahanArea" class="list-v" style="margin-top: 10px;"></div>
-
-          <div class="grid grid-3" style="margin-top: 8px; align-items: end;">
-            <div class="nota-card">
-              <div>
-                <label>Total</label>
-                <div id="totalPesanan" style="font-weight: 800; font-size: 22px; color: var(--danger-color);">Rp 0</div>
-                <div class="small">Subtotal item + ongkir + tambahan</div>
-              </div>
-              <div></div>
-              <div class="btnbar" style="justify-content: flex-end;">
-                <button id="btnSaveForm" class="btn secondary" aria-label="Simpan nota">Simpan Nota</button>
-                <button id="btnExportPreview" class="btn secondary" aria-label="Simpan foto">Simpan Foto</button>
-                <button id="btnSharePreview" class="btn secondary" aria-label="Bagikan WhatsApp">Bagikan WhatsApp</button>
-                <button id="btnClearAll" class="btn danger" aria-label="Bersihkan semua">Bersihkan Semua</button>
-              </div>
+          <div class="total-action-card animate__animated animate__fadeInUp">
+            <div class="total-highlight-box animate__animated animate__zoomIn">
+              <div class="label-total">TOTAL KESELURUHAN</div>
+              <div id="totalPesanan" class="total-pesanan-text">Rp 0</div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Termasuk ongkir & tambahan</div>
+            </div>
+          
+            <div class="btnbar-grid">
+              <button id="btnSaveForm" class="btn btn-save">Simpan Data</button>
+              <button id="btnExportPreview" class="btn btn-photo">Simpan Foto</button>
+              <button id="btnSharePreview" class="btn btn-wa">Bagikan WA</button>
+              <button id="btnClearAll" class="btn btn-clear">Bersihkan Semua</button>
             </div>
           </div>
 
@@ -1420,7 +1878,7 @@ select, input {
               ⚠️ <strong>Status:</strong> Tidak ada aktivitas input dalam 2 hari terakhir!
             </div>
         
-            <div style="background: linear-gradient(135deg, #00CAFF, #0077c8); padding: 22px; border-radius: 20px; color: white; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #0080f7, #0077c8); padding: 22px; border-radius: 20px; color: white; margin-bottom: 20px;">
               <span style="font-size: 0.7rem; opacity: 0.9; font-weight: 700; text-transform: uppercase;">Total Pendapatan Bulan Ini</span>
               <h1 id="sumTotal" style="margin: 5px 0 15px 0; font-size: 1.8rem; font-weight: 800;">Rp 0</h1>
               
@@ -2681,27 +3139,28 @@ loadOngkir();
   function addItemUI(pref = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'line-card';
+    // Di dalam fungsi addItemUI
     wrap.innerHTML = `
-      <div class="top-row">
-        <div class="col-name">
-          <label class="small">Nama Item</label>
-          <input class="iname" type="text" value="${pref.name || ''}" placeholder="Nama menu / barang">
-        </div>
+      <button class="removeBtn" style="position: absolute; top: 12px; right: 12px; background:#ff4757; color:white; border:none; padding:5px 12px; border-radius:8px; font-size:10px; font-weight:bold;">HAPUS</button>
+    
+      <div class="col-name">
+        <label class="small" style="color:white; margin-bottom:5px; display:block;">Nama Item</label>
+        <input class="iname" type="text" placeholder="Masukkan nama barang/keterangan...">
+      </div>
+    
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div class="col-qty">
-          <label class="small">Qty</label>
-          <input class="iqty" type="number" min="1" value="${pref.qty || 1}">
+          <label class="small" style="color:white; margin-bottom:5px; display:block;">Qty</label>
+          <input class="iqty" type="number" min="1" value="1">
         </div>
         <div class="col-price">
-          <label class="small">Harga (Rp)</label>
-          <input class="iprice" type="text" inputmode="numeric" 
-            value="${pref.price ? pref.price.toLocaleString('id-ID') : ''}" 
-            placeholder="0">
+          <label class="small" style="color:white; margin-bottom:5px; display:block;">Harga (Rp)</label>
+          <input class="iprice" type="text" placeholder="0">
         </div>
       </div>
-  
-      <div class="bottom-row">
-        <button class="btn danger mini-btn removeBtn">🗑 Hapus</button>
-        <div class="sub isub">Rp 0</div>
+    
+      <div class="isub">
+        <span></span> <span class="total-val">Rp 0</span>
       </div>
     `;
   
@@ -2738,143 +3197,114 @@ loadOngkir();
   
     updateTotals();
   }
-
   function addTambahanUI(pref = {}) {
-      const row = document.createElement("div");
-      row.className = "line-card line-card-tambahan";
+    const row = document.createElement("div");
+    row.className = "line-card line-card-tambahan";
+    row.style.position = "relative"; // Penting untuk tombol hapus absolut
+    
+    row.innerHTML = `
+      <button class="t-remove" style="position: absolute; top: 12px; right: 12px; background:#ff4757; color:white; border:none; padding:4px 10px; border-radius:8px; font-size:10px; font-weight:bold;">HAPUS</button>
       
-      // Perhatikan bahwa di sini saya sudah memastikan input nominal bertipe text
-      // dan sudah diformat di awal: value="${(pref.nominal || 0).toLocaleString('id-ID')}"
-      row.innerHTML = `
-        <div class="top-row" style="
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 14px;
-            align-items: end;
-        ">
-          <div>
-            <label class="small">Jenis Tambahan</label>
-            <select class="t-type" style="width: 100%;">
-              <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
-              <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
-              <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
-              <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
-              <option ${pref.type === "Tambahan Tempat (Ojek)" ? "selected" : ""}>Tambahan Tempat (Ojek)</option>
-              <option ${pref.type === "Tambahan Tempat >3 (Pasar)" ? "selected" : ""}>Tambahan Tempat >3 (Pasar)</option>
-              <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
-              <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
-              <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
-              <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
-              <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
-            </select>
-          </div>
-          <div>
-            <label class="small">Nominal (Rp)</label>
-            <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" style="width: 100%;">
-          </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="col-type">
+          <label class="small" style="color:white; display:block; margin-bottom:4px; font-size:11px;">Jenis Tambahan</label>
+          <select class="t-type" style="width: 100%; padding: 10px; border-radius: 8px; border:none; background:white; color:black;">
+            <option ${!pref.type ? "selected" : ""} value="">-- Pilih --</option>
+            <option ${pref.type === "Tambahan Ojeg" ? "selected" : ""}>Tambahan Ojeg</option>
+            <option ${pref.type === "Tambahan Malam" ? "selected" : ""}>Tambahan Malam</option>
+            <option ${pref.type === "Tambahan Tempat" ? "selected" : ""}>Tambahan Tempat</option>
+            <option ${pref.type === "Tambahan Tempat (Ojek)" ? "selected" : ""}>Tambahan Tempat (Ojek)</option>
+            <option ${pref.type === "Tambahan Tempat >3 (Pasar)" ? "selected" : ""}>Tambahan Tempat >3 (Pasar)</option>
+            <option ${pref.type === "Tambahan Hujan" ? "selected" : ""}>Tambahan Hujan</option>
+            <option ${pref.type === "Tambahan Parkir" ? "selected" : ""}>Tambahan Parkir</option>
+            <option ${pref.type === "Tambahan Kapasitas" ? "selected" : ""}>Tambahan Kapasitas</option>
+            <option ${pref.type === "Tambahan Cash Minuman" ? "selected" : ""}>Tambahan Cash Minuman</option>
+            <option ${pref.type === "Lainnya" ? "selected" : ""}>Lainnya</option>
+          </select>
         </div>
-        
-        <div class="bottom-row" style="margin-top: 14px;">
-          <button class="mini-btn t-remove" style="width: 100%;">Hapus Tambahan</button>
+        <div class="col-nom">
+          <label class="small" style="color:white; display:block; margin-bottom:4px; font-size:11px;">Nominal (Rp)</label>
+          <input class="t-nom" type="text" min="0" value="${(pref.nominal || 0).toLocaleString('id-ID')}" 
+                 style="width: 100%; padding: 10px; border-radius: 8px; border:none; background:white; color:black; box-sizing:border-box;">
         </div>
-      `;
-      
-      tambahanArea.appendChild(row);
-      
-      // Ambil referensi elemen setelah mereka dimasukkan ke dalam DOM
-      const typeSelect = row.querySelector(".t-type");
-      const nominalInput = row.querySelector(".t-nom");
+      </div>
+    `;
+    
+    tambahanArea.appendChild(row);
   
-      // 🎯 KODE BARU DIMULAI DI SINI 🎯
-      
-      // 1. Event Listener INPUT pada Nominal (Untuk Formatting 2.000, 5.000, dll.)
-      nominalInput.addEventListener("input", (e) => {
-          let value = e.target.value;
-          value = value.replace(/\D/g, ''); // Hapus semua non-digit (termasuk titik/koma)
+    // --- LOGIKA EVENT LISTENER ---
+    const typeSelect = row.querySelector(".t-type");
+    const nominalInput = row.querySelector(".t-nom");
   
-          if (value === '') {
-              e.target.value = '';
-          } else {
-              const numericValue = Number(value);
-              e.target.value = numericValue.toLocaleString('id-ID');
-          }
-          updateTotals(); // Hitung ulang total
-      });
-  
-      // 2. Event Listener CHANGE pada Tipe Tambahan (Untuk Harga Otomatis)
-      typeSelect.addEventListener("change", () => {
-          const selectedType = typeSelect.value;
-          let autoNominal = 0;
-  
-          switch(selectedType) {
-              case "Tambahan Ojeg":
-              case "Tambahan Malam":
-              case "Tambahan Hujan":
-              case "Tambahan Parkir":
-              case "Tambahan Tempat":
-              case "Tambahan Tempat (Ojek)":
-                  autoNominal = 2000;
-                  break;
-              case "Tambahan Tempat >3 (Pasar)":
-                  autoNominal = 3000;
-                  break;
-              case "Tambahan Cash Minuman":
-                  autoNominal = 5000;
-                  break;
-              // Tambahan Kapasitas & Lainnya akan tetap 0 (input manual)
-              default:
-                  autoNominal = 0; 
-                  break;
-          }
-  
-          // Set nilai nominal input. Gunakan toLocaleString agar tampil 2.000 atau 5.000
-          nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
-          
-          // Setelah nilai berubah, panggil updateTotals
-          updateTotals();
-      });
-      
-      // 3. Event Listener Hapus (Kode lama Anda)
-      row.querySelector(".t-remove").addEventListener("click", () => {
-        row.remove();
+    // Formatting Nominal
+    nominalInput.addEventListener("input", (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        e.target.value = value ? Number(value).toLocaleString('id-ID') : '';
         updateTotals();
-      });
-      
+    });
+  
+    // Auto-Nominal berdasarkan Jenis
+    typeSelect.addEventListener("change", () => {
+        const selectedType = typeSelect.value;
+        const rates = {
+            "Tambahan Ojeg": 2000, "Tambahan Malam": 2000, "Tambahan Hujan": 2000,
+            "Tambahan Parkir": 2000, "Tambahan Tempat": 2000, "Tambahan Tempat (Ojek)": 2000,
+            "Tambahan Tempat >3 (Pasar)": 3000, "Tambahan Cash Minuman": 5000
+        };
+        
+        const autoNominal = rates[selectedType] || 0;
+        nominalInput.value = autoNominal > 0 ? autoNominal.toLocaleString('id-ID') : '0';
+        updateTotals();
+    });
+    
+    // Hapus Baris
+    row.querySelector(".t-remove").addEventListener("click", () => {
+      row.remove();
       updateTotals();
-   }
+    });
+    
+    updateTotals();
+  }
   function updateTotals() {
     let total = 0;
-  
-    // Loop semua item
+    
+    // 1. Hitung Item
     itemsArea.querySelectorAll('.line-card').forEach(c => {
       const qty = parseInt(c.querySelector('.iqty').value) || 0;
-  
-      // 🔹 Ambil harga dan bersihkan titik pemisah
-      const priceRaw = c.querySelector('.iprice').value.replace(/\./g, '') || '0';
+      const priceRaw = c.querySelector('.iprice').value.replace(/\D/g, '') || '0';
       const price = parseInt(priceRaw);
-  
       const sub = qty * price;
-  
-      // 🔹 Tampilkan subtotal dengan format "Rp 10.000"
+      
+      // Update subtotal per item (Pastikan selector .isub sesuai dengan struktur baru Anda)
       c.querySelector('.isub').innerText = 'Rp ' + sub.toLocaleString('id-ID');
-  
       total += sub;
     });
-  
-    // 🔹 Tambahkan ongkir (hapus titik dulu)
-    const ong = parseInt((el('ongkir')?.value || '0').replace(/\./g, '')) || 0;
+    
+    // 2. Tambah Ongkir
+    const ongkirEl = document.getElementById('ongkir');
+    const ong = parseInt((ongkirEl?.value || '0').replace(/\D/g, '')) || 0;
     total += ong;
-  
-    // 🔹 Tambahan biaya (hapus titik juga)
-    let tambahan = 0;
+    
+    // 3. Tambah Biaya Tambahan
     tambahanArea.querySelectorAll('.t-nom').forEach(n => {
-      tambahan += parseInt((n.value || '0').replace(/\./g, '')) || 0;
+      total += parseInt((n.value || '0').replace(/\D/g, '')) || 0;
     });
-    total += tambahan;
-  
-    // 🔹 Tampilkan total keseluruhan dengan format ribuan
-    el('totalPesanan').innerText = 'Rp ' + total.toLocaleString('id-ID');
-  
+    
+    // 4. Update Tampilan dengan Animasi
+    const totalDisplay = document.getElementById('totalPesanan');
+    const formattedTotal = 'Rp ' + total.toLocaleString('id-ID');
+    
+    // Jika nilai berubah, jalankan animasi pop
+    if (totalDisplay.innerText !== formattedTotal) {
+        totalDisplay.innerText = formattedTotal;
+        
+        // Animasi "Pop" yang keren
+        totalDisplay.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            totalDisplay.style.transform = 'scale(1)';
+        }, 200);
+    }
+    
     updatePreviewFilename();
     return total;
   }
@@ -3836,7 +4266,12 @@ document.getElementById('btnSaveForm').addEventListener('click', () => {
 document.getElementById('btnExportPreview').addEventListener('click', () => {
     kirimDataKeSheets("Simpan Foto");
 });
-
+document.querySelectorAll('.floating-bottom-nav button').forEach(button => {
+  button.addEventListener('click', function() {
+    document.querySelector('.floating-bottom-nav button.active').classList.remove('active');
+    this.classList.add('active');
+  });
+});
 observerApp.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
 lucide.createIcons();
 </script>
