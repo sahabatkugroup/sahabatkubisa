@@ -749,25 +749,27 @@ nav.tab button:active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.2); /* Efek glass */
+  /* Menggunakan gradasi warna agar lebih jelas */
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); 
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 8px 16px; /* Ukuran sedikit diperbesar */
   border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800; /* Teks lebih tebal */
   cursor: pointer;
   margin-top: 10px;
   transition: all 0.3s ease;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3); /* Efek bayangan biru */
 }
 
 .btn-absen-mini:hover {
   background: white;
-  color: #0080f7;
+  color: #0072ff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Pastikan icon lucide ter-render dengan benar */
@@ -1764,9 +1766,9 @@ select, input {
         <button data-tab="notaTab" class="active"><i data-lucide="layers-3"></i><span>Nota</span></button>
         <button data-tab="riwayatTab"><i data-lucide="timer"></i><span>Riwayat</span></button>
         <button data-tab="laporanRekapTab"><i data-lucide="activity"></i><span>Rekap</span></button>
+        <button data-tab="mitraTab"><i data-lucide="contact-2"></i><span>Mitra</span></button>
         <button data-tab="ongkirTab"><i data-lucide="map-pinned"></i><span>Ongkir</span></button>
         <button onclick="window.location.href='absensi-kurir-sahabatku.html'"><i data-lucide="calendar-range"></i><span>Jadwal</span></button>
-        <button data-tab="mitraTab"><i data-lucide="contact-2"></i><span>Mitra</span></button>
         <button data-tab="sopTab"><i data-lucide="sparkles"></i><span>SOP</span></button>
         <button data-tab="pengaturanTab"><i data-lucide="gauge"></i><span>Setting</span></button>
       </nav>
