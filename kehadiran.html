@@ -3,501 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ABSEN KEHADIRAN SAHABATKU</title>
+    <title>SAHABATKU - SYSTEM V18</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
-        :root { --primary: #00CAFF; --dark: #0f172a; --bg: #f8fafc; --success: #10b981; --error: #ef4444; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--dark); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            /* Menggunakan dvh agar pas dengan dynamic toolbar browser HP */
-            height: 100dvh; 
-            width: 100vw;
-            overflow: hidden;
-        }
-
-        .app-container { 
-            width: 100%; 
-            max-width: 480px; 
-            height: 100%; 
-            background: var(--bg); 
-            display: flex; 
-            flex-direction: column; 
-            /* Mengizinkan scroll jika konten meluap di HP kecil */
-            overflow-y: auto;
-            position: relative;
-        }
+        :root { --primary: #0080f7; --dark: #0f172a; --bg: #f8fafc; --success: #10b981; --error: #ef4444; --white: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--dark); margin: 0; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         
-        header { 
-            padding: 15px 20px; 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color: white; 
-            border-bottom: 4px solid var(--primary); 
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .greeting h2 { margin: 0; font-size: 16px; font-weight: 800; }
-        #live-clock { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 2px; display: block; }
+        .app-container { width: 100%; max-width: 480px; height: 100%; background: var(--bg); display: flex; flex-direction: column; position: relative; }
 
-        .main-content { 
-            padding: 15px; 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px;
-            min-height: min-content; /* Memastikan isi tidak terpotong */
-        }
-        /* Animasi Lingkaran Berputar */
-        .loader {
-            width: 48px;
-            height: 48px;
-            border: 5px solid #FFF;
-            border-bottom-color: var(--primary); /* Warna biru cerah Anda */
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
-        }
-        
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Memperbaiki tampilan overlay loading */
-        #loading-overlay {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(15, 23, 42, 0.9); /* Gelap transparan */
-            color: white;
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-        }
-        .camera-view { 
-            width: 100%; 
-            aspect-ratio: 3/4; /* Menjaga bentuk kamera tetap kotak panjang */
-            background: #000; 
-            border-radius: 15px; 
-            overflow: hidden; 
-            border: 3px solid white; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            position: relative;
-            flex-shrink: 0; /* Mencegah kamera mengecil */
-        }
+        /* LOCK SCREEN STYLE */
+        #lock-screen { position: fixed; inset: 0; background: var(--dark); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 30px; }
+
+        /* HEADER */
+        header { padding: 12px 20px; background: var(--white); display: flex; justify-content: space-between; align-items: center; z-index: 100; border-bottom: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .brand h2 { margin: 0; font-size: 15px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .time-box { text-align: right; }
+        #live-clock { font-size: 14px; font-weight: 800; color: var(--dark); display: block; }
+        #live-date { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+
+        /* HISTORY */
+        .history-bar { padding: 12px 0 12px 20px; background: var(--white); display: flex; gap: 12px; overflow-x: auto; border-bottom: 1px solid #f1f5f9; min-height: 70px; }
+        .history-bar::-webkit-scrollbar { display: none; }
+        .h-item { min-width: 155px; background: #f8fafc; padding: 10px 14px; border-radius: 16px; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); flex-shrink: 0; }
+        .h-item span { display: block; font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 2px; }
+        .h-item b { font-size: 11px; color: var(--dark); display: block; }
+
+        /* CAMERA AREA */
+        .camera-box { flex: 1; position: relative; background: #000; overflow: hidden; margin: 15px; border-radius: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         #v, #p { width: 100%; height: 100%; object-fit: cover; }
         #v { transform: scaleX(-1); }
 
-        .gps-status { 
-            position: absolute; top: 10px; left: 10px; padding: 6px 12px; 
-            border-radius: 8px; font-size: 9px; font-weight: 800; 
-            backdrop-filter: blur(10px); z-index: 10;
-        }
-        .active { background: rgba(16, 185, 129, 0.9); color: white; }
-        .inactive { background: rgba(239, 68, 68, 0.9); color: white; }
+        .overlay-ui { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; pointer-events: none; }
+        .gps-status { align-self: flex-start; padding: 8px 16px; border-radius: 20px; font-size: 10px; font-weight: 800; color: white; backdrop-filter: blur(15px); background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; gap: 8px; }
 
-        .controls { 
-            width: 100%; 
-            padding: 10px 0 20px; 
-            flex-shrink: 0; 
-        }
-        .btn-snap.ready { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,202,255,0.3); color: var(--primary); }
-        #instruction { font-size: 11px; font-weight: 700; margin-top: 10px; transition: 0.3s; 
-        }
-        /* DROPDOWN MODERN */
-        .select-wrapper { position: relative; margin-bottom: 12px; }
-        .select-wrapper i {
-            position: absolute; left: 15px; top: 50%;
-            transform: translateY(-50%); color: var(--primary);
-            z-index: 10; font-size: 18px;
-        }
-        select { 
-            width: 100%; padding: 16px 16px 16px 45px; 
-            border-radius: 16px; border: 2px solid #e2e8f0; 
-            font-size: 15px; font-weight: 700; background: white; 
-            color: var(--dark); appearance: none; cursor: pointer;
-        }
+        .capture-area { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
+        .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: white; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .shutter-inner { width: 64px; height: 64px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; }
+        .shutter-btn:disabled { filter: grayscale(1); opacity: 0.4; transform: scale(0.85); }
+
+        /* CONFIRM PANEL */
+        .confirm-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--white); padding: 30px 25px; border-top-left-radius: 35px; border-top-right-radius: 35px; display: none; flex-direction: column; gap: 18px; pointer-events: auto; box-shadow: 0 -15px 40px rgba(0,0,0,0.12); animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
-        .btn-back {
-            width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
-            color: white; display: flex; align-items: center; justify-content: center;
-        }
-        
-        .btn-snap { 
-            width: 70px; height: 70px; background: white; border-radius: 50%; 
-            border: 6px solid var(--primary); display: flex; 
-            align-items: center; justify-content: center; margin: 10px auto; 
-            box-shadow: 0 5px 15px rgba(0,202,255,0.3);
-            cursor: pointer;
-        }
-        .btn-snap:disabled { opacity: 0.5; border-color: #cbd5e1; }
+        .input-group { position: relative; }
+        .input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 18px; }
+        .confirm-panel select { width: 100%; padding: 18px 18px 18px 52px; border-radius: 18px; border: 2px solid #f1f5f9; background: #f8fafc; font-weight: 700; font-size: 14px; appearance: none; }
 
-        .btn-group { display: flex; gap: 10px; width: 100%; }
-        .btn-send { 
-            flex: 2; padding: 18px; border-radius: 12px; border: none; 
-            background: var(--primary); color: var(--dark); font-size: 14px; 
-            font-weight: 800; text-transform: uppercase;
-        }
-        .btn-retry { 
-            flex: 1; padding: 18px; border-radius: 12px; 
-            border: 2px solid #cbd5e1; background: white; color: var(--error); font-weight: 800;
-        }
+        .btn-row { display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 18px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; }
+        .btn-send { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(0, 128, 247, 0.25); }
 
-        /* OVERLAYS */
-        #loading-overlay, #success-view, #time-blocked {
-            position: fixed; inset: 0; z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-        #loading-overlay { background: rgba(15,23,42,0.95); color: white; }
-        #success-view { background: var(--success); color: white; padding: 20px; text-align: center; }
-        #time-blocked { background: var(--dark); color: white; padding: 30px; text-align: center; }
-
-        .report-card { 
-            background: rgba(0,0,0,0.1); padding: 20px; border-radius: 15px; 
-            width: 100%; max-width: 320px; margin: 20px 0; border: 1px dashed rgba(255,255,255,0.5);
-        }
-
-        canvas { display: none; }
-
-        /* Scrollbar styling */
-        .app-container::-webkit-scrollbar { width: 4px; }
-        .app-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        #loader { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; backdrop-filter: blur(8px); }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #success-view { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="time-blocked">
-    <i class="fa-solid fa-clock-rotate-left" style="font-size:60px; color:var(--error); margin-bottom:20px;"></i>
-    <h1>AKSES DITUTUP</h1>
-    <p>Mohon Maaf, aplikasi absensi hanya dapat diakses pada jam<br><strong>05:00 - 21:00 WIB</strong></p>
+<div id="lock-screen">
+    <i class="fa-solid fa-user-lock" style="font-size: 60px; color: var(--error); margin-bottom: 20px;"></i>
+    <h1 style="font-weight: 800; margin:0;">SISTEM TERKUNCI</h1>
+    <p style="opacity: 0.8; font-weight: 600; padding: 15px 30px;">Server Dikunci (Maintenance).<br>Akan dibuka kembali pada pukul 05:00 WIB.</p>
 </div>
 
-<div id="loading-overlay">
-    <span class="loader"></span>
-    <p id="load-text" style="margin-top: 20px; font-weight: 800; letter-spacing: 1px;">PROSES...</p>
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top: 20px; font-weight: 800;">PROSES SABAR LUR!...</p>
 </div>
 
 <div id="success-view">
-    <i class="fa-solid fa-circle-check" style="font-size: 70px;"></i>
-    <h2 style="font-weight: 800; margin: 15px 0;">ABSENSI BERHASIL</h2>
-    <div class="report-card">
-        <div><label style="display:block; font-size:10px; opacity:0.8; font-weight:800;">NAMA KURIR</label><span id="res-nama" style="font-weight:800; font-size:18px;">-</span></div>
-        <div style="margin-top:15px;"><label style="display:block; font-size:10px; opacity:0.8; font-weight:800;">WAKTU ABSEN</label><span id="res-waktu" style="font-weight:800; font-size:18px;">-</span></div>
+    <div style="background: rgba(255,255,255,0.2); width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <i class="fa-solid fa-check" style="font-size: 45px;"></i>
     </div>
-    <button onclick="location.reload()" style="padding: 15px 50px; border-radius: 50px; border:none; font-weight:800; color:var(--success); background:white;">KEMBALI</button>
+    <h1 style="font-weight: 800; margin: 0;">BERHASIL</h1>
+    <p id="success-msg" style="padding: 20px 50px; font-weight: 600; opacity: 0.9;"></p>
+    <button onclick="location.reload()" style="padding: 18px 60px; border-radius: 50px; border:none; font-weight:800; color:var(--primary); background:white; margin-top:10px; cursor:pointer;">LANJUTKAN</button>
 </div>
 
 <div class="app-container">
-    <header style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="greeting">
-            <h2 id="today">Memuat...</h2>
-            <span id="live-clock">00:00:00 WIB</span>
+    <header>
+        <div class="brand"><h2>SAHABATKU</h2></div>
+        <div class="time-box">
+            <span id="live-clock">00:00:00</span>
+            <span id="live-date">...</span>
         </div>
-        <button class="btn-back" onclick="window.location.href='index.html'">
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
     </header>
 
-    <div class="main-content">
-        <div class="camera-view">
-            <div id="gps-box" class="gps-status inactive">TUNGGU...</div>
-            <video id="v" autoplay playsinline></video>
-            <img id="p" style="display:none;">
+    <div class="history-bar" id="history-list"></div>
+
+    <div class="camera-box" id="cam-box">
+        <video id="v" autoplay playsinline></video>
+        <img id="p" style="display:none;">
+        <div class="overlay-ui">
+            <div id="gps-box" class="gps-status" style="border-left: 4px solid var(--error);">
+                <i class="fa-solid fa-location-dot"></i> <span id="gps-text">MEMUAT...</span>
+            </div>
+            <div class="capture-area" id="ui-capture">
+                <p id="instruction" style="color: white; font-size: 11px; font-weight: 800; margin-bottom: 15px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 12px; backdrop-filter: blur(5px);">MENGANALISA WAJAH...</p>
+                <button class="shutter-btn" id="btnSnap" onclick="takePhoto()" disabled><div class="shutter-inner"><i class="fa-solid fa-camera fa-xl"></i></div></button>
+            </div>
         </div>
 
-        <div id="ui-1" style="text-align: center;">
-            <button class="btn-snap" id="btnSnap" onclick="takePhoto()" disabled>
-                <i class="fa-solid fa-camera" style="font-size:28px; color:var(--primary)"></i>
-            </button>
-            <p id="instruction" style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 10px;">
-                MENGHUBUNGKAN...
-            </p>
-        </div>
-            <div id="ui-2" style="display:none;">
-                <div class="select-wrapper">
-                    <i class="fa-solid fa-clock"></i>
-                    <select id="selStatus">
-                        <option value="MASUK">ABSEN MASUK</option>
-                        <option value="PULANG">ABSEN PULANG</option>
-                    </select>
-                </div>
-            
-                <div class="select-wrapper">
-                    <i class="fa-solid fa-user-circle"></i>
-                    <select id="selKurir" onchange="saveName()">
-                        <option value="">Pilih Nama Kurir...</option>
-                    </select>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-retry" onclick="resetCam()">ULANG</button>
-                    <button class="btn-send" onclick="submitData()">KIRIM DATA</button>
-                </div>
+        <div class="confirm-panel" id="ui-confirm">
+            <div class="input-group">
+                <i class="fa-solid fa-circle-user"></i>
+                <select id="selKurir" onchange="handleUserChange()"><option value="">Pilih Nama...</option></select>
+            </div>
+            <div class="input-group">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <select id="selStatus">
+                    <option value="MASUK">ABSEN MASUK</option>
+                    <option value="PULANG">ABSEN PULANG</option>
+                </select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-cancel" onclick="resetCam()">ULANG</button>
+                <button class="btn btn-send" onclick="smartValidation()">KIRIM</button>
             </div>
         </div>
     </div>
 </div>
 
-<canvas id="c"></canvas>
+<canvas id="c" style="display:none;"></canvas>
 
 <script>
     const URL_APPS = "https://script.google.com/macros/s/AKfycbwntZzvURlu7mxm0UyE_HDKyBTyLruRCO2YzzNr_A3kr7vkUpMLp_7O60o1ElTRMfI4ZQ/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
-    
-    let isGpsValid = false;
-    let isFaceValid = false;
-    let modelsLoaded = false;
-    let faceInterval;
-    
-    // 1. Load Model AI
-    async function loadModels() {
-        const loader = document.getElementById('loading-overlay');
-        const loadText = document.getElementById('load-text');
+    let isGpsValid = false, isFaceValid = false;
+
+    // 1. LOGIKA KEAMANAN & AUTO-PURGE
+    function applySecurity() {
+        const now = new Date();
+        const hr = now.getHours();
+        const min = now.getMinutes();
         
-        loader.style.display = 'flex'; // Tampilkan loading berputar
-        loadText.innerText = "MENGUNDUH SENSOR WAJAH...";
-    
-        try {
-            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            
-            loader.style.display = 'none'; // Sembunyikan jika sudah selesai
-            modelsLoaded = true;
-            startFaceDetection();
-        } catch (e) {
-            loadText.innerText = "GAGAL MEMUAT SENSOR!";
-            console.error(e);
+        // Auto-Purge riwayat jam 03:00 pagi
+        const lastPurge = localStorage.getItem('last_purge_date');
+        if (hr === 3 && min === 0 && lastPurge !== now.toDateString()) {
+            localStorage.removeItem('absensi_history');
+            localStorage.setItem('last_purge_date', now.toDateString());
+            location.reload();
+        }
+
+        // Hard Lockdown (03:01 - 04:59)
+        const isLockTime = (hr === 3 && min > 0) || hr === 4;
+        document.getElementById('lock-screen').style.display = isLockTime ? 'flex' : 'none';
+    }
+
+    // 2. AUTO-SWITCH STATUS BERDASARKAN HISTORY
+    function handleUserChange() {
+        const nama = document.getElementById('selKurir').value;
+        const selStatus = document.getElementById('selStatus');
+        if(!nama) return;
+
+        localStorage.setItem('user_nama_v13', nama);
+        
+        const history = JSON.parse(localStorage.getItem('absensi_history') || '[]');
+        const today = new Date().toDateString();
+        const userToday = history.filter(h => h.nama === nama && h.date === today);
+        
+        // Cek apakah sudah absen masuk tapi belum pulang hari ini
+        const hasMasuk = userToday.some(h => h.status === "MASUK");
+        const hasPulang = userToday.some(h => h.status === "PULANG");
+
+        if(hasMasuk && !hasPulang) {
+            selStatus.value = "PULANG";
+        } else {
+            selStatus.value = "MASUK";
         }
     }
-    
-    function clock() {
-        const d = new Date();
-        const timeStr = d.toLocaleTimeString('id-ID', {hour12:false}) + " WIB";
-        document.getElementById('live-clock').innerText = timeStr;
-        document.getElementById('today').innerText = d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'short'});
-        return timeStr;
-    }
-    setInterval(clock, 1000);
-    
-    async function init() {
-        // BAGIAN DIBAWAH INI DINONAKTIFKAN (DIBLOKIR) AGAR TIDAK MUNCUL
-        /* if (jam >= 2 && jam < 5) {
-            const blockView = document.getElementById('time-blocked');
-            blockView.querySelector('p').innerHTML = "Mohon Maaf, aplikasi absensi tidak aktif pada jam<br><strong>02:00 - 05:00 WIB</strong>";
-            blockView.style.display = 'flex';
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('absensi_history') || '[]');
+        const today = new Date().toDateString();
+        const container = document.getElementById('history-list');
+        const latestEntries = {};
+        history.filter(h => h.date === today).forEach(h => { latestEntries[h.nama] = h; });
+        const filtered = Object.values(latestEntries);
+        
+        if(!filtered.length) {
+            container.innerHTML = '<span style="font-size:10px; color:#94a3b8; line-height:45px; padding-left:15px;">Sesi Baru (Siap Absen).</span>';
             return;
         }
-        */
-        const jam = new Date().getHours();
+        container.innerHTML = '';
+        filtered.reverse().forEach(h => {
+            container.innerHTML += `<div class="h-item"><span>${h.nama}</span><b>${h.status}: ${h.waktu}</b></div>`;
+        });
+    }
+
+    async function smartValidation() {
+        const nama = document.getElementById('selKurir').value;
+        const status = document.getElementById('selStatus').value;
+        const now = new Date();
+        const hour = now.getHours();
+
+        if(!nama) return alert("Pilih Nama Anda!");
+
+        // Validasi Jam Masuk
+        if(status === "MASUK" && (hour < 5 || hour >= 20)) {
+            let sisaJam = hour < 5 ? 5 - hour : (24 - hour) + 5;
+            return alert(`Belum Waktunya Masuk!\nBuka ${sisaJam} jam lagi (Jam 05:00).`);
+        }
+
+        // Validasi Jam Pulang & Hitung Sisa Waktu
+        const isPulangTime = (hour >= 15 || hour < 3);
+        if(status === "PULANG" && !isPulangTime) {
+            let sisaJam = 15 - hour;
+            return alert(`Belum Waktunya Pulang!\nBuka ${sisaJam} jam lagi (Jam 15:00).`);
+        }
+
+        const history = JSON.parse(localStorage.getItem('absensi_history') || '[]');
+        const userLastEntry = history.filter(h => h.nama === nama).pop();
+
+        // Duplikasi Masuk
+        if(status === "MASUK" && userLastEntry && userLastEntry.status === "MASUK" && userLastEntry.date === now.toDateString()) {
+            return alert(`Halo ${nama}, Anda sudah Absen Masuk pukull ${userLastEntry.waktu}.`);
+        }
+
+        // Jeda 4 Jam Kerja
+        if(status === "PULANG") {
+            if(!userLastEntry || userLastEntry.status === "PULANG") return alert("Data Absen Masuk tidak ditemukan!");
+            
+            const diffHrs = (now - new Date(userLastEntry.timestamp)) / (1000 * 60 * 60);
+            if(diffHrs < 4) {
+                const totalSisaMenit = Math.ceil((4 - diffHrs) * 60);
+                const sj = Math.floor(totalSisaMenit / 60);
+                const sm = totalSisaMenit % 60;
+                let pesan = `BELUM 4 JAM KERJA!\n\nSisa waktu tunggu: `;
+                pesan += sj > 0 ? `${sj} jam ${sm} menit.` : `${sm} menit.`;
+                return alert(pesan);
+            }
+        }
+
+        submitData(nama, status);
+    }
+
+    async function submitData(n, s) {
+        document.getElementById('loader').style.display = 'flex';
+        const now = new Date();
+        const waktuStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
-            });
+            await fetch(URL_APPS, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nama: n, status: s, foto: document.getElementById('p').src }) });
+            let history = JSON.parse(localStorage.getItem('absensi_history') || '[]');
+            history.push({ nama: n, status: s, waktu: waktuStr, date: now.toDateString(), timestamp: now.getTime() });
+            localStorage.setItem('absensi_history', JSON.stringify(history));
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('success-msg').innerText = `${n} Berhasil Absen ${s} pkl ${waktuStr} WIB.`;
+            document.getElementById('success-view').style.display = 'flex';
+        } catch(e) { document.getElementById('loader').style.display = 'none'; alert("Gagal Kirim!"); }
+    }
+
+    // AI CAMERA & GPS STANDAR
+    async function loadModels() {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+        setInterval(async () => {
+            const detections = await faceapi.detectAllFaces(document.getElementById('v'), new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
+            isFaceValid = detections.length > 0;
+            document.getElementById('btnSnap').disabled = !(isGpsValid && isFaceValid);
+            document.getElementById('instruction').innerText = isGpsValid ? (isFaceValid ? "SIAP FOTO" : "ARAHKAN WAJAH") : "LUAR KANTOR";
+        }, 400);
+    }
+
+    async function init() {
+        applySecurity();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
             document.getElementById('v').srcObject = stream;
-            
             const res = await fetch(URL_APPS);
             const data = await res.json();
-            const sel = document.getElementById('selKurir');
-            sel.innerHTML = '<option value="">Pilih Nama Kurir...</option>';
-            data.daftarKurir.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
-            
+            data.daftarKurir.forEach(n => document.getElementById('selKurir').innerHTML += `<option value="${n}">${n}</option>`);
             const saved = localStorage.getItem('user_nama_v13');
-            if(saved) sel.value = saved;
-    
-            trackGPS();
-            loadModels(); 
-        } catch(e) { 
-            alert("Mohon izinkan kamera dan lokasi untuk absen!"); 
-        }
+            if(saved) {
+                document.getElementById('selKurir').value = saved;
+                handleUserChange();
+            }
+            trackGPS(); loadModels(); loadHistory();
+        } catch(e) { alert("Izinkan Akses!"); }
     }
-    
-    // 2. Loop Deteksi Wajah
-    async function startFaceDetection() {
-        const video = document.getElementById('v');
-        modelsLoaded = true;
-    
-        // Simpan ke variabel faceInterval
-        faceInterval = setInterval(async () => {
-            if (video.paused || video.ended || !modelsLoaded) return;
-    
-            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-            isFaceValid = detections.length > 0;
-            
-            syncButtonAndStatus(); 
-        }, 500);
-    }
-    
+
     function trackGPS() {
         navigator.geolocation.watchPosition(p => {
             const d = getDist(p.coords.latitude, p.coords.longitude, KANTOR.lat, KANTOR.lng);
             isGpsValid = (d <= KANTOR.rad);
-            
-            const box = document.getElementById('gps-box');
-            if(!isGpsValid) {
-                box.className = "gps-status inactive"; 
-                box.innerText = "DILUAR KANTOR ("+Math.round(d)+"m)";
-            }
-            syncButtonAndStatus();
+            document.getElementById('gps-box').style.borderLeftColor = isGpsValid ? "var(--success)" : "var(--error)";
+            document.getElementById('gps-text').innerText = isGpsValid ? "LOKASI TERVERIFIKASI" : `LUAR KANTOR (${Math.round(d)}m)`;
         }, null, {enableHighAccuracy:true});
     }
-    
-    function syncButtonAndStatus() {
-        const btn = document.getElementById('btnSnap');
-        const box = document.getElementById('gps-box');
-        
-        if (!isGpsValid) {
-            btn.disabled = true;
-            btn.classList.remove('ready');
-            return; // Jika lokasi salah, stop di sini
-        }
-    
-        if (isFaceValid) {
-            box.className = "gps-status active";
-            box.innerText = "SIAP ABSEN (WAJAH TERDETEKSI)";
-            btn.disabled = false;
-            btn.classList.add('ready');
-        } else {
-            box.className = "gps-status inactive";
-            box.innerText = "HADAPKAN WAJAH KE KAMERA";
-            btn.disabled = true;
-            btn.classList.remove('ready');
-        }
-    }
-    
+
     function takePhoto() {
-        // BERHENTIKAN DETEKSI WAJAH DI SINI
-        clearInterval(faceInterval);
-        console.log("Deteksi wajah dihentikan karena foto sudah diambil");
-    
         const v = document.getElementById('v'), c = document.getElementById('c'), p = document.getElementById('p');
-        c.width = 600; c.height = 800;
+        c.width = v.videoWidth; c.height = v.videoHeight;
         const ctx = c.getContext('2d');
-        
-        // ... sisa kode takePhoto Anda (sama seperti sebelumnya) ...
-        const vW = v.videoWidth, vH = v.videoHeight;
-        const ratio = 3/4;
-        let sW = vW, sH = vH, sX = 0, sY = 0;
-        if (vW / vH > ratio) { sW = vH * ratio; sX = (vW - sW) / 2; } 
-        else { sH = vW / ratio; sY = (vH - sH) / 2; }
         ctx.translate(c.width, 0); ctx.scale(-1, 1);
-        ctx.drawImage(v, sX, sY, sW, sH, 0, 0, c.width, c.height);
-        
-        p.src = c.toDataURL('image/jpeg', 0.5);
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        p.src = c.toDataURL('image/jpeg', 0.8);
         p.style.display = 'block'; v.style.display = 'none';
-        document.getElementById('ui-1').style.display = 'none';
-        document.getElementById('ui-2').style.display = 'block';
+        document.getElementById('ui-capture').style.display = 'none';
+        document.getElementById('ui-confirm').style.display = 'flex';
+        document.getElementById('cam-box').style.margin = "0"; document.getElementById('cam-box').style.borderRadius = "0";
     }
-    
+
     function resetCam() {
         document.getElementById('v').style.display = 'block';
         document.getElementById('p').style.display = 'none';
-        document.getElementById('ui-1').style.display = 'block';
-        document.getElementById('ui-2').style.display = 'none';
-        document.getElementById('gps-box').style.display = 'block';
-    
-        // JALANKAN LAGI DETEKSI WAJAH
-        startFaceDetection(); 
+        document.getElementById('ui-capture').style.display = 'flex';
+        document.getElementById('ui-confirm').style.display = 'none';
+        document.getElementById('cam-box').style.margin = "15px"; document.getElementById('cam-box').style.borderRadius = "32px";
     }
-    async function submitData() {
-        const n = document.getElementById('selKurir').value;
-        const s = document.getElementById('selStatus').value;
-        const jam = new Date().getHours();
-        
-        if(!n) return alert("Pilih Nama Kurir terlebih dahulu!");
-    
-        // --- LOGIKA VALIDASI JADWAL OPERASIONAL ---
-        if (s === "MASUK") {
-            if (jam < 5 || jam >= 22) {
-                return alert("Gagal! Absen MASUK hanya diperbolehkan antara jam 05:00 s/d 22:00 WIB.");
-            }
-        } else if (s === "PULANG") {
-            const bolehPulang = (jam >= 14 || jam < 5);
-            if (!bolehPulang) {
-                return alert("Gagal! Absen PULANG hanya diperbolehkan antara jam 14:00 s/d 05:00 WIB.");
-            }
-        }
-    
-        // --- LOGIKA JEDA 3 JAM (DIPERBARUI) ---
-        const SEKARANG = new Date().getTime();
-        const JEDA_MS = 3 * 60 * 60 * 1000; // 3 Jam dalam milidetik
-    
-        if (s === "PULANG") {
-            const waktuMasukTerakhir = localStorage.getItem('last_absen_masuk_' + n);
-            
-            if (waktuMasukTerakhir) {
-                const selisih = SEKARANG - parseInt(waktuMasukTerakhir);
-                if (selisih < JEDA_MS) {
-                    // Menghitung sisa waktu dalam menit
-                    const sisaMenit = Math.ceil((JEDA_MS - selisih) / (60 * 1000));
-                    const sisaJam = Math.floor(sisaMenit / 60);
-                    const sisaMenitTampil = sisaMenit % 60;
-                    
-                    let pesan = `Gagal! Jeda minimal 3 jam dari absen masuk. \nSisa waktu: `;
-                    pesan += sisaJam > 0 ? `${sisaJam} jam ${sisaMenitTampil} menit.` : `${sisaMenitTampil} menit.`;
-                    
-                    return alert(pesan);
-                }
-            } else {
-                return alert("Anda belum melakukan absen MASUK hari ini melalui perangkat ini.");
-            }
-        }
-        // --- AKHIR LOGIKA JEDA ---
-    
-        // ... (sisa kode fetch POST dan success view tetap sama) ...
-        const loader = document.getElementById('loading-overlay');
-        const loadText = document.getElementById('load-text');
-        loadText.innerText = "MENGIRIM " + s + "...";
-        loader.style.display = 'flex';
-    
-        const waktuAbsen = clock();
-    
-        try {
-            await fetch(URL_APPS, {
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({
-                    nama: n, 
-                    status: s,
-                    foto: document.getElementById('p').src
-                })
-            });
-    
-            if (s === "MASUK") {
-                localStorage.setItem('last_absen_masuk_' + n, SEKARANG.toString());
-            }
-    
-            loader.style.display = 'none';
-            document.getElementById('res-nama').innerText = n + " (" + s + ")";
-            document.getElementById('res-waktu').innerText = waktuAbsen;
-            document.getElementById('success-view').style.display = 'flex';
-    
-        } catch(e) {
-            loader.style.display = 'none';
-            alert("Gagal mengirim data!");
-        }
-    }
+
     function getDist(lat1, lon1, lat2, lon2) {
         const R = 6371000, p = Math.PI/180;
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
-    
-    function saveName() { localStorage.setItem('user_nama_v13', document.getElementById('selKurir').value); }
-    
+
+    setInterval(() => { 
+        const now = new Date();
+        document.getElementById('live-clock').innerText = now.toLocaleTimeString('id-ID'); 
+        document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long'});
+        applySecurity();
+    }, 1000);
+
     init();
-    clock();
 </script>
 </body>
 </html>
