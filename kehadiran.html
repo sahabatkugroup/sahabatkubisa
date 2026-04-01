@@ -32,9 +32,107 @@
         #v, #p { width: 100%; height: 100%; object-fit: cover; }
         #v { transform: scaleX(-1); }
 
-        .overlay-ui { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; pointer-events: none; }
-        .gps-status { align-self: flex-start; padding: 8px 16px; border-radius: 20px; font-size: 10px; font-weight: 800; color: white; backdrop-filter: blur(15px); background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; gap: 8px; }
-
+        .gps-status { 
+            position: absolute; /* Mengunci posisi di dalam cam-box */
+            top: 15px;          /* Jarak dari atas */
+            left: 15px;         /* Jarak dari kiri */
+            z-index: 10;        /* Memastikan muncul di atas video */
+            
+            /* Style visual */
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 10px; 
+            font-weight: 800; 
+            color: white; 
+            backdrop-filter: blur(15px); 
+            background: rgba(15, 23, 42, 0.6); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            border-left: 4px solid var(--error); /* Default warna merah */
+            pointer-events: none; 
+        }
+        
+        /* Pastikan overlay-ui tidak mengacak posisi flex */
+        .overlay-ui {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Tombol capture tetap di bawah */
+            padding: 20px;
+            pointer-events: none;
+        }
+        /* Update atau Tambahkan Style ini */
+        #instruction {
+            position: absolute;
+            top: 15px;
+            right: 15px; /* Pindah ke pojok kanan atas */
+            margin: 0;
+            
+            /* Visual Keren */
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.7);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 20;
+            
+            /* Animasi */
+            animation: pulseGlow 2s infinite ease-in-out;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Animasi Denyut Cahaya */
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px rgba(0, 128, 247, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(0, 128, 247, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(0, 128, 247, 0.2); }
+        }
+        
+        /* Tambahan: Jika status SIAP FOTO, warna border berubah hijau */
+        .status-ready {
+            border-color: var(--success) !important;
+            color: var(--success) !important;
+        }
+        /* Style Tombol Non-Foto yang Baru */
+        .btn-secondary-action {
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary-action:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .btn-secondary-action i {
+            font-size: 14px;
+            opacity: 0.9;
+        }
         .capture-area { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
         .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: white; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .shutter-inner { width: 64px; height: 64px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; }
@@ -90,20 +188,25 @@
     </header>
 
     <div class="history-bar" id="history-list"></div>
-
     <div class="camera-box" id="cam-box">
         <video id="v" autoplay playsinline></video>
         <img id="p" style="display:none;">
-        <div class="overlay-ui">
-            <div id="gps-box" class="gps-status" style="border-left: 4px solid var(--error);">
-                <i class="fa-solid fa-location-dot"></i> <span id="gps-text">MEMUAT...</span>
-            </div>
-            <div class="capture-area" id="ui-capture">
-                <p id="instruction" style="color: white; font-size: 11px; font-weight: 800; margin-bottom: 15px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 12px; backdrop-filter: blur(5px);">MENGANALISA...</p>
-                <button class="shutter-btn" id="btnSnap" onclick="takePhoto()" disabled><div class="shutter-inner"><i class="fa-solid fa-camera fa-xl"></i></div></button>
-            </div>
+        
+        <div id="gps-box" class="gps-status">
+            <i class="fa-solid fa-location-dot"></i> <span id="gps-text">MEMUAT...</span>
         </div>
-
+    
+        <p id="instruction"><i class="fa-solid fa-spinner fa-spin"></i> MENGANALISA...</p>
+        <div class="capture-area" id="ui-capture">
+            <button class="shutter-btn" id="btnSnap" onclick="takePhoto()" disabled>
+                <div class="shutter-inner"><i class="fa-solid fa-camera fa-xl"></i></div>
+            </button>
+        
+            <button type="button" class="btn-secondary-action" onclick="openNonPhotoPanel()">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>IZIN / SAKIT (NON-FOTO)</span>
+            </button>
+        </div>
         <div class="confirm-panel" id="ui-confirm">
             <div class="input-group">
                 <i class="fa-solid fa-circle-user"></i>
@@ -114,6 +217,8 @@
                 <select id="selStatus">
                     <option value="MASUK">ABSEN MASUK</option>
                     <option value="PULANG">ABSEN PULANG</option>
+                    <option value="IZIN">IZIN</option>
+                    <option value="SAKIT">SAKIT</option>
                 </select>
             </div>
             <div class="btn-row">
@@ -127,7 +232,7 @@
 <canvas id="c" style="display:none;"></canvas>
 
 <script>
-    const URL_APPS = "https://script.google.com/macros/s/AKfycbwntZzvURlu7mxm0UyE_HDKyBTyLruRCO2YzzNr_A3kr7vkUpMLp_7O60o1ElTRMfI4ZQ/exec";
+    const URL_APPS = "https://script.google.com/macros/s/AKfycbwH-SQDFkEsMc2boizcMGnT2E16_jD9kKDEOzXXjs7sgZWupuZHYFXwvqAj9EMqKjxYMA/exec";
     const KANTOR = { lat: -6.4679637, lng: 108.297226, rad: 50 };
     let isGpsValid = false, isFaceValid = false;
 
@@ -208,29 +313,40 @@
         const now = new Date();
         const hour = now.getHours();
         const workingDay = getWorkingDay(); // Validasi berdasarkan sesi kerja
-
+    
         if(!nama) return alert("Pilih Nama Anda!");
-
-        // Aturan Jam Operasional
+    
+        // --- FITUR TAMBAHAN: BYPASS UNTUK IZIN/SAKIT ---
+        // Jika status adalah IZIN atau SAKIT, langsung kirim tanpa cek jam & foto
+        if(status === "IZIN" || status === "SAKIT") {
+            const konfirmasi = confirm(`Kirim laporan ${status} untuk ${nama}?`);
+            if(konfirmasi) {
+                // Kita kirim string kosong atau placeholder untuk foto karena tidak ada foto
+                return submitData(nama, status); 
+            }
+            return;
+        }
+    
+        // Aturan Jam Operasional (Hanya berlaku untuk MASUK)
         if(status === "MASUK" && (hour < 5 || hour >= 20)) {
             let sisaJam = hour < 5 ? 5 - hour : (24 - hour) + 5;
             return alert(`Belum Waktunya Masuk!\nBuka ${sisaJam} jam lagi.`);
         }
-
+    
         const isPulangTime = (hour >= 15 || hour < 5); // Jam 15:00 s/d 04:59 pagi boleh pulang
         if(status === "PULANG" && !isPulangTime) {
             let sisaJam = 15 - hour;
             return alert(`Belum Waktunya Pulang!\nBuka ${sisaJam} jam lagi.`);
         }
-
+    
         const history = JSON.parse(localStorage.getItem('absensi_history') || '[]');
         // Cari data terakhir kurir tsb pada SESI KERJA yang sama
         const userLastEntry = history.filter(h => h.nama === nama && h.date === workingDay).pop();
-
+    
         if(status === "MASUK" && userLastEntry && userLastEntry.status === "MASUK") {
             return alert(`Halo ${nama}, Anda sudah Absen Masuk pukul ${userLastEntry.waktu}.`);
         }
-
+    
         if(status === "PULANG") {
             if(!userLastEntry || userLastEntry.status === "PULANG") return alert("Absen MASUK tidak ditemukan untuk sesi hari ini!");
             
@@ -244,10 +360,9 @@
                 return alert(pesan);
             }
         }
-
+    
         submitData(nama, status);
     }
-
     async function submitData(n, s) {
         document.getElementById('loader').style.display = 'flex';
         const now = new Date();
@@ -276,17 +391,29 @@
         }
     }
 
-    // --- FUNGSI STANDAR KAMERA & GPS ---
     async function loadModels() {
         await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
         setInterval(async () => {
             const detections = await faceapi.detectAllFaces(document.getElementById('v'), new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
             isFaceValid = detections.length > 0;
-            document.getElementById('btnSnap').disabled = !(isGpsValid && isFaceValid);
-            document.getElementById('instruction').innerText = isGpsValid ? (isFaceValid ? "SIAP FOTO" : "HADAPKAN WAJAH") : "LUAR KANTOR";
+            
+            const btn = document.getElementById('btnSnap');
+            const ins = document.getElementById('instruction');
+            
+            btn.disabled = !(isGpsValid && isFaceValid);
+            
+            if (!isGpsValid) {
+                ins.innerHTML = `<i class="fa-solid fa-xmark-circle"></i> LUAR KANTOR`;
+                ins.classList.remove('status-ready');
+            } else if (!isFaceValid) {
+                ins.innerHTML = `<i class="fa-solid fa-user-clock"></i> HADAPKAN WAJAH`;
+                ins.classList.remove('status-ready');
+            } else {
+                ins.innerHTML = `<i class="fa-solid fa-check-circle"></i> SIAP FOTO`;
+                ins.classList.add('status-ready');
+            }
         }, 400);
     }
-
     async function init() {
         applySecurity();
         try {
@@ -339,7 +466,33 @@
         const a = 0.5 - Math.cos((lat2-lat1)*p)/2 + Math.cos(lat1*p)*Math.cos(lat2*p)*(1-Math.cos((lon2-lon1)*p))/2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
-
+    function openNonPhotoPanel() {
+        isNonPhotoMode = true; // Menghentikan teks "MENGANALISA"
+        
+        // Sembunyikan kamera & tampilkan placeholder
+        document.getElementById('v').style.display = 'none';
+        document.getElementById('p').style.display = 'block';
+        document.getElementById('p').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="; 
+        
+        // Set status ke IZIN secara otomatis sebagai default saat tombol diklik
+        document.getElementById('selStatus').value = "IZIN";
+        
+        // Switch UI ke Panel Konfirmasi
+        document.getElementById('ui-capture').style.display = 'none';
+        document.getElementById('ui-confirm').style.display = 'flex';
+        
+        // Animasi Box Kamera jadi Full
+        const camBox = document.getElementById('cam-box');
+        camBox.style.margin = "0"; 
+        camBox.style.borderRadius = "0";
+    
+        // Ubah teks instruksi di pojok kanan atas
+        const ins = document.getElementById('instruction');
+        if(ins) {
+            ins.innerHTML = `<i class="fa-solid fa-file-medical"></i> MODE LAPORAN`;
+            ins.classList.add('status-ready');
+        }
+    }
     setInterval(() => { 
         const now = new Date();
         document.getElementById('live-clock').innerText = now.toLocaleTimeString('id-ID'); 
