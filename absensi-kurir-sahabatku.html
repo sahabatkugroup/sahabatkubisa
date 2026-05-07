@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>Sahabatku Elite System</title>
+    <title>Sahabatku Absensi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -427,33 +427,65 @@
             const q = document.getElementById('searchKurir').value.toLowerCase();
             document.querySelectorAll('.recap-card').forEach(c => c.style.display = c.dataset.nama.includes(q) ? 'block' : 'none');
         }
-
         async function submitForm() {
             const btn = document.getElementById('btnSubmit');
+            const nama = document.getElementById('selectedNama').innerText;
             const data = {
                 action: "submit",
                 jenis: document.getElementById('pJenis').value,
-                nama: document.getElementById('selectedNama').innerText,
+                nama: nama,
                 tgl: document.getElementById('pTgl').value,
                 ket: document.getElementById('pKet').value
             };
         
+            // 1. Validasi Input Dasar
             if(data.nama === "Pilih Personel" || !data.tgl) {
-                return Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap!', text: 'Pastikan Nama dan Tanggal sudah diisi.', confirmButtonColor: '#00CAFF' });
+                return Swal.fire({ 
+                    icon: 'warning', 
+                    title: 'Data Belum Lengkap!', 
+                    text: 'Pastikan Nama dan Tanggal sudah diisi.', 
+                    confirmButtonColor: '#00CAFF' 
+                });
             }
         
+            // 2. Verifikasi PIN (Sama dengan fitur verifikasi OFF)
+            const { value: pin } = await Swal.fire({
+                title: `Halo ${nama}`,
+                text: "Masukkan PIN Verifikasi Anda untuk mengajukan:",
+                input: 'password',
+                inputPlaceholder: 'PIN 6 Digit',
+                confirmButtonColor: '#00CAFF',
+                confirmButtonText: 'Verifikasi & Kirim',
+                inputAttributes: { maxlength: 6, autofocus: 'true' },
+                showCancelButton: true,
+                cancelButtonText: 'Batal'
+            });
+        
+            if (pin === undefined || pin === "") return;
+        
+            // Validasi PIN dari data store
+            if (String(pin) !== String(store.sandi[nama])) {
+                return Swal.fire({ 
+                    icon: 'error', 
+                    title: 'PIN SALAH!', 
+                    text: 'Identitas tidak terverifikasi. Silakan cek kembali PIN Anda.',
+                    confirmButtonColor: '#00CAFF' 
+                });
+            }
+        
+            // 3. Proses Pengiriman Jika PIN Benar
             btn.disabled = true; 
             btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> MENGIRIM...';
         
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
                 
-                // Notifikasi Sukses dengan instruksi Leader
                 Swal.fire({
                     icon: 'success',
                     title: 'BERHASIL TERKIRIM!',
                     html: `
                         <div class="text-left text-sm space-y-2">
+                            <p>Nama: <b>${nama}</b></p>
                             <p>Status Pengajuan: <span class="text-amber-500 font-bold italic underline">PENDING</span></p>
                             <hr>
                             <p>Segera hubungi <b>Leader of the Day</b> untuk konfirmasi agar segera mendapatkan <b>Approval Atasan</b>.</p>
@@ -467,7 +499,12 @@
                 });
         
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Gagal Terkirim!', text: 'Periksa koneksi internet Anda.', confirmButtonColor: '#00CAFF' });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Gagal Terkirim!', 
+                    text: 'Periksa koneksi internet Anda.', 
+                    confirmButtonColor: '#00CAFF' 
+                });
                 btn.disabled = false; 
                 btn.innerText = "AJUKAN";
             }
